@@ -31,3 +31,9 @@ Thumbs.db
 
 # Vite
 apps/frontend/.vite/
+
+
+# Coding agents
+.openpackage
+.claude
+.agents
