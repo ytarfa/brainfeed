@@ -1,0 +1,294 @@
+export type ContentType = "link" | "note" | "image" | "pdf" | "file";
+export type SourceType =
+  | "github"
+  | "twitter"
+  | "youtube"
+  | "news"
+  | "amazon"
+  | "paper"
+  | "generic"
+  | "note"
+  | "image"
+  | "pdf"
+  | "file"
+  | "reddit"
+  | "spotify";
+
+export interface Tag {
+  id: string;
+  label: string;
+}
+
+export interface Collaborator {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  role: "owner" | "editor" | "viewer";
+}
+
+export interface SyncSource {
+  id: string;
+  type: "youtube" | "spotify" | "reddit" | "rss";
+  label: string;
+  connected: boolean;
+  status: "active" | "failed" | "idle";
+  frequency: "hourly" | "daily" | "weekly";
+  lastSync?: string;
+}
+
+export interface Space {
+  id: string;
+  name: string;
+  description?: string;
+  color: string;
+  itemCount: number;
+  collaborators: Collaborator[];
+  syncSources: SyncSource[];
+  isShared: boolean;
+  isSyncing: boolean;
+  shareToken?: string;
+  rules: CategorizationRule[];
+  aiEnabled: boolean;
+}
+
+export interface CategorizationRule {
+  id: string;
+  field: string;
+  operator: string;
+  value: string;
+}
+
+export interface Bookmark {
+  id: string;
+  title: string;
+  type: ContentType;
+  sourceType: SourceType;
+  url?: string;
+  domain?: string;
+  thumbnail?: string;
+  favicon?: string;
+  summary?: string;
+  content?: string;
+  tags: Tag[];
+  spaceId: string;
+  savedAt: string;
+  notes?: string;
+  metadata?: Record<string, string | number>;
+  isArticle?: boolean;
+}
+
+export interface ActivityEntry {
+  id: string;
+  bookmarkId: string;
+  bookmarkTitle: string;
+  spaceId: string;
+  action: string;
+  timestamp: string;
+  accepted?: boolean;
+}
+
+export const mockCollaborators: Collaborator[] = [
+  { id: "c1", name: "Yannis", email: "yannis@example.com", avatar: "Y", role: "owner" },
+  { id: "c2", name: "Sofia", email: "sofia@example.com", avatar: "S", role: "editor" },
+  { id: "c3", name: "Marco", email: "marco@example.com", avatar: "M", role: "viewer" },
+];
+
+export const mockSpaces: Space[] = [
+  {
+    id: "s1",
+    name: "Dev Tools",
+    description: "Libraries, frameworks, and tools for software development",
+    color: "#d4845a",
+    itemCount: 47,
+    collaborators: [mockCollaborators[0], mockCollaborators[1]],
+    syncSources: [
+      { id: "ss1", type: "reddit", label: "r/programming", connected: true, status: "active", frequency: "daily", lastSync: "2 hours ago" },
+      { id: "ss2", type: "rss", label: "Hacker News", connected: true, status: "active", frequency: "hourly", lastSync: "12 min ago" },
+    ],
+    isShared: true,
+    isSyncing: true,
+    shareToken: "abc123xyz",
+    rules: [
+      { id: "r1", field: "domain", operator: "contains", value: "github.com" },
+      { id: "r2", field: "tag", operator: "is", value: "open-source" },
+    ],
+    aiEnabled: true,
+  },
+  {
+    id: "s2",
+    name: "Learning — ML",
+    description: "Machine learning papers, courses, and resources",
+    color: "#4a7a5b",
+    itemCount: 23,
+    collaborators: [mockCollaborators[0], mockCollaborators[2]],
+    syncSources: [
+      { id: "ss3", type: "youtube", label: "ML channels", connected: true, status: "active", frequency: "weekly", lastSync: "1 day ago" },
+    ],
+    isShared: true,
+    isSyncing: false,
+    shareToken: "ml789abc",
+    rules: [],
+    aiEnabled: true,
+  },
+  {
+    id: "s3",
+    name: "Recipes",
+    description: "Food and cooking inspiration",
+    color: "#8b5e3c",
+    itemCount: 18,
+    collaborators: [mockCollaborators[0]],
+    syncSources: [],
+    isShared: false,
+    isSyncing: false,
+    rules: [],
+    aiEnabled: false,
+  },
+  {
+    id: "s4",
+    name: "Reading List",
+    description: "Articles and essays to read later",
+    color: "#6a6660",
+    itemCount: 92,
+    collaborators: [mockCollaborators[0]],
+    syncSources: [
+      { id: "ss4", type: "rss", label: "Various feeds", connected: true, status: "failed", frequency: "daily", lastSync: "2 days ago" },
+    ],
+    isShared: false,
+    isSyncing: false,
+    rules: [],
+    aiEnabled: true,
+  },
+];
+
+export const mockTags: Tag[] = [
+  { id: "t1", label: "Dev tools" },
+  { id: "t2", label: "ML" },
+  { id: "t3", label: "New" },
+  { id: "t4", label: "Open source" },
+  { id: "t5", label: "TypeScript" },
+  { id: "t6", label: "React" },
+  { id: "t7", label: "Paper" },
+  { id: "t8", label: "Video" },
+];
+
+export const mockBookmarks: Bookmark[] = [
+  {
+    id: "b1",
+    title: "shadcn/ui — Beautifully designed components",
+    type: "link",
+    sourceType: "github",
+    url: "https://github.com/shadcn/ui",
+    domain: "github.com",
+    thumbnail: "https://opengraph.githubassets.com/shadcn-ui",
+    summary: "Beautifully designed components built with Radix UI and Tailwind CSS. Open source. Not a component library — a collection of re-usable components.",
+    tags: [mockTags[0], mockTags[4], mockTags[3]],
+    spaceId: "s1",
+    savedAt: "3 min ago",
+    notes: "",
+    metadata: { stars: 62400, language: "TypeScript", forks: 3800 },
+  },
+  {
+    id: "b2",
+    title: "Attention Is All You Need",
+    type: "link",
+    sourceType: "paper",
+    url: "https://arxiv.org/abs/1706.03762",
+    domain: "arxiv.org",
+    summary: "We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely.",
+    tags: [mockTags[1], mockTags[6]],
+    spaceId: "s2",
+    savedAt: "1 hour ago",
+    isArticle: true,
+    metadata: { authors: "Vaswani et al.", year: 2017, citations: 95000 },
+  },
+  {
+    id: "b3",
+    title: "Build a React app with TypeScript — Full Course",
+    type: "link",
+    sourceType: "youtube",
+    url: "https://youtube.com/watch?v=abc123",
+    domain: "youtube.com",
+    thumbnail: "https://i.ytimg.com/vi/abc123/maxresdefault.jpg",
+    summary: "In this full course we cover building production-ready React applications with TypeScript, covering patterns, testing, and deployment.",
+    tags: [mockTags[4], mockTags[5], mockTags[7]],
+    spaceId: "s1",
+    savedAt: "2 hours ago",
+    metadata: { duration: "4:32:18", channel: "Fireship", views: 840000 },
+  },
+  {
+    id: "b4",
+    title: "The unreasonable effectiveness of just showing up every day",
+    type: "link",
+    sourceType: "news",
+    url: "https://every.to/chain-of-thought/the-unreasonable-effectiveness",
+    domain: "every.to",
+    summary: "A meditation on consistency, compounding effort, and how small daily actions create extraordinary outcomes over time.",
+    tags: [],
+    spaceId: "s4",
+    savedAt: "4 hours ago",
+    isArticle: true,
+  },
+  {
+    id: "b5",
+    title: "Thoughts on async communication",
+    type: "note",
+    sourceType: "note",
+    summary: "Async-first teams move faster. The discipline is writing well enough that your future self and teammates don't need to ask follow-up questions.\n\nKey principles:\n- Context over instructions\n- Decisions and rationale, not just outcomes\n- Link to relevant artifacts",
+    tags: [],
+    spaceId: "s3",
+    savedAt: "Yesterday",
+    content: "Async-first teams move faster. The discipline is writing well enough that your future self and teammates don't need to ask follow-up questions.",
+  },
+  {
+    id: "b6",
+    title: "Bun v1.0 is here",
+    type: "link",
+    sourceType: "news",
+    url: "https://bun.sh/blog/bun-v1",
+    domain: "bun.sh",
+    thumbnail: "https://bun.sh/og.png",
+    summary: "Bun is a fast JavaScript runtime, package manager, bundler, and test runner. v1.0 brings stability guarantees and Node.js compatibility.",
+    tags: [mockTags[0], mockTags[2]],
+    spaceId: "s1",
+    savedAt: "2 days ago",
+  },
+  {
+    id: "b7",
+    title: "LLM Visualization — 3D Transformer Explorer",
+    type: "link",
+    sourceType: "generic",
+    url: "https://bbycroft.net/llm",
+    domain: "bbycroft.net",
+    summary: "An interactive 3D visualization of a large language model showing how tokens flow through transformer layers, attention heads, and MLP blocks.",
+    tags: [mockTags[1], mockTags[2]],
+    spaceId: "s2",
+    savedAt: "3 days ago",
+  },
+  {
+    id: "b8",
+    title: "Pasta Carbonara — The Definitive Guide",
+    type: "link",
+    sourceType: "news",
+    url: "https://seriouseats.com/carbonara",
+    domain: "seriouseats.com",
+    thumbnail: "https://seriouseats.com/carbonara.jpg",
+    summary: "The real carbonara: guanciale, Pecorino Romano, eggs, black pepper. No cream, no garlic, no shortcuts.",
+    tags: [],
+    spaceId: "s3",
+    savedAt: "1 week ago",
+  },
+];
+
+export const mockActivity: ActivityEntry[] = [
+  { id: "a1", bookmarkId: "b1", bookmarkTitle: "shadcn/ui — Beautifully designed components", spaceId: "s1", action: "added to this Space by AI", timestamp: "3 min ago" },
+  { id: "a2", bookmarkId: "b6", bookmarkTitle: "Bun v1.0 is here", spaceId: "s1", action: "added to this Space by AI", timestamp: "2 days ago", accepted: true },
+  { id: "a3", bookmarkId: "b3", bookmarkTitle: "Build a React app with TypeScript", spaceId: "s1", action: "added to this Space by AI", timestamp: "2 hours ago" },
+];
+
+export const mockUser = {
+  id: "u1",
+  name: "Yannis",
+  email: "yannis@example.com",
+  avatar: "Y",
+};
