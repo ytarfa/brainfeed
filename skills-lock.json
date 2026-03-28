@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "railway": {
+      "source": "mshumer/claude-skill-railway",
+      "sourceType": "github",
+      "computedHash": "44fa85c01c9d50cfc4439fc2bd08e12a2ec41c826e0b8a2d889af0f2dc079787"
+    }
+  }
+}
