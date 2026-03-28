@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "pnpm --parallel -r run dev",
     "build": "pnpm -r run build",
-    "lint": "pnpm -r run lint"
+    "lint": "pnpm -r run lint",
+    "sync:types": "pnpm --filter @brain-feed/types run sync"
   },
   "devDependencies": {
     "typescript": "^5.4.5"

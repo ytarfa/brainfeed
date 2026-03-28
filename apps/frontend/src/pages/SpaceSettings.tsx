@@ -123,7 +123,7 @@ export default function SpaceSettings() {
               <div style={{ marginBottom: 28 }}>
                 <label style={labelStyle}>Description</label>
                 <textarea
-                  defaultValue={space.description}
+                  defaultValue={space.description ?? ""}
                   rows={3}
                   style={{
                     ...sectionInputStyle,
@@ -440,7 +440,7 @@ export default function SpaceSettings() {
                         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                           <span className="text-meta">Frequency:</span>
                           <select
-                            defaultValue={src.frequency}
+                            defaultValue={src.sync_frequency}
                             style={{
                               height: 26,
                               padding: "0 8px",
@@ -512,7 +512,7 @@ export default function SpaceSettings() {
                 Share a read-only view of this Space with anyone — no account needed.
               </p>
 
-              {space.shareToken ? (
+              {space.share_token ? (
                 <div
                   style={{
                     padding: 16,
@@ -539,7 +539,7 @@ export default function SpaceSettings() {
                         whiteSpace: "nowrap",
                       }}
                     >
-                      https://brainfeed.app/p/{space.shareToken}
+                      https://brainfeed.app/p/{space.share_token}
                     </code>
                     <button
                       onClick={handleCopy}
@@ -582,7 +582,7 @@ export default function SpaceSettings() {
                 </button>
               )}
 
-              {space.shareToken && (
+              {space.share_token && (
                 <button
                   style={{
                     height: 34,

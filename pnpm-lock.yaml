@@ -14,6 +14,9 @@ importers:
 
   apps/backend:
     dependencies:
+      '@brain-feed/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@supabase/supabase-js':
         specifier: ^2.100.1
         version: 2.100.1
@@ -69,6 +72,9 @@ importers:
 
   apps/frontend:
     dependencies:
+      '@brain-feed/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -94,6 +100,8 @@ importers:
       vite:
         specifier: ^5.2.12
         version: 5.4.21(@types/node@20.19.37)(terser@5.46.1)
+
+  packages/types: {}
 
 packages:
 

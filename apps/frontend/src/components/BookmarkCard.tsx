@@ -56,7 +56,7 @@ export default function BookmarkCard({ bookmark, view, onClick, showSpace = fals
   const [menuOpen, setMenuOpen] = useState(false);
 
   const space = mockSpaces.find((s) => s.id === bookmark.spaceId);
-  const isArticle = bookmark.isArticle || bookmark.sourceType === "paper";
+  const isArticle = bookmark.isArticle || bookmark.source_type === "paper";
 
   const cardStyle: React.CSSProperties = {
     background: "var(--bg-raised)",
@@ -102,10 +102,10 @@ export default function BookmarkCard({ bookmark, view, onClick, showSpace = fals
       tabIndex={0}
       onKeyDown={(e) => e.key === "Enter" && onClick()}
       role="button"
-      aria-label={bookmark.title}
+      aria-label={bookmark.title ?? undefined}
     >
       {/* Thumbnail (grid only) */}
-      {view === "grid" && bookmark.thumbnail && (
+      {view === "grid" && bookmark.thumbnail_url && (
         <div
           style={{
             width: "100%",
@@ -117,7 +117,7 @@ export default function BookmarkCard({ bookmark, view, onClick, showSpace = fals
           }}
         >
           <img
-            src={bookmark.thumbnail}
+            src={bookmark.thumbnail_url}
             alt=""
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
             onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
@@ -142,8 +142,8 @@ export default function BookmarkCard({ bookmark, view, onClick, showSpace = fals
             color: "var(--accent-text)",
           }}
         >
-          <span style={{ fontSize: 9 }}>{typeIcons[bookmark.sourceType] || "◈"}</span>
-          {bookmark.sourceType}
+          <span style={{ fontSize: 9 }}>{typeIcons[bookmark.source_type ?? ""] || "◈"}</span>
+          {bookmark.source_type}
         </span>
 
         {showSpace && space && (

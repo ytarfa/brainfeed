@@ -16,7 +16,7 @@ export default function Library() {
   const [filter, setFilter] = useState<ContentFilter>("all");
   const [sort, setSort] = useState<SortOption>("saved");
 
-  const filtered = mockBookmarks.filter((b) => filter === "all" || b.type === filter);
+  const filtered = mockBookmarks.filter((b) => filter === "all" || b.content_type === filter);
 
   const filters: { label: string; value: ContentFilter }[] = [
     { label: "All", value: "all" },

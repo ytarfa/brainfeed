@@ -16,7 +16,7 @@ export default function SpaceView() {
   const space = mockSpaces.find((s) => s.id === id);
   const bookmarks = mockBookmarks.filter((b) => b.spaceId === id);
   const [activity, setActivity] = useState<ActivityEntry[]>(
-    mockActivity.filter((a) => a.spaceId === id)
+    mockActivity.filter((a) => a.space_id === id)
   );
 
   if (!space) {

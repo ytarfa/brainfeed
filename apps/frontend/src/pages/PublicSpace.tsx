@@ -7,7 +7,7 @@ import { mockSpaces, mockBookmarks } from "../data/mock";
 
 export default function PublicSpace() {
   const { shareToken } = useParams<{ shareToken: string }>();
-  const space = mockSpaces.find((s) => s.shareToken === shareToken);
+  const space = mockSpaces.find((s) => s.share_token === shareToken);
   const [detailId, setDetailId] = useState<string | null>(null);
   const detail = detailId ? (mockBookmarks.find((b) => b.id === detailId) ?? null) : null;
 

@@ -31,7 +31,7 @@ export default function GlobalSearch({ open, onClose, onSelect }: GlobalSearchPr
 
   const results = query.trim().length > 1
     ? mockBookmarks.filter((b) =>
-        b.title.toLowerCase().includes(query.toLowerCase()) ||
+        (b.title ?? "").toLowerCase().includes(query.toLowerCase()) ||
         b.summary?.toLowerCase().includes(query.toLowerCase()) ||
         b.domain?.toLowerCase().includes(query.toLowerCase())
       )

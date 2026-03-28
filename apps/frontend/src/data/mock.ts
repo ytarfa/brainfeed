@@ -1,92 +1,25 @@
-export type ContentType = "link" | "note" | "image" | "pdf" | "file";
-export type SourceType =
-  | "github"
-  | "twitter"
-  | "youtube"
-  | "news"
-  | "amazon"
-  | "paper"
-  | "generic"
-  | "note"
-  | "image"
-  | "pdf"
-  | "file"
-  | "reddit"
-  | "spotify";
+import type {
+  Tag,
+  Collaborator,
+  SyncSource,
+  CategorizationRule,
+  Space,
+  Bookmark,
+  ActivityEntry,
+} from "@brain-feed/types";
 
-export interface Tag {
-  id: string;
-  label: string;
-}
-
-export interface Collaborator {
-  id: string;
-  name: string;
-  email: string;
-  avatar: string;
-  role: "owner" | "editor" | "viewer";
-}
-
-export interface SyncSource {
-  id: string;
-  type: "youtube" | "spotify" | "reddit" | "rss";
-  label: string;
-  connected: boolean;
-  status: "active" | "failed" | "idle";
-  frequency: "hourly" | "daily" | "weekly";
-  lastSync?: string;
-}
-
-export interface Space {
-  id: string;
-  name: string;
-  description?: string;
-  color: string;
-  itemCount: number;
-  collaborators: Collaborator[];
-  syncSources: SyncSource[];
-  isShared: boolean;
-  isSyncing: boolean;
-  shareToken?: string;
-  rules: CategorizationRule[];
-  aiEnabled: boolean;
-}
-
-export interface CategorizationRule {
-  id: string;
-  field: string;
-  operator: string;
-  value: string;
-}
-
-export interface Bookmark {
-  id: string;
-  title: string;
-  type: ContentType;
-  sourceType: SourceType;
-  url?: string;
-  domain?: string;
-  thumbnail?: string;
-  favicon?: string;
-  summary?: string;
-  content?: string;
-  tags: Tag[];
-  spaceId: string;
-  savedAt: string;
-  notes?: string;
-  metadata?: Record<string, string | number>;
-  isArticle?: boolean;
-}
-
-export interface ActivityEntry {
-  id: string;
-  bookmarkId: string;
-  bookmarkTitle: string;
-  spaceId: string;
-  action: string;
-  timestamp: string;
-  accepted?: boolean;
-}
+export type {
+  ContentType,
+  SourceType,
+  Tag,
+  Collaborator,
+  SyncSource,
+  CategorizationRule,
+  Space,
+  Bookmark,
+  ActivityEntry,
+  Profile,
+} from "@brain-feed/types";
 
 export const mockCollaborators: Collaborator[] = [
   { id: "c1", name: "Yannis", email: "yannis@example.com", avatar: "Y", role: "owner" },
@@ -103,17 +36,73 @@ export const mockSpaces: Space[] = [
     itemCount: 47,
     collaborators: [mockCollaborators[0], mockCollaborators[1]],
     syncSources: [
-      { id: "ss1", type: "reddit", label: "r/programming", connected: true, status: "active", frequency: "daily", lastSync: "2 hours ago" },
-      { id: "ss2", type: "rss", label: "Hacker News", connected: true, status: "active", frequency: "hourly", lastSync: "12 min ago" },
+      {
+        id: "ss1",
+        platform: "reddit",
+        label: "r/programming",
+        connected: true,
+        status: "active",
+        sync_frequency: "daily",
+        lastSync: "2 hours ago",
+        external_id: "programming",
+        external_name: "r/programming",
+        is_active: true,
+        last_synced_at: null,
+        space_id: "s1",
+        user_id: "u1",
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: "ss2",
+        platform: "rss",
+        label: "Hacker News",
+        connected: true,
+        status: "active",
+        sync_frequency: "hourly",
+        lastSync: "12 min ago",
+        external_id: "hackernews",
+        external_name: "Hacker News",
+        is_active: true,
+        last_synced_at: null,
+        space_id: "s1",
+        user_id: "u1",
+        created_at: new Date().toISOString(),
+      },
     ],
     isShared: true,
     isSyncing: true,
-    shareToken: "abc123xyz",
+    is_public: true,
+    share_token: "abc123xyz",
     rules: [
-      { id: "r1", field: "domain", operator: "contains", value: "github.com" },
-      { id: "r2", field: "tag", operator: "is", value: "open-source" },
+      {
+        id: "r1",
+        field: "domain",
+        operator: "contains",
+        value: "github.com",
+        rule_type: "domain",
+        rule_value: "github.com",
+        space_id: "s1",
+        created_by: "u1",
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: "r2",
+        field: "tag",
+        operator: "is",
+        value: "open-source",
+        rule_type: "keyword",
+        rule_value: "open-source",
+        space_id: "s1",
+        created_by: "u1",
+        created_at: new Date().toISOString(),
+      },
     ],
     aiEnabled: true,
+    ai_auto_categorize: true,
+    owner_id: "u1",
+    taste_profile: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: "s2",
@@ -123,13 +112,34 @@ export const mockSpaces: Space[] = [
     itemCount: 23,
     collaborators: [mockCollaborators[0], mockCollaborators[2]],
     syncSources: [
-      { id: "ss3", type: "youtube", label: "ML channels", connected: true, status: "active", frequency: "weekly", lastSync: "1 day ago" },
+      {
+        id: "ss3",
+        platform: "youtube",
+        label: "ML channels",
+        connected: true,
+        status: "active",
+        sync_frequency: "weekly",
+        lastSync: "1 day ago",
+        external_id: "ml-channels",
+        external_name: "ML channels",
+        is_active: true,
+        last_synced_at: null,
+        space_id: "s2",
+        user_id: "u1",
+        created_at: new Date().toISOString(),
+      },
     ],
     isShared: true,
     isSyncing: false,
-    shareToken: "ml789abc",
+    is_public: true,
+    share_token: "ml789abc",
     rules: [],
     aiEnabled: true,
+    ai_auto_categorize: true,
+    owner_id: "u1",
+    taste_profile: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: "s3",
@@ -141,8 +151,15 @@ export const mockSpaces: Space[] = [
     syncSources: [],
     isShared: false,
     isSyncing: false,
+    is_public: false,
+    share_token: null,
     rules: [],
     aiEnabled: false,
+    ai_auto_categorize: false,
+    owner_id: "u1",
+    taste_profile: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: "s4",
@@ -152,12 +169,34 @@ export const mockSpaces: Space[] = [
     itemCount: 92,
     collaborators: [mockCollaborators[0]],
     syncSources: [
-      { id: "ss4", type: "rss", label: "Various feeds", connected: true, status: "failed", frequency: "daily", lastSync: "2 days ago" },
+      {
+        id: "ss4",
+        platform: "rss",
+        label: "Various feeds",
+        connected: true,
+        status: "failed",
+        sync_frequency: "daily",
+        lastSync: "2 days ago",
+        external_id: "various-feeds",
+        external_name: "Various feeds",
+        is_active: false,
+        last_synced_at: null,
+        space_id: "s4",
+        user_id: "u1",
+        created_at: new Date().toISOString(),
+      },
     ],
     isShared: false,
     isSyncing: false,
+    is_public: false,
+    share_token: null,
     rules: [],
     aiEnabled: true,
+    ai_auto_categorize: true,
+    owner_id: "u1",
+    taste_profile: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
 ];
 
@@ -176,114 +215,221 @@ export const mockBookmarks: Bookmark[] = [
   {
     id: "b1",
     title: "shadcn/ui — Beautifully designed components",
-    type: "link",
-    sourceType: "github",
+    content_type: "link",
+    source_type: "github",
     url: "https://github.com/shadcn/ui",
     domain: "github.com",
-    thumbnail: "https://opengraph.githubassets.com/shadcn-ui",
+    thumbnail_url: "https://opengraph.githubassets.com/shadcn-ui",
     summary: "Beautifully designed components built with Radix UI and Tailwind CSS. Open source. Not a component library — a collection of re-usable components.",
     tags: [mockTags[0], mockTags[4], mockTags[3]],
     spaceId: "s1",
     savedAt: "3 min ago",
     notes: "",
     metadata: { stars: 62400, language: "TypeScript", forks: 3800 },
+    user_id: "u1",
+    description: null,
+    enriched_data: null,
+    enrichment_status: "completed",
+    file_path: null,
+    raw_content: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: "b2",
     title: "Attention Is All You Need",
-    type: "link",
-    sourceType: "paper",
+    content_type: "link",
+    source_type: "paper",
     url: "https://arxiv.org/abs/1706.03762",
     domain: "arxiv.org",
+    thumbnail_url: null,
     summary: "We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely.",
     tags: [mockTags[1], mockTags[6]],
     spaceId: "s2",
     savedAt: "1 hour ago",
     isArticle: true,
     metadata: { authors: "Vaswani et al.", year: 2017, citations: 95000 },
+    notes: null,
+    user_id: "u1",
+    description: null,
+    enriched_data: null,
+    enrichment_status: "completed",
+    file_path: null,
+    raw_content: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: "b3",
     title: "Build a React app with TypeScript — Full Course",
-    type: "link",
-    sourceType: "youtube",
+    content_type: "link",
+    source_type: "youtube",
     url: "https://youtube.com/watch?v=abc123",
     domain: "youtube.com",
-    thumbnail: "https://i.ytimg.com/vi/abc123/maxresdefault.jpg",
+    thumbnail_url: "https://i.ytimg.com/vi/abc123/maxresdefault.jpg",
     summary: "In this full course we cover building production-ready React applications with TypeScript, covering patterns, testing, and deployment.",
     tags: [mockTags[4], mockTags[5], mockTags[7]],
     spaceId: "s1",
     savedAt: "2 hours ago",
     metadata: { duration: "4:32:18", channel: "Fireship", views: 840000 },
+    notes: null,
+    user_id: "u1",
+    description: null,
+    enriched_data: null,
+    enrichment_status: "completed",
+    file_path: null,
+    raw_content: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: "b4",
     title: "The unreasonable effectiveness of just showing up every day",
-    type: "link",
-    sourceType: "news",
+    content_type: "link",
+    source_type: "news",
     url: "https://every.to/chain-of-thought/the-unreasonable-effectiveness",
     domain: "every.to",
+    thumbnail_url: null,
     summary: "A meditation on consistency, compounding effort, and how small daily actions create extraordinary outcomes over time.",
     tags: [],
     spaceId: "s4",
     savedAt: "4 hours ago",
     isArticle: true,
+    notes: null,
+    user_id: "u1",
+    description: null,
+    enriched_data: null,
+    enrichment_status: "completed",
+    file_path: null,
+    raw_content: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: "b5",
     title: "Thoughts on async communication",
-    type: "note",
-    sourceType: "note",
+    content_type: "note",
+    source_type: "note",
+    url: null,
     summary: "Async-first teams move faster. The discipline is writing well enough that your future self and teammates don't need to ask follow-up questions.\n\nKey principles:\n- Context over instructions\n- Decisions and rationale, not just outcomes\n- Link to relevant artifacts",
     tags: [],
     spaceId: "s3",
     savedAt: "Yesterday",
-    content: "Async-first teams move faster. The discipline is writing well enough that your future self and teammates don't need to ask follow-up questions.",
+    notes: "Async-first teams move faster. The discipline is writing well enough that your future self and teammates don't need to ask follow-up questions.",
+    thumbnail_url: null,
+    domain: undefined,
+    user_id: "u1",
+    description: null,
+    enriched_data: null,
+    enrichment_status: "completed",
+    file_path: null,
+    raw_content: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: "b6",
     title: "Bun v1.0 is here",
-    type: "link",
-    sourceType: "news",
+    content_type: "link",
+    source_type: "news",
     url: "https://bun.sh/blog/bun-v1",
     domain: "bun.sh",
-    thumbnail: "https://bun.sh/og.png",
+    thumbnail_url: "https://bun.sh/og.png",
     summary: "Bun is a fast JavaScript runtime, package manager, bundler, and test runner. v1.0 brings stability guarantees and Node.js compatibility.",
     tags: [mockTags[0], mockTags[2]],
     spaceId: "s1",
     savedAt: "2 days ago",
+    notes: null,
+    user_id: "u1",
+    description: null,
+    enriched_data: null,
+    enrichment_status: "completed",
+    file_path: null,
+    raw_content: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: "b7",
     title: "LLM Visualization — 3D Transformer Explorer",
-    type: "link",
-    sourceType: "generic",
+    content_type: "link",
+    source_type: "generic",
     url: "https://bbycroft.net/llm",
     domain: "bbycroft.net",
+    thumbnail_url: null,
     summary: "An interactive 3D visualization of a large language model showing how tokens flow through transformer layers, attention heads, and MLP blocks.",
     tags: [mockTags[1], mockTags[2]],
     spaceId: "s2",
     savedAt: "3 days ago",
+    notes: null,
+    user_id: "u1",
+    description: null,
+    enriched_data: null,
+    enrichment_status: "completed",
+    file_path: null,
+    raw_content: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
   {
     id: "b8",
     title: "Pasta Carbonara — The Definitive Guide",
-    type: "link",
-    sourceType: "news",
+    content_type: "link",
+    source_type: "news",
     url: "https://seriouseats.com/carbonara",
     domain: "seriouseats.com",
-    thumbnail: "https://seriouseats.com/carbonara.jpg",
+    thumbnail_url: "https://seriouseats.com/carbonara.jpg",
     summary: "The real carbonara: guanciale, Pecorino Romano, eggs, black pepper. No cream, no garlic, no shortcuts.",
     tags: [],
     spaceId: "s3",
     savedAt: "1 week ago",
+    notes: null,
+    user_id: "u1",
+    description: null,
+    enriched_data: null,
+    enrichment_status: "completed",
+    file_path: null,
+    raw_content: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   },
 ];
 
 export const mockActivity: ActivityEntry[] = [
-  { id: "a1", bookmarkId: "b1", bookmarkTitle: "shadcn/ui — Beautifully designed components", spaceId: "s1", action: "added to this Space by AI", timestamp: "3 min ago" },
-  { id: "a2", bookmarkId: "b6", bookmarkTitle: "Bun v1.0 is here", spaceId: "s1", action: "added to this Space by AI", timestamp: "2 days ago", accepted: true },
-  { id: "a3", bookmarkId: "b3", bookmarkTitle: "Build a React app with TypeScript", spaceId: "s1", action: "added to this Space by AI", timestamp: "2 hours ago" },
+  {
+    id: "a1",
+    bookmark_id: "b1",
+    bookmarkTitle: "shadcn/ui — Beautifully designed components",
+    space_id: "s1",
+    action: "added to this Space by AI",
+    timestamp: "3 min ago",
+    user_id: "u1",
+    details: null,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "a2",
+    bookmark_id: "b6",
+    bookmarkTitle: "Bun v1.0 is here",
+    space_id: "s1",
+    action: "added to this Space by AI",
+    timestamp: "2 days ago",
+    accepted: true,
+    user_id: "u1",
+    details: null,
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "a3",
+    bookmark_id: "b3",
+    bookmarkTitle: "Build a React app with TypeScript",
+    space_id: "s1",
+    action: "added to this Space by AI",
+    timestamp: "2 hours ago",
+    user_id: "u1",
+    details: null,
+    created_at: new Date().toISOString(),
+  },
 ];
 
 export const mockUser = {

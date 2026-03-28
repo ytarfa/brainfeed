@@ -157,7 +157,7 @@ export default function BookmarkDetail({ bookmark, onClose }: BookmarkDetailProp
         {/* Body */}
         <div style={{ flex: 1, padding: "20px", overflowY: "auto" }}>
           {/* Thumbnail */}
-          {bookmark.thumbnail && (
+          {bookmark.thumbnail_url && (
             <div
               style={{
                 width: "100%",
@@ -169,7 +169,7 @@ export default function BookmarkDetail({ bookmark, onClose }: BookmarkDetailProp
                 border: "1px solid var(--border-subtle)",
               }}
             >
-              <img src={bookmark.thumbnail} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <img src={bookmark.thumbnail_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             </div>
           )}
 
