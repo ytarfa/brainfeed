@@ -38,4 +38,33 @@ pnpm lint      # tsc --noEmit (type-check only)
 
 ## Architecture
 
-The backend is a plain Express app (`apps/backend/src/index.ts`). The frontend is a Vite/React app with a single `App` component. There is no shared package between them yet — each app has its own `node_modules` installed by pnpm.
+The backend is an Express + TypeScript API (`apps/backend/src/index.ts`) with full REST routes under `/api/v1`. The frontend is a Vite/React app. There is no shared package between them yet — each app has its own `node_modules` installed by pnpm.
+
+## Supabase
+
+- **Project name:** brainfeed
+- **MCP server:** `@supabase/mcp-server-supabase` — use this to create/edit tables, run SQL, manage RLS policies, and manage storage buckets.
+- **Schema migration:** `supabase/migrations.sql` — full schema (tables, indexes, RLS, storage policies). Run in Supabase SQL editor when setting up a fresh project.
+- **Auth:** Supabase Auth (email/password + OAuth). The Express API verifies JWTs via `serviceClient.auth.getUser(token)` in `src/middleware/auth.ts`.
+- **Two Supabase clients:**
+  - `serviceClient` — service role key, bypasses RLS. Used in `public/` routes and admin ops (account deletion, invite lookup).
+  - `createUserClient(token)` — per-request, uses the user's JWT so RLS is enforced. Attached to `req.supabase` by the auth middleware.
+- **Storage bucket:** `user-uploads` — files stored at `user-uploads/{userId}/{uuid}-{filename}`. Signed URLs returned to client.
+
+## Backend Route Map
+
+All routes prefixed `/api/v1`:
+
+| Method | Path | Description |
+|---|---|---|
+| GET/POST/PATCH/DELETE | `/bookmarks` | Library CRUD |
+| GET/POST/PATCH/DELETE | `/spaces` | Space CRUD |
+| POST/DELETE | `/spaces/:id/share` | Share token |
+| GET/POST/PATCH/DELETE | `/spaces/:spaceId/rules` | Categorization rules |
+| GET/POST/PATCH/DELETE | `/spaces/:spaceId/members` | Collaborators |
+| GET | `/spaces/:spaceId/activity` | Activity log |
+| GET/POST/PATCH/DELETE | `/sync-sources` | Sync source configs |
+| GET | `/search` | Full-text search |
+| GET/PATCH | `/settings/profile` | User profile |
+| DELETE | `/settings/account` | Delete account |
+| GET | `/public/spaces/:shareToken` | Public space view (no auth) |
