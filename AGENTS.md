@@ -47,6 +47,12 @@ pnpm --filter frontend exec vitest run src/path/to/file.test.tsx
 pnpm --filter backend  exec vitest run src/path/to/file.test.ts
 ```
 
+**Testing policy — always follow these rules when implementing features or fixes:**
+- Always run tests after implementing something. If tests do not yet exist for the area you changed, create them.
+- You may need to modify your implementation, create new tests, or update existing tests to make them pass.
+- Whenever building or modifying frontend features, test the feature visually and interactively using the **Playwright skill** (browser automation). This catches layout, interaction, and rendering issues that unit tests miss.
+- Do not consider an implementation complete until all relevant tests pass and frontend changes have been verified via Playwright.
+
 ---
 
 ## TypeScript

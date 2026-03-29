@@ -68,3 +68,15 @@ All routes prefixed `/api/v1`:
 | GET/PATCH | `/settings/profile` | User profile |
 | DELETE | `/settings/account` | Delete account |
 | GET | `/public/spaces/:shareToken` | Public space view (no auth) |
+
+## Testing
+
+**Always run tests when implementing something.** You may need to modify your implementation, create new tests, or update existing tests to make them pass. Do not consider an implementation complete until all relevant tests pass.
+
+When building or modifying frontend features, test the feature visually and interactively using browser automation (e.g., Playwright). This catches layout, interaction, and rendering issues that unit tests miss.
+
+Test framework: Vitest (not yet configured — set it up if needed). Run tests with:
+```bash
+pnpm --filter frontend exec vitest run src/path/to/file.test.tsx
+pnpm --filter backend  exec vitest run src/path/to/file.test.ts
+```

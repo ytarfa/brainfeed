@@ -3,18 +3,16 @@ schema: spec-driven
 # Project context (optional)
 # This is shown to AI when creating artifacts.
 # Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Tech stack: TypeScript, React 18, Vite, Express, Supabase, pnpm monorepo
+  Testing: Always run tests when implementing something. You may need to modify
+  your implementation, create new tests, or update existing tests. Whenever
+  building frontend features, test the feature using the Playwright skill
+  (browser automation) to catch layout, interaction, and rendering issues.
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  tasks:
+    - Every implementation task must include a step for running/creating tests
+    - Frontend tasks must include a step for Playwright-based visual/interactive verification
