@@ -8,11 +8,14 @@ import {
 } from "react-router-dom";
 
 import AppLayout from "./layouts/AppLayout";
+import AuthProvider from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Auth pages
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
+import ConfirmEmail from "./pages/auth/ConfirmEmail";
 
 // App pages
 import Library from "./pages/Library";
@@ -48,33 +51,38 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <Routes>
-          {/* Auth */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
+        <AuthProvider>
+          <Routes>
+            {/* Auth */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/confirm-email" element={<ConfirmEmail />} />
 
-          {/* Onboarding */}
-          <Route path="/onboarding" element={<Onboarding />} />
+            {/* Onboarding */}
+            <Route path="/onboarding" element={<Onboarding />} />
 
-          {/* Public share view — no auth, no sidebar */}
-          <Route path="/p/:shareToken" element={<PublicSpace />} />
+            {/* Public share view — no auth, no sidebar */}
+            <Route path="/p/:shareToken" element={<PublicSpace />} />
 
-          {/* Authenticated app shell */}
-          <Route
-            path="/"
-            element={
-              <AppLayout dark={dark} onToggleDark={() => setDark((v) => !v)} />
-            }
-          >
-            <Route index element={<Navigate to="/library" replace />} />
-            <Route path="library" element={<Library />} />
-            <Route path="spaces" element={<AllSpaces />} />
-            <Route path="spaces/:id" element={<SpaceView />} />
-            <Route path="spaces/:id/settings" element={<SpaceSettings />} />
-            <Route path="settings" element={<UserSettings />} />
-          </Route>
-        </Routes>
+            {/* Authenticated app shell */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <AppLayout dark={dark} onToggleDark={() => setDark((v) => !v)} />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Navigate to="/library" replace />} />
+              <Route path="library" element={<Library />} />
+              <Route path="spaces" element={<AllSpaces />} />
+              <Route path="spaces/:id" element={<SpaceView />} />
+              <Route path="spaces/:id/settings" element={<SpaceSettings />} />
+              <Route path="settings" element={<UserSettings />} />
+            </Route>
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
   );

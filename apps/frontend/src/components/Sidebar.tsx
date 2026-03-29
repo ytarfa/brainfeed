@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+
 import Logo from "./Logo";
 import { useSpaces } from "../api/hooks";
+import { useAuth } from "../contexts/AuthContext";
 import type { SpaceListItem } from "../api/hooks";
 
 interface SidebarProps {
@@ -24,9 +26,16 @@ const PlusIcon = () => (
 );
 
 const SettingsIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-    <circle cx="7" cy="7" r="2" stroke="currentColor" strokeWidth="1.4" />
-    <path d="M7 1v1.5M7 11.5V13M1 7h1.5M11.5 7H13M2.9 2.9l1.1 1.1M10 10l1.1 1.1M2.9 11.1L4 10M10 4l1.1-1.1" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <circle cx="8" cy="8" r="2.2" stroke="currentColor" strokeWidth="1.3" />
+    <path d="M8 1.5v1.3M8 13.2v1.3M1.5 8h1.3M13.2 8h1.3M3.4 3.4l.9.9M11.7 11.7l.9.9M3.4 12.6l.9-.9M11.7 4.3l.9-.9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+  </svg>
+);
+
+const LogoutIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <path d="M6 14H3.333A1.333 1.333 0 0 1 2 12.667V3.333A1.333 1.333 0 0 1 3.333 2H6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M10.667 11.333 14 8l-3.333-3.333M14 8H6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 
@@ -46,6 +55,7 @@ const ChevronIcon = ({ open }: { open: boolean }) => (
 
 export default function Sidebar({ collapsed = false, onToggle, dark = false }: SidebarProps) {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
   const [spacesOpen, setSpacesOpen] = useState(true);
   const { data: spacesData } = useSpaces();
   const spaces = spacesData?.data ?? [];
@@ -270,6 +280,32 @@ export default function Sidebar({ collapsed = false, onToggle, dark = false }: S
         >
           <SettingsIcon />
           {!collapsed && <span>Settings</span>}
+        </button>
+        <button
+          onClick={signOut}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: collapsed ? "8px" : "8px 10px",
+            justifyContent: collapsed ? "center" : "flex-start",
+            borderRadius: 6,
+            color: "var(--text-secondary)",
+            fontSize: 13,
+            fontFamily: "var(--font-ui)",
+            transition: "background var(--transition-fast), color var(--transition-fast)",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.background = "var(--bg-raised)";
+            (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.background = "transparent";
+            (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
+          }}
+        >
+          <LogoutIcon />
+          {!collapsed && <span>Sign out</span>}
         </button>
       </div>
     </aside>

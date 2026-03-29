@@ -1,16 +1,50 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+
 import Logo from "../../components/Logo";
+import { supabase } from "../../lib/supabase";
 
 export default function Signup() {
   const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/onboarding");
+    setError(null);
+    setLoading(true);
+
+    const { error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { display_name: name },
+      },
+    });
+
+    if (authError) {
+      setError(authError.message);
+      setLoading(false);
+      return;
+    }
+
+    navigate("/confirm-email");
+  };
+
+  const handleGoogleSignUp = async () => {
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/onboarding`,
+      },
+    });
+
+    if (authError) {
+      setError(authError.message);
+    }
   };
 
   return (
@@ -66,8 +100,27 @@ export default function Signup() {
         </div>
 
         <form onSubmit={handleSubmit}>
+          {/* Error message */}
+          {error && (
+            <div
+              style={{
+                background: "rgba(220,38,38,0.08)",
+                border: "1px solid rgba(220,38,38,0.2)",
+                borderRadius: 8,
+                padding: "10px 14px",
+                marginBottom: 16,
+                fontSize: 13,
+                color: "var(--text-primary)",
+                fontFamily: "var(--font-ui)",
+              }}
+            >
+              {error}
+            </div>
+          )}
+
           <button
             type="button"
+            onClick={handleGoogleSignUp}
             style={{
               display: "flex",
               alignItems: "center",
@@ -136,6 +189,7 @@ export default function Signup() {
 
           <button
             type="submit"
+            disabled={loading}
             style={{
               width: "100%",
               height: 40,
@@ -146,14 +200,15 @@ export default function Signup() {
               fontFamily: "var(--font-ui)",
               fontWeight: 500,
               color: "#fff",
-              cursor: "pointer",
+              cursor: loading ? "default" : "pointer",
+              opacity: loading ? 0.7 : 1,
               marginTop: 8,
               transition: "background var(--transition-fast)",
             }}
-            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "var(--terra-600)")}
-            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "var(--accent)")}
+            onMouseEnter={(e) => { if (!loading) (e.currentTarget as HTMLElement).style.background = "var(--terra-600)"; }}
+            onMouseLeave={(e) => { if (!loading) (e.currentTarget as HTMLElement).style.background = "var(--accent)"; }}
           >
-            Create account
+            {loading ? "Creating account..." : "Create account"}
           </button>
         </form>
 

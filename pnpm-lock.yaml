@@ -75,6 +75,9 @@ importers:
       '@brain-feed/types':
         specifier: workspace:*
         version: link:../../packages/types
+      '@supabase/supabase-js':
+        specifier: ^2.100.1
+        version: 2.100.1
       '@tanstack/react-query':
         specifier: ^5.95.2
         version: 5.95.2(react@18.3.1)

@@ -1,13 +1,31 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+
 import Logo from "../../components/Logo";
+import { supabase } from "../../lib/supabase";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/login`,
+    });
+
+    setLoading(false);
+
+    if (authError) {
+      setError(authError.message);
+      return;
+    }
+
     setSent(true);
   };
 
@@ -75,6 +93,24 @@ export default function ForgotPassword() {
               Enter your email and we'll send you a reset link.
             </p>
 
+            {/* Error message */}
+            {error && (
+              <div
+                style={{
+                  background: "rgba(220,38,38,0.08)",
+                  border: "1px solid rgba(220,38,38,0.2)",
+                  borderRadius: 8,
+                  padding: "10px 14px",
+                  marginBottom: 16,
+                  fontSize: 13,
+                  color: "var(--text-primary)",
+                  fontFamily: "var(--font-ui)",
+                }}
+              >
+                {error}
+              </div>
+            )}
+
             <label className="text-label" style={{ display: "block", marginBottom: 5, color: "var(--text-secondary)" }}>
               Email
             </label>
@@ -104,6 +140,7 @@ export default function ForgotPassword() {
 
             <button
               type="submit"
+              disabled={loading}
               style={{
                 width: "100%",
                 height: 40,
@@ -114,11 +151,12 @@ export default function ForgotPassword() {
                 fontFamily: "var(--font-ui)",
                 fontWeight: 500,
                 color: "#fff",
-                cursor: "pointer",
+                cursor: loading ? "default" : "pointer",
+                opacity: loading ? 0.7 : 1,
                 marginBottom: 16,
               }}
             >
-              Send reset link
+              {loading ? "Sending..." : "Send reset link"}
             </button>
 
             <p style={{ textAlign: "center", fontSize: 13, color: "var(--text-muted)" }}>
