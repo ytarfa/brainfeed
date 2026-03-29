@@ -8,6 +8,7 @@ import {
   authGetMe,
   authRefresh,
   authSignOut,
+  authSignIn as apiSignIn,
   parseHashTokens,
 } from "../api/auth";
 
@@ -19,6 +20,7 @@ interface AuthContextValue {
   user: AuthUser | null;
   session: AuthSession | null;
   loading: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -129,6 +131,15 @@ export default function AuthProvider({ children }: AuthProviderProps) {
     };
   }, [scheduleRefresh]);
 
+  const handleSignIn = useCallback(async (email: string, password: string) => {
+    const result = await apiSignIn(email, password);
+    if (result.user && result.session) {
+      setUser(result.user);
+      setSession(result.session);
+      scheduleRefresh(result.session);
+    }
+  }, [scheduleRefresh]);
+
   const handleSignOut = useCallback(async () => {
     if (refreshTimerRef.current) {
       clearTimeout(refreshTimerRef.current);
@@ -142,6 +153,7 @@ export default function AuthProvider({ children }: AuthProviderProps) {
     user,
     session,
     loading,
+    signIn: handleSignIn,
     signOut: handleSignOut,
   };
 

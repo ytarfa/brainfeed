@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import Logo from "../../components/Logo";
-import { authSignIn, authGetOAuthUrl } from "../../api/auth";
+import { authGetOAuthUrl } from "../../api/auth";
+import { useAuth } from "../../contexts/AuthContext";
 
 const GoogleIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16">
@@ -15,6 +16,7 @@ const GoogleIcon = () => (
 
 export default function Login() {
   const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +28,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      await authSignIn(email, password);
+      await signIn(email, password);
       navigate("/library");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Sign in failed");
