@@ -7,7 +7,7 @@ interface YouTubeMetaProps {
 }
 
 export default function YouTubeMeta({ bookmark }: YouTubeMetaProps) {
-  const meta = bookmark.metadata;
+  const meta = bookmark.enriched_data?.metadata;
   if (!meta) return null;
 
   const duration = typeof meta.duration === "string" ? meta.duration : null;

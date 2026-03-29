@@ -4,10 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Monorepo Structure
 
-pnpm workspaces monorepo with two apps under `apps/`:
+pnpm workspaces monorepo:
 
+**Apps:**
 - **`apps/backend`** — Express + TypeScript API, runs on port 3001
 - **`apps/frontend`** — React 18 + TypeScript + Vite SPA, runs on port 3000
+
+**Packages:**
+- **`packages/types`** — Shared TypeScript types (`@brain-feed/types`)
+- **`packages/worker-core`** — Shared worker infrastructure: Redis, BullMQ queues, Supabase DB helpers (`@brain-feed/worker-core`)
+- **`packages/worker-enrichment`** — Enrichment worker: BullMQ consumer, LangGraph pipeline, health endpoint (`@brain-feed/worker-enrichment`)
 
 ## Commands
 
@@ -38,13 +44,14 @@ pnpm lint      # tsc --noEmit (type-check only)
 
 ## Architecture
 
-The backend is an Express + TypeScript API (`apps/backend/src/index.ts`) with full REST routes under `/api/v1`. The frontend is a Vite/React app. There is no shared package between them yet — each app has its own `node_modules` installed by pnpm.
+The backend is an Express + TypeScript API (`apps/backend/src/index.ts`) with full REST routes under `/api/v1`. The frontend is a Vite/React app. Shared types live in `packages/types`. Worker packages live in `packages/worker-core` and `packages/worker-enrichment`.
 
 ## Supabase
 
 - **Project name:** brainfeed
 - **MCP server:** `@supabase/mcp-server-supabase` — use this to create/edit tables, run SQL, manage RLS policies, and manage storage buckets.
-- **Schema migration:** `supabase/migrations.sql` — full schema (tables, indexes, RLS, storage policies). Run in Supabase SQL editor when setting up a fresh project.
+- **Schema migration:** `supabase/migrations.sql` — full baseline schema (tables, indexes, RLS, storage policies). Run in Supabase SQL editor when setting up a fresh project.
+- **Incremental migrations:** All schema changes go in `supabase/migrations/` as timestamped files (`YYYYMMDDHHMMSS_description.sql`). Never edit the baseline `migrations.sql` for incremental changes. Apply via Supabase MCP `apply_migration` tool or SQL editor.
 - **Auth:** Supabase Auth (email/password + OAuth). The Express API verifies JWTs via `serviceClient.auth.getUser(token)` in `src/middleware/auth.ts`.
 - **Database ops:** When needed, you can create or insert data by running SQL scripts. **Never run destructive actions** (DROP, DELETE, TRUNCATE, or destructive ALTER) unless explicitly asked.
 - **Two Supabase clients:**

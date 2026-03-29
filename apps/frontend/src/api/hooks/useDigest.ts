@@ -79,7 +79,7 @@ export function toDigestCandidate(raw: DigestBookmarkRow): DigestCandidate {
     thumbnail_url: raw.thumbnail_url,
     created_at: raw.created_at,
     updated_at: raw.updated_at,
-    enrichment_status: raw.enrichment_status ?? "pending",
+    enrichment_status: (raw.enrichment_status ?? "pending") as Bookmark["enrichment_status"],
     enriched_data: (raw.enriched_data ?? null) as Bookmark["enriched_data"],
     raw_content: (raw.raw_content as string) ?? null,
     file_path: (raw.file_path as string) ?? null,

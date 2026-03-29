@@ -6,7 +6,7 @@ interface SpotifyMetaProps {
 }
 
 export default function SpotifyMeta({ bookmark }: SpotifyMetaProps) {
-  const meta = bookmark.metadata;
+  const meta = bookmark.enriched_data?.metadata;
   if (!meta) return null;
 
   const artist = typeof meta.artist === "string" ? meta.artist : null;

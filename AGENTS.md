@@ -4,12 +4,18 @@ Guidance for agentic coding agents working in this repository.
 
 ## Monorepo Structure
 
-pnpm workspaces monorepo with two apps:
+pnpm workspaces monorepo:
 
+**Apps:**
 - **`apps/backend`** — Express + TypeScript API, port 3001
 - **`apps/frontend`** — React 18 + TypeScript + Vite SPA, port 3000
 
-Shared root `tsconfig.json` is extended by both apps. There is no shared package between them.
+**Packages:**
+- **`packages/types`** — Shared TypeScript types (`@brain-feed/types`)
+- **`packages/worker-core`** — Shared worker infrastructure: Redis, BullMQ queues, Supabase DB helpers (`@brain-feed/worker-core`)
+- **`packages/worker-enrichment`** — Enrichment worker: BullMQ consumer, LangGraph pipeline, health endpoint (`@brain-feed/worker-enrichment`)
+
+Shared root `tsconfig.json` is extended by all apps and packages.
 
 ---
 
@@ -39,7 +45,7 @@ pnpm --filter frontend lint     # tsc --noEmit (type-check only)
 ```
 
 ### Testing
-There is currently **no test framework configured** in this repo. No test files exist. When adding tests, choose Vitest (compatible with Vite for frontend; works for backend too). Add a `test` script to the relevant `package.json`.
+Vitest is the test framework for all packages. Each package/app with tests has a `test` script in its `package.json`.
 
 Running a single test (once Vitest is set up):
 ```bash
@@ -192,6 +198,14 @@ Define icon components as small inline functions at the top of the file that nee
 ### Supabase Database
 
 When needed, you can create or insert data in the Supabase database by running SQL scripts (via the Supabase MCP tools). **Never run destructive actions** (DROP, DELETE, TRUNCATE, or destructive ALTER) against the database unless explicitly asked by the user.
+
+### Database Migrations
+
+- The monolithic `supabase/migrations.sql` is the **baseline schema** — it is used for fresh project setup only.
+- All incremental schema changes go in `supabase/migrations/` as timestamped files: `YYYYMMDDHHMMSS_description.sql`.
+- Each migration file should be self-contained and idempotent where possible.
+- Apply migrations via the Supabase MCP `apply_migration` tool or the Supabase SQL editor.
+- Never edit the baseline `migrations.sql` for incremental changes.
 
 ---
 

@@ -6,7 +6,7 @@ interface PaperMetaProps {
 }
 
 export default function PaperMeta({ bookmark }: PaperMetaProps) {
-  const meta = bookmark.metadata;
+  const meta = bookmark.enriched_data?.metadata;
   if (!meta) return null;
 
   const authors = typeof meta.authors === "string" ? meta.authors : null;

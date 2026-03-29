@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@brain-feed/types": "workspace:*",
+    "@brain-feed/worker-core": "workspace:*",
     "@supabase/supabase-js": "^2.100.1",
     "cheerio": "^1.2.0",
     "cors": "^2.8.6",

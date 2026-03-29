@@ -7,7 +7,7 @@ interface GitHubMetaProps {
 }
 
 export default function GitHubMeta({ bookmark }: GitHubMetaProps) {
-  const meta = bookmark.metadata;
+  const meta = bookmark.enriched_data?.metadata;
   if (!meta) return null;
 
   const stars = typeof meta.stars === "number" ? meta.stars : null;

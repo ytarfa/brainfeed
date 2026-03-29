@@ -31,8 +31,9 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
   if (!bookmark) return null;
 
   const renderMetadata = () => {
-    if (!bookmark.metadata) return null;
-    const entries = Object.entries(bookmark.metadata);
+    const meta = bookmark.enriched_data?.metadata;
+    if (!meta) return null;
+    const entries = Object.entries(meta);
     return (
       <div className="mb-4 flex flex-wrap gap-2">
         {entries.map(([key, val]) => (
@@ -41,7 +42,7 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
             className="rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2.5 py-1 font-ui text-[11px] text-[var(--text-secondary)]"
           >
             <span className="capitalize text-[var(--text-muted)]">{key}: </span>
-            {typeof val === "number" ? val.toLocaleString() : val}
+            {typeof val === "number" ? val.toLocaleString() : String(val)}
           </div>
         ))}
       </div>
@@ -110,7 +111,7 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
           )}
 
           {/* Metadata */}
-          {bookmark.metadata && (
+          {bookmark.enriched_data?.metadata && (
             <div className="mb-4">
               <p className="text-label mb-2 text-[var(--text-muted)]">Details</p>
               {renderMetadata()}

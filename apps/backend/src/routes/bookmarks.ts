@@ -6,6 +6,7 @@ import { bookmarkService } from "../services/bookmarkService";
 import { resolveThumbnail } from "../services/thumbnailService";
 import { getPaginationParams } from "../utils/pagination";
 import { serviceClient } from "../config/supabase";
+import { publishEnrichmentJob } from "../lib/enrichmentQueue";
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
@@ -147,6 +148,17 @@ router.post("/", upload.single("file"), async (req: Request, res: Response): Pro
   }
 
   res.status(201).json({ ...bookmark, signed_url });
+
+  // Fire-and-forget: publish enrichment job for non-note bookmarks
+  if (enrichment_status === "pending") {
+    publishEnrichmentJob({
+      bookmarkId: bookmark.id,
+      userId: req.userId,
+      contentType: body.content_type,
+      sourceType: source_type,
+      url: body.url ?? null,
+    });
+  }
 });
 
 // PATCH /:id

@@ -35,6 +35,27 @@ export type SourceType =
 
 export type DigestStatus = "active" | "saved" | "dismissed";
 
+export type EnrichmentStatus =
+  | "pending"
+  | "processing"
+  | "completed"
+  | "failed"
+  | "unsupported";
+
+/** Structured output of the enrichment pipeline, stored in bookmarks.enriched_data. */
+export interface EnrichedData {
+  /** AI-generated summary of the bookmark content. */
+  summary: string | null;
+  /** Named entities extracted from the content. */
+  entities: { name: string; type: string }[];
+  /** Topic labels assigned to the content. */
+  topics: string[];
+  /** Source-type-specific metadata (e.g. GitHub stars, video duration). */
+  metadata: Record<string, string | number> | null;
+  /** ISO 8601 timestamp of when enrichment was completed. */
+  processedAt: string;
+}
+
 /** A resolved tag object used in the UI (DB stores raw string arrays). */
 export interface Tag {
   id: string;
@@ -117,7 +138,7 @@ export interface Space extends Tables<"spaces"> {
 // Bookmark — derived from bookmarks row with UI-layer additions
 // ---------------------------------------------------------------------------
 
-export interface Bookmark extends Omit<Tables<"bookmarks">, "content_type" | "source_type" | "tags" | "digest_status"> {
+export interface Bookmark extends Omit<Tables<"bookmarks">, "content_type" | "source_type" | "tags" | "digest_status" | "enrichment_status" | "enriched_data"> {
   /** bookmarks.content_type narrowed to known values */
   content_type: ContentType;
   /** bookmarks.source_type narrowed to known values */
@@ -126,6 +147,8 @@ export interface Bookmark extends Omit<Tables<"bookmarks">, "content_type" | "so
   tags: Tag[];
   /** bookmarks.digest_status narrowed to known values (null for regular bookmarks) */
   digest_status: DigestStatus | null;
+  /** bookmarks.enrichment_status narrowed to the EnrichmentStatus union */
+  enrichment_status: EnrichmentStatus;
   /** The space this bookmark belongs to (from bookmark_spaces join) */
   spaceId: string;
   /** Computed from url (e.g. "github.com") */
@@ -138,8 +161,8 @@ export interface Bookmark extends Omit<Tables<"bookmarks">, "content_type" | "so
   savedAt: string;
   /** Whether this bookmark is considered a long-form article */
   isArticle?: boolean;
-  /** Arbitrary key/value metadata (e.g. GitHub stars, video duration) */
-  metadata?: Record<string, string | number>;
+  /** Structured enrichment pipeline output (null until enrichment completes) */
+  enriched_data: EnrichedData | null;
 }
 
 // ---------------------------------------------------------------------------
