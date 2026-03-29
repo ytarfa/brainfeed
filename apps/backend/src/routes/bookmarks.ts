@@ -2,7 +2,8 @@ import { Router, Request, Response } from "express";
 import multer from "multer";
 import { z } from "zod";
 import { validateBody, validateQuery } from "../middleware/validate";
-import { detectSourceType, getPaginationParams } from "../services/bookmarkService";
+import { bookmarkService } from "../services/bookmarkService";
+import { getPaginationParams } from "../utils/pagination";
 import { serviceClient } from "../config/supabase";
 
 const router = Router();
@@ -82,7 +83,7 @@ router.post("/", upload.single("file"), async (req: Request, res: Response): Pro
   }
 
   const body = parseResult.data;
-  const source_type = detectSourceType(body.url);
+  const source_type = bookmarkService.detectSourceType(body.url);
   const enrichment_status = body.content_type === "note" ? "completed" : "pending";
 
   let file_path: string | null = null;

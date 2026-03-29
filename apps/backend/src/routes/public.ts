@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import { z } from "zod";
 import { validateQuery } from "../middleware/validate";
 import { serviceClient } from "../config/supabase";
-import { getPaginationParams } from "../services/bookmarkService";
+import { getPaginationParams } from "../utils/pagination";
 
 const router = Router();
 

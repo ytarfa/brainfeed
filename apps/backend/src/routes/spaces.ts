@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
 import { validateBody, validateQuery } from "../middleware/validate";
-import { getPaginationParams } from "../services/bookmarkService";
+import { getPaginationParams } from "../utils/pagination";
 
 const router = Router();
 
