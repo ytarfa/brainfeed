@@ -1,31 +1,42 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { apiGet, apiPost, apiDelete } from "../client";
-import type { DigestCandidate } from "../../data/mock";
+import type { DigestCandidate, Bookmark } from "../../data/mock";
 
 // --- Response types ---
 
-interface DigestCandidateRow {
+/**
+ * A bookmark row returned by the digest endpoints.
+ * Digest candidates are now bookmarks with digest_status = 'active'.
+ */
+interface DigestBookmarkRow {
   id: string;
   user_id: string;
-  source_type: string;
-  source_name: string;
-  source_id: string | null;
-  url: string;
+  url: string | null;
   title: string | null;
   description: string | null;
+  notes: string | null;
+  content_type: string;
+  source_type: string | null;
+  tags: string[] | null;
   thumbnail_url: string | null;
-  published_at: string | null;
-  status: string;
-  expires_at: string;
   created_at: string;
   updated_at: string;
+  enrichment_status: string;
+  enriched_data: unknown;
+  raw_content: string | null;
+  file_path: string | null;
+  digest_status: string;
+  source_name: string | null;
+  source_id: string | null;
+  published_at: string | null;
+  expires_at: string | null;
 }
 
 export interface DigestGroup {
   source_name: string;
   source_type: string;
-  candidates: DigestCandidateRow[];
+  candidates: DigestBookmarkRow[];
 }
 
 interface DigestListResponse {
@@ -51,24 +62,34 @@ export const digestKeys = {
   summary: () => [...digestKeys.all, "summary"] as const,
 };
 
-// --- Utility: Transform API row to frontend DigestCandidate type ---
+// --- Utility: Transform API bookmark row to frontend DigestCandidate type ---
 
-export function toDigestCandidate(raw: DigestCandidateRow): DigestCandidate {
+export function toDigestCandidate(raw: DigestBookmarkRow): DigestCandidate {
   return {
     id: raw.id,
     user_id: raw.user_id,
-    source_type: raw.source_type as DigestCandidate["source_type"],
-    source_name: raw.source_name,
-    source_id: raw.source_id,
     url: raw.url,
-    title: raw.title,
+    title: raw.title ?? "",
     description: raw.description,
+    notes: raw.notes,
+    content_type: raw.content_type as Bookmark["content_type"],
+    source_type: (raw.source_type ?? null) as Bookmark["source_type"],
+    tags: (raw.tags ?? []).map((t: string) => ({ id: t, label: t })),
     thumbnail_url: raw.thumbnail_url,
-    published_at: raw.published_at,
-    status: raw.status as DigestCandidate["status"],
-    expires_at: raw.expires_at,
     created_at: raw.created_at,
     updated_at: raw.updated_at,
+    enrichment_status: raw.enrichment_status ?? "pending",
+    enriched_data: (raw.enriched_data ?? null) as Bookmark["enriched_data"],
+    raw_content: (raw.raw_content as string) ?? null,
+    file_path: (raw.file_path as string) ?? null,
+    digest_status: "active" as const,
+    source_name: raw.source_name,
+    source_id: raw.source_id,
+    published_at: raw.published_at,
+    expires_at: raw.expires_at,
+    spaceId: "",
+    savedAt: raw.created_at,
+    domain: raw.url ? (() => { try { return new URL(raw.url).hostname.replace("www.", ""); } catch { return undefined; } })() : undefined,
   };
 }
 
@@ -99,7 +120,7 @@ export function useSaveCandidate() {
 
   return useMutation({
     mutationFn: (id: string) =>
-      apiPost<{ bookmark: Record<string, unknown> }>(`/api/v1/digest/${id}/save`),
+      apiPost<Record<string, unknown>>(`/api/v1/digest/${id}/save`),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: digestKeys.all });
       void queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
@@ -112,7 +133,7 @@ export function useDismissCandidate() {
 
   return useMutation({
     mutationFn: (id: string) =>
-      apiPost<{ id: string; status: string }>(`/api/v1/digest/${id}/dismiss`),
+      apiPost<Record<string, unknown>>(`/api/v1/digest/${id}/dismiss`),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: digestKeys.all });
     },

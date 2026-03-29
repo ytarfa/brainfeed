@@ -84,7 +84,11 @@ create table if not exists public.bookmarks (
   title               text,
   description         text,
   content_type        text not null check (content_type in ('link', 'note', 'image', 'pdf', 'file')),
-  source_type         text check (source_type in ('github', 'youtube', 'twitter', 'article', 'amazon', 'academic', 'instagram', 'reddit', 'generic', 'manual')),
+  source_type         text check (source_type in (
+                        'github', 'youtube', 'twitter', 'article', 'amazon', 'academic',
+                        'instagram', 'reddit', 'generic', 'manual', 'spotify', 'rss',
+                        'news', 'paper', 'note', 'image', 'pdf', 'file'
+                      )),
   enrichment_status   text not null default 'pending' check (enrichment_status in ('pending', 'processing', 'completed', 'failed')),
   enriched_data       jsonb,
   thumbnail_url       text,
@@ -92,6 +96,12 @@ create table if not exists public.bookmarks (
   tags                text[] not null default '{}',
   raw_content         text,
   file_path           text,
+  -- Digest-specific columns (NULL for regular bookmarks)
+  digest_status       text check (digest_status in ('active', 'saved', 'dismissed')),
+  source_name         text,
+  source_id           uuid references public.sync_sources(id) on delete set null,
+  published_at        timestamptz,
+  expires_at          timestamptz,
   created_at          timestamptz not null default now(),
   updated_at          timestamptz not null default now()
 );
@@ -106,6 +116,16 @@ create index if not exists bookmarks_fts_idx on public.bookmarks
 
 -- Tags index
 create index if not exists bookmarks_tags_idx on public.bookmarks using gin (tags);
+
+-- Digest status index (partial — only rows that are digest candidates)
+create index if not exists bookmarks_digest_status_idx
+  on public.bookmarks (user_id, digest_status)
+  where digest_status is not null;
+
+-- Expiry index for digest cleanup (partial)
+create index if not exists bookmarks_expires_at_idx
+  on public.bookmarks (expires_at)
+  where expires_at is not null;
 
 -- ----------------------
 -- BOOKMARK SPACES (many-to-many)
@@ -295,40 +315,6 @@ create policy "Users can delete own uploads" on storage.objects
     bucket_id = 'user-uploads' and
     (storage.foldername(name))[2] = auth.uid()::text
   );
-
--- ----------------------
--- DIGEST CANDIDATES
--- ----------------------
-create table if not exists public.digest_candidates (
-  id              uuid primary key default gen_random_uuid(),
-  user_id         uuid not null references public.profiles(id) on delete cascade,
-  source_type     text not null,
-  source_name     text not null,
-  source_id       uuid references public.sync_sources(id) on delete set null,
-  url             text not null,
-  title           text,
-  description     text,
-  thumbnail_url   text,
-  published_at    timestamptz,
-  status          text not null default 'active' check (status in ('active', 'saved', 'dismissed')),
-  expires_at      timestamptz not null,
-  created_at      timestamptz not null default now(),
-  updated_at      timestamptz not null default now()
-);
-
--- Composite index for listing active candidates per user
-create index if not exists digest_candidates_user_status_idx
-  on public.digest_candidates (user_id, status);
-
--- Index for expiry purge queries
-create index if not exists digest_candidates_expires_at_idx
-  on public.digest_candidates (expires_at);
-
--- RLS
-alter table public.digest_candidates enable row level security;
-
-create policy "Users can CRUD own digest candidates" on public.digest_candidates
-  for all using (auth.uid() = user_id);
 
 -- Fix infinite recursion between bookmarks and bookmark_spaces RLS policies.
 -- The cycle: bookmarks SELECT policy -> bookmark_spaces -> bookmark_spaces ALL policy -> bookmarks -> ...

@@ -181,5 +181,10 @@ export function toBookmark(raw: BookmarkWithSpaces): Bookmark {
     file_path: (raw.file_path as string) ?? null,
     enriched_data: (raw.enriched_data ?? null) as Bookmark["enriched_data"],
     enrichment_status: (raw.enrichment_status as string) ?? "pending",
+    digest_status: ((raw.digest_status as string) ?? null) as Bookmark["digest_status"],
+    source_name: (raw.source_name as string) ?? null,
+    source_id: (raw.source_id as string) ?? null,
+    published_at: (raw.published_at as string) ?? null,
+    expires_at: (raw.expires_at as string) ?? null,
   };
 }

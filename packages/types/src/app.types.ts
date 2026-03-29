@@ -30,7 +30,10 @@ export type SourceType =
   | "pdf"
   | "file"
   | "reddit"
-  | "spotify";
+  | "spotify"
+  | "rss";
+
+export type DigestStatus = "active" | "saved" | "dismissed";
 
 /** A resolved tag object used in the UI (DB stores raw string arrays). */
 export interface Tag {
@@ -114,13 +117,15 @@ export interface Space extends Tables<"spaces"> {
 // Bookmark — derived from bookmarks row with UI-layer additions
 // ---------------------------------------------------------------------------
 
-export interface Bookmark extends Omit<Tables<"bookmarks">, "content_type" | "source_type" | "tags"> {
+export interface Bookmark extends Omit<Tables<"bookmarks">, "content_type" | "source_type" | "tags" | "digest_status"> {
   /** bookmarks.content_type narrowed to known values */
   content_type: ContentType;
   /** bookmarks.source_type narrowed to known values */
   source_type: SourceType | null;
   /** bookmarks.tags promoted from string[] to Tag[] for the UI */
   tags: Tag[];
+  /** bookmarks.digest_status narrowed to known values (null for regular bookmarks) */
+  digest_status: DigestStatus | null;
   /** The space this bookmark belongs to (from bookmark_spaces join) */
   spaceId: string;
   /** Computed from url (e.g. "github.com") */
@@ -157,14 +162,10 @@ export interface ActivityEntry extends Tables<"activity_log"> {
 export type Profile = Tables<"profiles">;
 
 // ---------------------------------------------------------------------------
-// DigestCandidate — derived from digest_candidates row
+// DigestCandidate — a Bookmark with digest_status = 'active'
 // ---------------------------------------------------------------------------
 
-export type DigestCandidateStatus = "active" | "saved" | "dismissed";
+export type DigestCandidateStatus = DigestStatus;
 
-export interface DigestCandidate extends Omit<Tables<"digest_candidates">, "source_type" | "status"> {
-  /** digest_candidates.source_type narrowed to known values */
-  source_type: SourceType;
-  /** digest_candidates.status narrowed to known values */
-  status: DigestCandidateStatus;
-}
+/** A digest candidate is a bookmark in the "active" digest state. */
+export type DigestCandidate = Bookmark & { digest_status: "active" };

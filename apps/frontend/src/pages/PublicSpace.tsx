@@ -53,6 +53,11 @@ export default function PublicSpace() {
     file_path: null,
     enriched_data: null,
     enrichment_status: "pending",
+    digest_status: null,
+    source_name: null,
+    source_id: null,
+    published_at: null,
+    expires_at: null,
   });
 
   const detailBookmark = detailId

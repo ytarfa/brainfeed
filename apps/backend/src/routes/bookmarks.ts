@@ -3,6 +3,7 @@ import multer from "multer";
 import { z } from "zod";
 import { validateBody, validateQuery } from "../middleware/validate";
 import { bookmarkService } from "../services/bookmarkService";
+import { resolveThumbnail } from "../services/thumbnailService";
 import { getPaginationParams } from "../utils/pagination";
 import { serviceClient } from "../config/supabase";
 
@@ -45,6 +46,7 @@ router.get("/", validateQuery(listQuerySchema), async (req: Request, res: Respon
     .from("bookmarks")
     .select(`*, bookmark_spaces(space_id, spaces(id, name))`, { count: "exact" })
     .eq("user_id", req.userId)
+    .or("digest_status.is.null,digest_status.eq.saved")
     .order(sort as string, { ascending: order === "asc" })
     .range(offset, offset + limit - 1);
 
@@ -105,6 +107,12 @@ router.post("/", upload.single("file"), async (req: Request, res: Response): Pro
     signed_url = urlData?.signedUrl ?? null;
   }
 
+  // Resolve thumbnail inline for link bookmarks (best-effort, non-blocking on failure)
+  let thumbnail_url: string | null = null;
+  if (body.content_type === "link" && body.url) {
+    thumbnail_url = await resolveThumbnail(body.url, source_type);
+  }
+
   const insertData: Record<string, unknown> = {
     user_id: req.userId,
     url: body.url ?? null,
@@ -117,6 +125,7 @@ router.post("/", upload.single("file"), async (req: Request, res: Response): Pro
     source_type,
     enrichment_status,
     file_path,
+    thumbnail_url,
   };
 
   const { data: bookmark, error } = await req.supabase

@@ -13,6 +13,7 @@ export type {
 export type {
   ContentType,
   SourceType,
+  DigestStatus,
   Tag,
   Collaborator,
   SyncSource,

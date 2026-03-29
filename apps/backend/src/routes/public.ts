@@ -32,6 +32,7 @@ router.get("/spaces/:shareToken", validateQuery(querySchema), async (req: Reques
       { count: "exact" }
     )
     .eq("bookmark_spaces.space_id", space.id)
+    .or("digest_status.is.null,digest_status.eq.saved")
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 

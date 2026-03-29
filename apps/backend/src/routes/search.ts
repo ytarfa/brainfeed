@@ -21,6 +21,7 @@ router.get("/", validateQuery(searchQuerySchema), async (req: Request, res: Resp
     .from("bookmarks")
     .select(`*, bookmark_spaces(space_id, spaces(id, name))`, { count: "exact" })
     .eq("user_id", req.userId)
+    .or("digest_status.is.null,digest_status.eq.saved")
     .textSearch(
       "fts",
       q,

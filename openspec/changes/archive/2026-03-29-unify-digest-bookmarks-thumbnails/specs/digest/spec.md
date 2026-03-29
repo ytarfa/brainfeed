@@ -1,4 +1,4 @@
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Digest candidates table
 The system SHALL store digest candidates as rows in the `bookmarks` table with `digest_status = 'active'`. Digest candidates SHALL use the existing bookmarks columns (`id`, `user_id`, `url`, `title`, `description`, `thumbnail_url`, `source_type`, `enrichment_status`, `enriched_data`, `tags`, `created_at`, `updated_at`) plus the following additional columns on bookmarks: `digest_status` (text, nullable, one of 'active', 'saved', 'dismissed'), `source_name` (text, nullable), `source_id` (uuid, nullable FK to sync_sources), `published_at` (timestamptz, nullable), `expires_at` (timestamptz, nullable). Regular bookmarks SHALL have `digest_status = NULL`. Row-level security on bookmarks SHALL continue to restrict access to rows owned by the authenticated user. An index on `(user_id, digest_status)` and `(expires_at)` SHALL be created for query performance.
@@ -177,3 +177,9 @@ The frontend mock data file SHALL export a `mockDigestCandidates` array with at 
 #### Scenario: Mock data available
 - **WHEN** a developer imports `mockDigestCandidates` from the mock data module
 - **THEN** at least 8 realistic bookmark objects with `digest_status: 'active'` are available across multiple source types with varied titles, descriptions, thumbnails, and published dates
+
+## REMOVED Requirements
+
+### Requirement: Digest candidates table
+**Reason**: Digest candidates are now stored as rows in the `bookmarks` table with `digest_status` instead of in a separate `digest_candidates` table.
+**Migration**: All existing `digest_candidates` rows are migrated to `bookmarks` rows with `digest_status = 'active'` (or their existing status). The `digest_candidates` table is dropped.

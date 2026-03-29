@@ -18,7 +18,7 @@ const dismissGroupSchema = z.object({
 });
 
 // ---------------------------------------------------------------------------
-// GET / — list active candidates grouped by source
+// GET / — list active digest bookmarks grouped by source
 // ---------------------------------------------------------------------------
 router.get(
   "/",
@@ -27,10 +27,10 @@ router.get(
     const { source_type } = req.query as z.infer<typeof listQuerySchema>;
 
     let query = req.supabase
-      .from("digest_candidates")
+      .from("bookmarks")
       .select("*")
       .eq("user_id", req.userId)
-      .eq("status", "active")
+      .eq("digest_status", "active")
       .gt("expires_at", new Date().toISOString())
       .order("published_at", { ascending: false });
 
@@ -45,19 +45,19 @@ router.get(
       return;
     }
 
-    // Group candidates by source_name
+    // Group by source_name
     const groups: Record<string, { source_name: string; source_type: string; candidates: typeof data }> = {};
 
-    for (const candidate of data ?? []) {
-      const key = candidate.source_name ?? candidate.source_type ?? "unknown";
+    for (const bookmark of data ?? []) {
+      const key = bookmark.source_name ?? bookmark.source_type ?? "unknown";
       if (!groups[key]) {
         groups[key] = {
-          source_name: candidate.source_name ?? candidate.source_type ?? "Unknown",
-          source_type: candidate.source_type ?? "generic",
+          source_name: bookmark.source_name ?? bookmark.source_type ?? "Unknown",
+          source_type: bookmark.source_type ?? "generic",
           candidates: [],
         };
       }
-      groups[key].candidates.push(candidate);
+      groups[key].candidates.push(bookmark);
     }
 
     res.json({ data: Object.values(groups) });
@@ -69,10 +69,10 @@ router.get(
 // ---------------------------------------------------------------------------
 router.get("/summary", async (req: Request, res: Response): Promise<void> => {
   const { data, error } = await req.supabase
-    .from("digest_candidates")
+    .from("bookmarks")
     .select("source_name, source_type")
     .eq("user_id", req.userId)
-    .eq("status", "active")
+    .eq("digest_status", "active")
     .gt("expires_at", new Date().toISOString());
 
   if (error) {
@@ -102,64 +102,36 @@ router.get("/summary", async (req: Request, res: Response): Promise<void> => {
 });
 
 // ---------------------------------------------------------------------------
-// POST /:id/save — promote candidate to bookmark
+// POST /:id/save — promote digest bookmark to regular bookmark
 // ---------------------------------------------------------------------------
 router.post("/:id/save", async (req: Request, res: Response): Promise<void> => {
-  // Fetch the candidate
-  const { data: candidate, error: fetchError } = await req.supabase
-    .from("digest_candidates")
-    .select("*")
+  const { data: bookmark, error } = await req.supabase
+    .from("bookmarks")
+    .update({ digest_status: "saved", updated_at: new Date().toISOString() })
     .eq("id", req.params.id)
     .eq("user_id", req.userId)
-    .eq("status", "active")
+    .eq("digest_status", "active")
+    .select()
     .single();
 
-  if (fetchError || !candidate) {
+  if (error || !bookmark) {
     res.status(404).json({ error: "Candidate not found or already acted on" });
     return;
   }
 
-  // Create bookmark from candidate
-  const { data: bookmark, error: insertError } = await req.supabase
-    .from("bookmarks")
-    .insert({
-      user_id: req.userId,
-      url: candidate.url,
-      title: candidate.title,
-      description: candidate.description,
-      thumbnail_url: candidate.thumbnail_url,
-      source_type: candidate.source_type,
-      content_type: "link",
-      enrichment_status: "pending",
-      tags: [],
-    })
-    .select()
-    .single();
-
-  if (insertError) {
-    res.status(500).json({ error: insertError.message });
-    return;
-  }
-
-  // Mark candidate as saved
-  await req.supabase
-    .from("digest_candidates")
-    .update({ status: "saved", updated_at: new Date().toISOString() })
-    .eq("id", req.params.id);
-
-  res.status(201).json(bookmark);
+  res.status(200).json(bookmark);
 });
 
 // ---------------------------------------------------------------------------
-// POST /:id/dismiss — mark candidate dismissed
+// POST /:id/dismiss — mark digest bookmark as dismissed
 // ---------------------------------------------------------------------------
 router.post("/:id/dismiss", async (req: Request, res: Response): Promise<void> => {
   const { error } = await req.supabase
-    .from("digest_candidates")
-    .update({ status: "dismissed", updated_at: new Date().toISOString() })
+    .from("bookmarks")
+    .update({ digest_status: "dismissed", updated_at: new Date().toISOString() })
     .eq("id", req.params.id)
     .eq("user_id", req.userId)
-    .eq("status", "active");
+    .eq("digest_status", "active");
 
   if (error) {
     res.status(500).json({ error: error.message });
@@ -170,14 +142,14 @@ router.post("/:id/dismiss", async (req: Request, res: Response): Promise<void> =
 });
 
 // ---------------------------------------------------------------------------
-// POST /dismiss-all — bulk dismiss all active candidates
+// POST /dismiss-all — bulk dismiss all active digest bookmarks
 // ---------------------------------------------------------------------------
 router.post("/dismiss-all", async (req: Request, res: Response): Promise<void> => {
   const { error } = await req.supabase
-    .from("digest_candidates")
-    .update({ status: "dismissed", updated_at: new Date().toISOString() })
+    .from("bookmarks")
+    .update({ digest_status: "dismissed", updated_at: new Date().toISOString() })
     .eq("user_id", req.userId)
-    .eq("status", "active");
+    .eq("digest_status", "active");
 
   if (error) {
     res.status(500).json({ error: error.message });
@@ -197,10 +169,10 @@ router.post(
     const { source_name, source_type } = req.body as z.infer<typeof dismissGroupSchema>;
 
     let query = req.supabase
-      .from("digest_candidates")
-      .update({ status: "dismissed", updated_at: new Date().toISOString() })
+      .from("bookmarks")
+      .update({ digest_status: "dismissed", updated_at: new Date().toISOString() })
       .eq("user_id", req.userId)
-      .eq("status", "active")
+      .eq("digest_status", "active")
       .eq("source_name", source_name);
 
     if (source_type) {
@@ -219,17 +191,31 @@ router.post(
 );
 
 // ---------------------------------------------------------------------------
-// DELETE /expired — purge expired candidates
+// DELETE /expired — purge expired or dismissed digest bookmarks
 // ---------------------------------------------------------------------------
 router.delete("/expired", async (req: Request, res: Response): Promise<void> => {
-  const { error } = await req.supabase
-    .from("digest_candidates")
+  // Delete dismissed digest bookmarks
+  const { error: dismissedError } = await req.supabase
+    .from("bookmarks")
     .delete()
     .eq("user_id", req.userId)
+    .eq("digest_status", "dismissed");
+
+  if (dismissedError) {
+    res.status(500).json({ error: dismissedError.message });
+    return;
+  }
+
+  // Delete expired active digest bookmarks
+  const { error: expiredError } = await req.supabase
+    .from("bookmarks")
+    .delete()
+    .eq("user_id", req.userId)
+    .eq("digest_status", "active")
     .lt("expires_at", new Date().toISOString());
 
-  if (error) {
-    res.status(500).json({ error: error.message });
+  if (expiredError) {
+    res.status(500).json({ error: expiredError.message });
     return;
   }
 

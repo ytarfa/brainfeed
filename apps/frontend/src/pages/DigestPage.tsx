@@ -71,10 +71,10 @@ function DigestCandidateCard({ candidate, index, onSave, onDismiss, savingId, di
       {/* Source type badge */}
       <div className="mb-2 flex items-center gap-1.5">
         <span className="inline-flex items-center gap-1 rounded-sm border border-terra-100 bg-[var(--accent-subtle)] px-1.5 py-0.5 font-ui text-2xs font-medium text-[var(--accent-text)]">
-          <span className="text-[9px]" style={{ color: typeColors[candidate.source_type] ?? "var(--text-muted)" }}>
-            {typeIcons[candidate.source_type] ?? "\u25C8"}
+          <span className="text-[9px]" style={{ color: typeColors[candidate.source_type ?? "generic"] ?? "var(--text-muted)" }}>
+            {typeIcons[candidate.source_type ?? "generic"] ?? "\u25C8"}
           </span>
-          {candidate.source_type}
+          {candidate.source_type ?? "generic"}
         </span>
       </div>
 

@@ -113,12 +113,17 @@ export type Database = {
           content_type: string
           created_at: string
           description: string | null
+          digest_status: string | null
           enriched_data: Json | null
           enrichment_status: string
+          expires_at: string | null
           file_path: string | null
           id: string
           notes: string | null
+          published_at: string | null
           raw_content: string | null
+          source_id: string | null
+          source_name: string | null
           source_type: string | null
           tags: string[]
           thumbnail_url: string | null
@@ -131,12 +136,17 @@ export type Database = {
           content_type: string
           created_at?: string
           description?: string | null
+          digest_status?: string | null
           enriched_data?: Json | null
           enrichment_status?: string
+          expires_at?: string | null
           file_path?: string | null
           id?: string
           notes?: string | null
+          published_at?: string | null
           raw_content?: string | null
+          source_id?: string | null
+          source_name?: string | null
           source_type?: string | null
           tags?: string[]
           thumbnail_url?: string | null
@@ -149,12 +159,17 @@ export type Database = {
           content_type?: string
           created_at?: string
           description?: string | null
+          digest_status?: string | null
           enriched_data?: Json | null
           enrichment_status?: string
+          expires_at?: string | null
           file_path?: string | null
           id?: string
           notes?: string | null
+          published_at?: string | null
           raw_content?: string | null
+          source_id?: string | null
+          source_name?: string | null
           source_type?: string | null
           tags?: string[]
           thumbnail_url?: string | null
@@ -164,6 +179,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "bookmarks_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "sync_sources"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "bookmarks_user_id_fkey"
             columns: ["user_id"]
@@ -211,72 +233,6 @@ export type Database = {
             columns: ["space_id"]
             isOneToOne: false
             referencedRelation: "spaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      digest_candidates: {
-        Row: {
-          created_at: string
-          description: string | null
-          expires_at: string
-          id: string
-          published_at: string | null
-          source_id: string | null
-          source_name: string
-          source_type: string
-          status: string
-          thumbnail_url: string | null
-          title: string | null
-          updated_at: string
-          url: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          expires_at: string
-          id?: string
-          published_at?: string | null
-          source_id?: string | null
-          source_name: string
-          source_type: string
-          status?: string
-          thumbnail_url?: string | null
-          title?: string | null
-          updated_at?: string
-          url: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          expires_at?: string
-          id?: string
-          published_at?: string | null
-          source_id?: string | null
-          source_name?: string
-          source_type?: string
-          status?: string
-          thumbnail_url?: string | null
-          title?: string | null
-          updated_at?: string
-          url?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "digest_candidates_source_id_fkey"
-            columns: ["source_id"]
-            isOneToOne: false
-            referencedRelation: "sync_sources"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "digest_candidates_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -456,7 +412,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_space_member: { Args: { sp_id: string }; Returns: boolean }
+      owns_bookmark: { Args: { bk_id: string }; Returns: boolean }
+      owns_space: { Args: { sp_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
