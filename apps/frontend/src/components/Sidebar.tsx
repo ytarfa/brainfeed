@@ -30,6 +30,14 @@ const SettingsIcon = () => (
   </svg>
 );
 
+const LibraryIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <path d="M2 11V4.5L7 2l5 2.5V11" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M2 11h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
+    <path d="M4.5 11V7h2v4M7.5 11V7h2v4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 const ChevronIcon = ({ open }: { open: boolean }) => (
   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms ease" }}>
     <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
@@ -76,6 +84,30 @@ export default function Sidebar({ collapsed = false, onToggle, dark = false }: S
           <Logo variant="full" size="sm" dark={dark} />
         )}
       </div>
+
+      {/* Library */}
+      <NavLink
+        to="/library"
+        style={({ isActive }) => ({
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          padding: collapsed ? "10px 0" : "10px 20px",
+          justifyContent: collapsed ? "center" : "flex-start",
+          color: isActive ? "var(--text-primary)" : "var(--text-secondary)",
+          background: isActive ? "var(--bg-raised)" : "transparent",
+          borderRight: isActive ? "2px solid var(--accent)" : "2px solid transparent",
+          fontSize: 13.5,
+          fontFamily: "var(--font-ui)",
+          fontWeight: isActive ? 500 : 400,
+          textDecoration: "none",
+          transition: "background var(--transition-fast), color var(--transition-fast)",
+          flexShrink: 0,
+        })}
+      >
+        <LibraryIcon />
+        {!collapsed && <span>Library</span>}
+      </NavLink>
 
       {/* Spaces list */}
       <div style={{ flex: 1, overflowY: "auto", padding: collapsed ? "12px 8px" : "12px 0" }}>
