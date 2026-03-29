@@ -23,6 +23,15 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
     }
   }, [bookmark]);
 
+  useEffect(() => {
+    if (!bookmark) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") handleClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [bookmark]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleClose = () => {
     setVisible(false);
     setTimeout(onClose, 280);
@@ -51,21 +60,24 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
 
   return (
     <>
-      {/* Overlay */}
+      {/* Overlay — backdrop blur + centering container */}
       <div
         className={cn(
-          "fixed inset-0 z-[200] bg-ink-DEFAULT/30 backdrop-blur-sm transition-opacity duration-[280ms]",
+          "fixed inset-0 z-[200] flex items-center justify-center bg-ink-DEFAULT/30 backdrop-blur-sm transition-opacity duration-[280ms]",
           visible ? "opacity-100" : "opacity-0",
           bookmark ? "pointer-events-auto" : "pointer-events-none",
         )}
         onClick={handleClose}
-      />
+      >
 
-      {/* Panel */}
-      <aside
+      {/* Modal */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        onClick={(e) => e.stopPropagation()}
         className={cn(
-          "fixed top-0 right-0 z-[201] flex h-full w-[min(480px,94vw)] flex-col border-l border-[var(--border-subtle)] bg-[var(--bg-base)] shadow-[-8px_0_32px_rgba(30,28,26,0.08)] transition-transform duration-[280ms] ease-[cubic-bezier(0.32,0.72,0,1)]",
-          visible ? "translate-x-0" : "translate-x-full",
+          "flex max-h-[min(800px,88vh)] w-[min(800px,94vw)] flex-col rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-base)] shadow-xl transition-all duration-[280ms] ease-[cubic-bezier(0.32,0.72,0,1)]",
+          visible ? "scale-100 opacity-100" : "scale-[0.96] opacity-0",
         )}
       >
         {/* Header */}
@@ -248,7 +260,8 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
             </a>
           </div>
         )}
-      </aside>
+      </div>
+      </div>
     </>
   );
 }

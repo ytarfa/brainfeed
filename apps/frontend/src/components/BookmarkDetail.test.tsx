@@ -67,11 +67,12 @@ describe("BookmarkDetail", () => {
     expect(screen.getByText("A short summary of the bookmark")).toBeInTheDocument();
   });
 
-  it("does NOT render summary section when bookmark has no summary", () => {
+  it("renders fallback text when bookmark has no summary", () => {
     render(
       <BookmarkDetail bookmark={createMockBookmark({ summary: undefined })} onClose={vi.fn()} />,
     );
-    expect(screen.queryByText("Summary")).not.toBeInTheDocument();
+    expect(screen.getByText("Summary")).toBeInTheDocument();
+    expect(screen.getByText("No summary available.")).toBeInTheDocument();
   });
 
   it("renders tags", () => {
@@ -166,16 +167,55 @@ describe("BookmarkDetail", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it("renders as a centered modal dialog", () => {
+    render(<BookmarkDetail bookmark={createMockBookmark()} onClose={vi.fn()} />);
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toBeInTheDocument();
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+  });
+
   it("overlay click triggers onClose after 280ms setTimeout", () => {
     const onClose = vi.fn();
-    const { container } = render(
+    render(
       <BookmarkDetail bookmark={createMockBookmark()} onClose={onClose} />,
     );
 
-    // The overlay is the first child div (with className containing "fixed" and "inset-0")
-    const overlay = container.querySelector("div.fixed") as HTMLElement;
+    // The overlay is the parent of the dialog element
+    const dialog = screen.getByRole("dialog");
+    const overlay = dialog.parentElement as HTMLElement;
     expect(overlay).toBeTruthy();
     fireEvent.click(overlay);
+
+    expect(onClose).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(280);
+    });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("clicking inside the modal does NOT trigger onClose", () => {
+    const onClose = vi.fn();
+    render(
+      <BookmarkDetail bookmark={createMockBookmark()} onClose={onClose} />,
+    );
+
+    const dialog = screen.getByRole("dialog");
+    fireEvent.click(dialog);
+
+    act(() => {
+      vi.advanceTimersByTime(280);
+    });
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it("Escape key triggers onClose after 280ms setTimeout", () => {
+    const onClose = vi.fn();
+    render(
+      <BookmarkDetail bookmark={createMockBookmark()} onClose={onClose} />,
+    );
+
+    fireEvent.keyDown(window, { key: "Escape" });
 
     expect(onClose).not.toHaveBeenCalled();
 
