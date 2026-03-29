@@ -2,6 +2,7 @@
   "name": "brain-feed",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@10.14.0",
   "scripts": {
     "dev": "pnpm --parallel -r run dev",
     "build": "pnpm -r run build",
