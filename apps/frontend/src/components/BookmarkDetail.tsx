@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, ExternalLink, ChevronDown } from "lucide-react";
+import { X, ExternalLink, ChevronDown, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "../lib/utils";
 import type { Bookmark } from "@brain-feed/types";
 
@@ -100,17 +100,88 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
             </div>
           )}
 
-          {/* Summary */}
-          {bookmark.summary && (
+          {/* Summary — prefer enriched AI summary, fall back to description */}
+          {(() => {
+            const enrichedSummary = bookmark.enriched_data?.summary;
+            const displaySummary = enrichedSummary || bookmark.summary;
+            const isEnriching =
+              bookmark.enrichment_status === "pending" ||
+              bookmark.enrichment_status === "processing";
+            const isFailed = bookmark.enrichment_status === "failed";
+
+            return (
+              <div className="mb-4">
+                <p className="text-label mb-1.5 text-[var(--text-muted)]">Summary</p>
+                {displaySummary ? (
+                  <>
+                    <p className="whitespace-pre-line font-ui text-sm leading-relaxed text-[var(--text-secondary)]">
+                      {displaySummary}
+                    </p>
+                    {enrichedSummary && (
+                      <p className="mt-1 font-ui text-[10px] text-[var(--text-muted)]">
+                        AI-generated summary
+                      </p>
+                    )}
+                  </>
+                ) : isEnriching ? (
+                  <div className="flex items-center gap-2 py-2">
+                    <Loader2 size={14} className="animate-spin text-[var(--accent)]" />
+                    <span className="font-ui text-[13px] text-[var(--text-muted)]">
+                      Generating summary…
+                    </span>
+                  </div>
+                ) : isFailed ? (
+                  <div className="flex items-center gap-2 py-2">
+                    <AlertCircle size={14} className="text-[var(--status-error)]" />
+                    <span className="font-ui text-[13px] text-[var(--text-muted)]">
+                      Summary generation failed
+                    </span>
+                  </div>
+                ) : (
+                  <p className="font-ui text-sm text-[var(--text-muted)]">
+                    No summary available.
+                  </p>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* Topics — from enriched data */}
+          {bookmark.enriched_data?.topics && bookmark.enriched_data.topics.length > 0 && (
             <div className="mb-4">
-              <p className="text-label mb-1.5 text-[var(--text-muted)]">Summary</p>
-              <p className="whitespace-pre-line font-ui text-sm leading-relaxed text-[var(--text-secondary)]">
-                {bookmark.summary}
-              </p>
+              <p className="text-label mb-2 text-[var(--text-muted)]">Topics</p>
+              <div className="flex flex-wrap gap-1.5">
+                {bookmark.enriched_data.topics.map((topic) => (
+                  <span
+                    key={topic}
+                    className="cursor-default rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2.5 py-[3px] font-ui text-[11px] text-[var(--text-secondary)]"
+                  >
+                    {topic}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
 
-          {/* Metadata */}
+          {/* Entities — from enriched data */}
+          {bookmark.enriched_data?.entities && bookmark.enriched_data.entities.length > 0 && (
+            <div className="mb-4">
+              <p className="text-label mb-2 text-[var(--text-muted)]">Entities</p>
+              <div className="flex flex-wrap gap-2">
+                {bookmark.enriched_data.entities.map((entity) => (
+                  <div
+                    key={`${entity.name}-${entity.type}`}
+                    className="rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2.5 py-1 font-ui text-[11px] text-[var(--text-secondary)]"
+                  >
+                    <span className="capitalize text-[var(--text-muted)]">{entity.type}: </span>
+                    {entity.name}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Metadata — from enriched data */}
           {bookmark.enriched_data?.metadata && (
             <div className="mb-4">
               <p className="text-label mb-2 text-[var(--text-muted)]">Details</p>

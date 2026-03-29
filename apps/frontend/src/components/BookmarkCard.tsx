@@ -229,13 +229,13 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
         {/* Source-specific metadata line (factory pattern) */}
         {sourceMeta}
 
-        {/* Summary */}
-        {bookmark.summary && (
+        {/* Summary — prefer enriched AI summary, fall back to description */}
+        {(bookmark.enriched_data?.summary || bookmark.summary) && (
           <p className={cn(
             "font-ui text-[13px] leading-[1.55] text-[var(--text-secondary)]",
             isGrid ? "mb-2.5 line-clamp-3" : "mb-2 line-clamp-2",
           )}>
-            {bookmark.summary}
+            {bookmark.enriched_data?.summary || bookmark.summary}
           </p>
         )}
 
