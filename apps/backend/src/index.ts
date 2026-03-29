@@ -30,7 +30,8 @@ app.use(
 );
 app.use(express.json());
 
-// Health check
+// Health check (Railway healthcheck hits "/" by default)
+app.get("/", (_req, res) => res.json({ status: "ok" }));
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
 // Public routes (no auth)
