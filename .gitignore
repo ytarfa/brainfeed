@@ -35,11 +35,9 @@ apps/frontend/.vite/
 
 # Coding agents
 .openpackage
-.claude
 .agents
 .cursor
 .factory
 .kilocode
 .roo
-.opencode
 .codex

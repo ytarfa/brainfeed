@@ -1,0 +1,11 @@
+# Session data and caches — not tracked
+backups/
+cache/
+file-history/
+history.jsonl
+paste-cache/
+plugins/
+projects/
+sessions/
+tasks/
+settings.local.json
