@@ -20,12 +20,22 @@ const app = express();
 const PORT = process.env.PORT ?? 3001;
 
 app.use(helmet());
+const allowedOrigins = [
+  "http://localhost:3000",
+  ...(process.env.FRONTEND_URL?.split(",").map((u) => u.trim()) ?? []),
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      process.env.FRONTEND_URL ?? "http://localhost:3000",
-    ].filter(Boolean),
+    origin(origin, callback) {
+      // Allow requests with no origin (curl, server-to-server)
+      if (!origin) return callback(null, true);
+      // Exact match (localhost, production domain)
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      // Allow all Vercel preview deployments
+      if (/\.vercel\.app$/.test(origin)) return callback(null, true);
+      callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
     credentials: true,
   })
 );
