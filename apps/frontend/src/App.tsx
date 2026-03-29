@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   BrowserRouter,
   Routes,
@@ -22,6 +23,16 @@ import PublicSpace from "./pages/PublicSpace";
 import Onboarding from "./pages/Onboarding";
 import UserSettings from "./pages/UserSettings";
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 2, // 2 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 export default function App() {
   const [dark, setDark] = useState(() => {
     const stored = localStorage.getItem("bf-theme");
@@ -35,34 +46,36 @@ export default function App() {
   }, [dark]);
 
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Auth */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          {/* Auth */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* Onboarding */}
-        <Route path="/onboarding" element={<Onboarding />} />
+          {/* Onboarding */}
+          <Route path="/onboarding" element={<Onboarding />} />
 
-        {/* Public share view — no auth, no sidebar */}
-        <Route path="/p/:shareToken" element={<PublicSpace />} />
+          {/* Public share view — no auth, no sidebar */}
+          <Route path="/p/:shareToken" element={<PublicSpace />} />
 
-        {/* Authenticated app shell */}
-        <Route
-          path="/"
-          element={
-            <AppLayout dark={dark} onToggleDark={() => setDark((v) => !v)} />
-          }
-        >
-          <Route index element={<Navigate to="/library" replace />} />
-          <Route path="library" element={<Library />} />
-          <Route path="spaces" element={<AllSpaces />} />
-          <Route path="spaces/:id" element={<SpaceView />} />
-          <Route path="spaces/:id/settings" element={<SpaceSettings />} />
-          <Route path="settings" element={<UserSettings />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+          {/* Authenticated app shell */}
+          <Route
+            path="/"
+            element={
+              <AppLayout dark={dark} onToggleDark={() => setDark((v) => !v)} />
+            }
+          >
+            <Route index element={<Navigate to="/library" replace />} />
+            <Route path="library" element={<Library />} />
+            <Route path="spaces" element={<AllSpaces />} />
+            <Route path="spaces/:id" element={<SpaceView />} />
+            <Route path="spaces/:id/settings" element={<SpaceSettings />} />
+            <Route path="settings" element={<UserSettings />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }

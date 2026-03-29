@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
+
 import Sidebar from "../components/Sidebar";
 import TopBar from "../components/TopBar";
 import SaveItemModal from "../components/SaveItemModal";
 import GlobalSearch from "../components/GlobalSearch";
 import BookmarkDetail from "../components/BookmarkDetail";
-import { mockBookmarks } from "../data/mock";
+import { useBookmark, useSpaces, toBookmark } from "../api/hooks";
 
 interface AppLayoutProps {
   dark: boolean;
@@ -20,9 +21,14 @@ export default function AppLayout({ dark, onToggleDark }: AppLayoutProps) {
   const [detailBookmarkId, setDetailBookmarkId] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const detailBookmark = detailBookmarkId
-    ? mockBookmarks.find((b) => b.id === detailBookmarkId) ?? null
-    : null;
+  const { data: rawDetail } = useBookmark(detailBookmarkId);
+  const { data: spacesData } = useSpaces();
+  const spaces = spacesData?.data ?? [];
+
+  const detailBookmark = rawDetail ? toBookmark(rawDetail) : null;
+  const detailSpace = detailBookmark
+    ? spaces.find((s) => s.id === detailBookmark.spaceId)
+    : undefined;
 
   // Cmd+K shortcut
   useEffect(() => {
@@ -84,6 +90,8 @@ export default function AppLayout({ dark, onToggleDark }: AppLayoutProps) {
       <BookmarkDetail
         bookmark={detailBookmark}
         onClose={() => setDetailBookmarkId(null)}
+        spaceName={detailSpace?.name}
+        spaceColor={detailSpace?.color ?? undefined}
       />
     </div>
   );

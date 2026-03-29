@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { mockSpaces } from "../data/mock";
+import { useSpaces } from "../api/hooks";
 
 interface SaveItemModalProps {
   open: boolean;
@@ -20,6 +20,8 @@ export default function SaveItemModal({ open, onClose }: SaveItemModalProps) {
   const [selectedSpace, setSelectedSpace] = useState<string>("");
   const [visible, setVisible] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { data: spacesData } = useSpaces();
+  const spaces = spacesData?.data ?? [];
 
   useEffect(() => {
     if (open) {
@@ -174,7 +176,7 @@ export default function SaveItemModal({ open, onClose }: SaveItemModalProps) {
                   }}
                 >
                   <option value="">Let AI suggest a Space…</option>
-                  {mockSpaces.map((s) => (
+                  {spaces.map((s) => (
                     <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
                 </select>

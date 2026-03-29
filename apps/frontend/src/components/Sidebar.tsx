@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import Logo from "./Logo";
-import { mockSpaces } from "../data/mock";
+import { useSpaces } from "../api/hooks";
+import type { SpaceListItem } from "../api/hooks";
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -38,6 +39,8 @@ const ChevronIcon = ({ open }: { open: boolean }) => (
 export default function Sidebar({ collapsed = false, onToggle, dark = false }: SidebarProps) {
   const navigate = useNavigate();
   const [spacesOpen, setSpacesOpen] = useState(true);
+  const { data: spacesData } = useSpaces();
+  const spaces = spacesData?.data ?? [];
 
   const sidebarStyle: React.CSSProperties = {
     width: collapsed ? "var(--sidebar-rail-width)" : "var(--sidebar-width)",
@@ -104,7 +107,7 @@ export default function Sidebar({ collapsed = false, onToggle, dark = false }: S
 
         {(spacesOpen || collapsed) && (
           <div style={{ marginTop: collapsed ? 0 : 4 }}>
-            {mockSpaces.map((space, i) => (
+            {spaces.map((space: SpaceListItem, i: number) => (
               <NavLink
                 key={space.id}
                 to={`/spaces/${space.id}`}
@@ -132,7 +135,7 @@ export default function Sidebar({ collapsed = false, onToggle, dark = false }: S
                     width: 7,
                     height: 7,
                     borderRadius: "50%",
-                    background: space.color,
+                    background: space.color ?? "var(--text-muted)",
                     flexShrink: 0,
                   }}
                 />
@@ -142,11 +145,11 @@ export default function Sidebar({ collapsed = false, onToggle, dark = false }: S
                       {space.name}
                     </span>
                     <span style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
-                      {space.isShared && (
+                      {space.space_members.length > 1 && (
                         <span style={{ display: "flex", gap: 1 }}>
-                          {space.collaborators.slice(0, 2).map((c) => (
+                          {space.space_members.slice(0, 2).map((m) => (
                             <span
-                              key={c.id}
+                              key={m.user_id}
                               style={{
                                 width: 14,
                                 height: 14,
@@ -160,14 +163,9 @@ export default function Sidebar({ collapsed = false, onToggle, dark = false }: S
                                 fontWeight: 500,
                               }}
                             >
-                              {c.avatar}
+                              {m.profiles.display_name?.[0] ?? "?"}
                             </span>
                           ))}
-                        </span>
-                      )}
-                      {space.isSyncing && (
-                        <span style={{ color: "var(--accent)", opacity: 0.7 }}>
-                          <SyncIcon />
                         </span>
                       )}
                     </span>

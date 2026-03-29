@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { mockBookmarks, mockSpaces } from "../data/mock";
+
+import { useSearch, useBookmarks, toBookmark } from "../api/hooks";
+import type { SearchBookmark } from "../api/hooks";
 
 interface GlobalSearchProps {
   open: boolean;
@@ -11,6 +13,12 @@ export default function GlobalSearch({ open, onClose, onSelect }: GlobalSearchPr
   const [query, setQuery] = useState("");
   const [visible, setVisible] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const { data: searchData } = useSearch({ q: query.trim() });
+  const { data: recentData } = useBookmarks({ limit: 3 });
+
+  const results: SearchBookmark[] = query.trim().length > 0 ? (searchData?.data ?? []) : [];
+  const recentBookmarks = (recentData?.data ?? []).map(toBookmark);
 
   useEffect(() => {
     if (open) {
@@ -28,14 +36,6 @@ export default function GlobalSearch({ open, onClose, onSelect }: GlobalSearchPr
     setVisible(false);
     setTimeout(onClose, 200);
   };
-
-  const results = query.trim().length > 1
-    ? mockBookmarks.filter((b) =>
-        (b.title ?? "").toLowerCase().includes(query.toLowerCase()) ||
-        b.summary?.toLowerCase().includes(query.toLowerCase()) ||
-        b.domain?.toLowerCase().includes(query.toLowerCase())
-      )
-    : [];
 
   const overlayStyle: React.CSSProperties = {
     position: "fixed",
@@ -67,7 +67,10 @@ export default function GlobalSearch({ open, onClose, onSelect }: GlobalSearchPr
 
   if (!open && !visible) return null;
 
-  const getSpace = (spaceId: string) => mockSpaces.find((s) => s.id === spaceId);
+  const getSpaceFromResult = (b: SearchBookmark) => {
+    const join = b.bookmark_spaces?.[0];
+    return join ? { name: join.spaces.name, color: "var(--text-muted)" } : null;
+  };
 
   return (
     <div style={overlayStyle} onClick={handleClose}>
@@ -124,7 +127,8 @@ export default function GlobalSearch({ open, onClose, onSelect }: GlobalSearchPr
         {query && results.length > 0 && (
           <div style={{ maxHeight: 360, overflowY: "auto" }}>
             {results.map((b, i) => {
-              const space = getSpace(b.spaceId);
+              const space = getSpaceFromResult(b);
+              const domain = b.url ? new URL(b.url).hostname.replace("www.", "") : undefined;
               return (
                 <button
                   key={b.id}
@@ -149,7 +153,6 @@ export default function GlobalSearch({ open, onClose, onSelect }: GlobalSearchPr
                     <p
                       style={{
                         fontFamily: "var(--font-display)",
-                        fontStyle: b.isArticle ? "italic" : "normal",
                         fontWeight: 500,
                         fontSize: 14,
                         color: "var(--text-primary)",
@@ -161,7 +164,7 @@ export default function GlobalSearch({ open, onClose, onSelect }: GlobalSearchPr
                     >
                       {b.title}
                     </p>
-                    {b.summary && (
+                    {b.description && (
                       <p
                         style={{
                           fontSize: 12,
@@ -171,7 +174,7 @@ export default function GlobalSearch({ open, onClose, onSelect }: GlobalSearchPr
                           whiteSpace: "nowrap",
                         }}
                       >
-                        {b.summary}
+                        {b.description}
                       </p>
                     )}
                   </div>
@@ -196,7 +199,7 @@ export default function GlobalSearch({ open, onClose, onSelect }: GlobalSearchPr
                         {space.name}
                       </span>
                     )}
-                    <span className="text-meta">{b.domain}</span>
+                    {domain && <span className="text-meta">{domain}</span>}
                   </div>
                 </button>
               );
@@ -206,14 +209,14 @@ export default function GlobalSearch({ open, onClose, onSelect }: GlobalSearchPr
 
         {query && results.length === 0 && (
           <div style={{ padding: "28px 16px", textAlign: "center", color: "var(--text-muted)", fontSize: 13 }}>
-            No results for <em>"{query}"</em> — try a broader search.
+            No results for <em>&quot;{query}&quot;</em> — try a broader search.
           </div>
         )}
 
         {!query && (
           <div style={{ padding: "20px 16px" }}>
             <p className="text-label" style={{ color: "var(--text-muted)", marginBottom: 10 }}>Recent</p>
-            {mockBookmarks.slice(0, 3).map((b) => (
+            {recentBookmarks.map((b) => (
               <button
                 key={b.id}
                 onClick={() => { onSelect(b.id); handleClose(); }}

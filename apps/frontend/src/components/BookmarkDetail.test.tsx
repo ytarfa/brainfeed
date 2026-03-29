@@ -1,0 +1,187 @@
+import React from "react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
+import BookmarkDetail from "./BookmarkDetail";
+import type { Bookmark } from "@brain-feed/types";
+
+function createMockBookmark(overrides: Partial<Bookmark> = {}): Bookmark {
+  return {
+    id: "bk-1",
+    user_id: "user-1",
+    url: "https://example.com/article",
+    title: "Test Bookmark",
+    description: "A test bookmark",
+    notes: "Some notes",
+    thumbnail_url: "https://example.com/thumb.jpg",
+    content_type: "link",
+    source_type: "github",
+    tags: [{ id: "t1", label: "React" }, { id: "t2", label: "TypeScript" }],
+    raw_content: null,
+    metadata: null,
+    embedding: null,
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
+    spaceId: "space-1",
+    domain: "example.com",
+    summary: "A short summary of the bookmark",
+    savedAt: "3 min ago",
+    isArticle: false,
+    ...overrides,
+  } as Bookmark;
+}
+
+describe("BookmarkDetail", () => {
+  let rafSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    rafSpy = vi.spyOn(window, "requestAnimationFrame").mockImplementation((cb) => {
+      cb(0);
+      return 0;
+    });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    rafSpy.mockRestore();
+  });
+
+  it("returns null when bookmark is null", () => {
+    const { container } = render(<BookmarkDetail bookmark={null} onClose={vi.fn()} />);
+    expect(container.innerHTML).toBe("");
+  });
+
+  it("renders bookmark title", () => {
+    render(<BookmarkDetail bookmark={createMockBookmark()} onClose={vi.fn()} />);
+    expect(screen.getByText("Test Bookmark")).toBeInTheDocument();
+  });
+
+  it("renders bookmark domain and savedAt", () => {
+    render(<BookmarkDetail bookmark={createMockBookmark()} onClose={vi.fn()} />);
+    expect(screen.getByText(/example\.com/)).toBeInTheDocument();
+    expect(screen.getByText(/3 min ago/)).toBeInTheDocument();
+  });
+
+  it("renders summary section when bookmark has summary", () => {
+    render(<BookmarkDetail bookmark={createMockBookmark()} onClose={vi.fn()} />);
+    expect(screen.getByText("Summary")).toBeInTheDocument();
+    expect(screen.getByText("A short summary of the bookmark")).toBeInTheDocument();
+  });
+
+  it("does NOT render summary section when bookmark has no summary", () => {
+    render(
+      <BookmarkDetail bookmark={createMockBookmark({ summary: undefined })} onClose={vi.fn()} />,
+    );
+    expect(screen.queryByText("Summary")).not.toBeInTheDocument();
+  });
+
+  it("renders tags", () => {
+    render(<BookmarkDetail bookmark={createMockBookmark()} onClose={vi.fn()} />);
+    expect(screen.getByText("React")).toBeInTheDocument();
+    expect(screen.getByText("TypeScript")).toBeInTheDocument();
+  });
+
+  it("renders 'Add tag' button", () => {
+    render(<BookmarkDetail bookmark={createMockBookmark()} onClose={vi.fn()} />);
+    expect(screen.getByText("+ Add tag")).toBeInTheDocument();
+  });
+
+  it("renders space badge when spaceName provided", () => {
+    render(
+      <BookmarkDetail
+        bookmark={createMockBookmark()}
+        onClose={vi.fn()}
+        spaceName="Dev Tools"
+        spaceColor="#d4845a"
+      />,
+    );
+    expect(screen.getByText("Dev Tools")).toBeInTheDocument();
+  });
+
+  it("does NOT render space badge when spaceName omitted", () => {
+    render(<BookmarkDetail bookmark={createMockBookmark()} onClose={vi.fn()} />);
+    // The "Space" label is always present but the space name badge should not be
+    expect(screen.queryByText("Dev Tools")).not.toBeInTheDocument();
+  });
+
+  it("renders notes textarea with bookmark notes value", () => {
+    render(<BookmarkDetail bookmark={createMockBookmark()} onClose={vi.fn()} />);
+    const textarea = screen.getByPlaceholderText("Add a note…");
+    expect(textarea).toBeInTheDocument();
+    expect(textarea).toHaveValue("Some notes");
+  });
+
+  it("renders 'Open original source' link when bookmark has url", () => {
+    render(<BookmarkDetail bookmark={createMockBookmark()} onClose={vi.fn()} />);
+    const link = screen.getByText("Open original source");
+    expect(link).toBeInTheDocument();
+    expect(link.closest("a")).toHaveAttribute("href", "https://example.com/article");
+    expect(link.closest("a")).toHaveAttribute("target", "_blank");
+  });
+
+  it("does NOT render 'Open original source' link when url is null", () => {
+    render(
+      <BookmarkDetail bookmark={createMockBookmark({ url: null })} onClose={vi.fn()} />,
+    );
+    expect(screen.queryByText("Open original source")).not.toBeInTheDocument();
+  });
+
+  it("renders thumbnail when bookmark has thumbnail_url", () => {
+    const { container } = render(
+      <BookmarkDetail bookmark={createMockBookmark()} onClose={vi.fn()} />,
+    );
+    const img = container.querySelector("img");
+    expect(img).toBeInTheDocument();
+    expect(img).toHaveAttribute("src", "https://example.com/thumb.jpg");
+  });
+
+  it("does NOT render thumbnail when thumbnail_url is null", () => {
+    const { container } = render(
+      <BookmarkDetail
+        bookmark={createMockBookmark({ thumbnail_url: null })}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(container.querySelector("img")).not.toBeInTheDocument();
+  });
+
+  it("close button triggers onClose after 280ms setTimeout", () => {
+    const onClose = vi.fn();
+    render(<BookmarkDetail bookmark={createMockBookmark()} onClose={onClose} />);
+
+    // Find the close button — it's the button containing the CloseIcon SVG
+    const buttons = screen.getAllByRole("button");
+    // The close button is the one in the header, not "+ Add tag"
+    const closeButton = buttons.find(
+      (btn) => btn.querySelector("svg") && btn.textContent === "",
+    )!;
+    fireEvent.click(closeButton);
+
+    // Not called immediately
+    expect(onClose).not.toHaveBeenCalled();
+
+    // Called after 280ms timeout
+    act(() => {
+      vi.advanceTimersByTime(280);
+    });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("overlay click triggers onClose after 280ms setTimeout", () => {
+    const onClose = vi.fn();
+    const { container } = render(
+      <BookmarkDetail bookmark={createMockBookmark()} onClose={onClose} />,
+    );
+
+    // The overlay is the first div (with position: fixed, inset: 0)
+    const overlay = container.querySelector("div[style*='inset']") as HTMLElement;
+    expect(overlay).toBeTruthy();
+    fireEvent.click(overlay);
+
+    expect(onClose).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(280);
+    });
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import type { Bookmark } from "../data/mock";
-import { mockSpaces } from "../data/mock";
+import type { Bookmark } from "@brain-feed/types";
 
 interface BookmarkDetailProps {
   bookmark: Bookmark | null;
   onClose: () => void;
+  spaceName?: string;
+  spaceColor?: string;
 }
 
 const CloseIcon = () => (
@@ -20,7 +21,7 @@ const ExternalIcon = () => (
   </svg>
 );
 
-export default function BookmarkDetail({ bookmark, onClose }: BookmarkDetailProps) {
+export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColor }: BookmarkDetailProps) {
   const [notes, setNotes] = useState("");
   const [visible, setVisible] = useState(false);
 
@@ -68,8 +69,6 @@ export default function BookmarkDetail({ bookmark, onClose }: BookmarkDetailProp
   };
 
   if (!bookmark) return null;
-
-  const space = mockSpaces.find((s) => s.id === bookmark.spaceId);
 
   const renderMetadata = () => {
     if (!bookmark.metadata) return null;
@@ -240,7 +239,7 @@ export default function BookmarkDetail({ bookmark, onClose }: BookmarkDetailProp
           {/* Space */}
           <div style={{ marginBottom: 16 }}>
             <p className="text-label" style={{ marginBottom: 8, color: "var(--text-muted)" }}>Space</p>
-            {space && (
+            {spaceName && (
               <div
                 style={{
                   display: "inline-flex",
@@ -256,8 +255,8 @@ export default function BookmarkDetail({ bookmark, onClose }: BookmarkDetailProp
                   cursor: "pointer",
                 }}
               >
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: space.color }} />
-                {space.name}
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: spaceColor ?? "var(--text-muted)" }} />
+                {spaceName}
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ marginLeft: 2 }}>
                   <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
                 </svg>

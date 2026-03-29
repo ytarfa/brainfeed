@@ -1,12 +1,23 @@
-import React, { useState } from "react";
-import { mockUser } from "../data/mock";
+import React, { useState, useEffect } from "react";
+
+import { useProfile, useUpdateProfile, useDeleteAccount } from "../api/hooks";
 
 type Tab = "profile" | "accounts" | "notifications" | "danger";
 
 export default function UserSettings() {
+  const { data: profile, isLoading } = useProfile();
+  const updateProfile = useUpdateProfile();
+  const deleteAccount = useDeleteAccount();
   const [tab, setTab] = useState<Tab>("profile");
-  const [name, setName] = useState(mockUser.name);
-  const [email, setEmail] = useState(mockUser.email);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+
+  useEffect(() => {
+    if (profile) {
+      setName(profile.display_name ?? "");
+      setEmail(profile.email ?? "");
+    }
+  }, [profile]);
 
   const tabs: { label: string; value: Tab }[] = [
     { label: "Profile", value: "profile" },
@@ -39,6 +50,16 @@ export default function UserSettings() {
     textTransform: "uppercase",
     color: "var(--text-secondary)",
   };
+
+  if (isLoading) {
+    return (
+      <div style={{ padding: "24px 24px", maxWidth: 740 }}>
+        <p style={{ color: "var(--text-muted)" }}>Loading settings...</p>
+      </div>
+    );
+  }
+
+  const avatarInitial = (profile?.display_name ?? "?")[0]?.toUpperCase() ?? "?";
 
   return (
     <div style={{ padding: "24px 24px", maxWidth: 740, animation: "fadeIn 240ms both" }}>
@@ -100,11 +121,11 @@ export default function UserSettings() {
                     flexShrink: 0,
                   }}
                 >
-                  {mockUser.avatar}
+                  {avatarInitial}
                 </div>
                 <div>
                   <p style={{ fontSize: 14, fontWeight: 500, color: "var(--text-primary)", marginBottom: 3 }}>
-                    {mockUser.name}
+                    {profile?.display_name ?? ""}
                   </p>
                   <button
                     style={{
@@ -145,6 +166,7 @@ export default function UserSettings() {
                 />
               </div>
               <button
+                onClick={() => updateProfile.mutate({ display_name: name })}
                 style={{
                   height: 36,
                   padding: "0 18px",
@@ -173,9 +195,9 @@ export default function UserSettings() {
               </p>
               {[
                 { icon: "G", label: "Google", connected: true, color: "#4285F4" },
-                { icon: "▶", label: "YouTube", connected: false, color: "#ff0000" },
-                { icon: "♪", label: "Spotify", connected: false, color: "#1db954" },
-                { icon: "◎", label: "Reddit", connected: false, color: "#ff4500" },
+                { icon: "\u25B6", label: "YouTube", connected: false, color: "#ff0000" },
+                { icon: "\u266A", label: "Spotify", connected: false, color: "#1db954" },
+                { icon: "\u25CE", label: "Reddit", connected: false, color: "#ff4500" },
               ].map((acc) => (
                 <div
                   key={acc.label}
@@ -312,6 +334,7 @@ export default function UserSettings() {
                   This permanently deletes your account, all Spaces, and all saved content. This cannot be undone.
                 </p>
                 <button
+                  onClick={() => deleteAccount.mutate()}
                   style={{
                     height: 36,
                     padding: "0 18px",

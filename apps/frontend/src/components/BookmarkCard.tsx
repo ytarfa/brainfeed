@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import type { Bookmark } from "../data/mock";
-import { mockSpaces } from "../data/mock";
+import type { Bookmark } from "@brain-feed/types";
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
   view: "grid" | "list";
   onClick: () => void;
   showSpace?: boolean;
+  spaceName?: string;
+  spaceColor?: string;
   index?: number;
   readonly?: boolean;
 }
@@ -51,11 +52,9 @@ const MoreIcon = () => (
   </svg>
 );
 
-export default function BookmarkCard({ bookmark, view, onClick, showSpace = false, index = 0, readonly = false }: BookmarkCardProps) {
+export default function BookmarkCard({ bookmark, view, onClick, showSpace = false, spaceName, spaceColor, index = 0, readonly = false }: BookmarkCardProps) {
   const [hovered, setHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-
-  const space = mockSpaces.find((s) => s.id === bookmark.spaceId);
   const isArticle = bookmark.isArticle || bookmark.source_type === "paper";
 
   const cardStyle: React.CSSProperties = {
@@ -146,7 +145,7 @@ export default function BookmarkCard({ bookmark, view, onClick, showSpace = fals
           {bookmark.source_type}
         </span>
 
-        {showSpace && space && (
+        {showSpace && spaceName && (
           <span
             style={{
               display: "inline-flex",
@@ -162,8 +161,8 @@ export default function BookmarkCard({ bookmark, view, onClick, showSpace = fals
               color: "var(--text-secondary)",
             }}
           >
-            <span style={{ width: 5, height: 5, borderRadius: "50%", background: space.color, flexShrink: 0 }} />
-            {space.name}
+            <span style={{ width: 5, height: 5, borderRadius: "50%", background: spaceColor ?? "var(--text-muted)", flexShrink: 0 }} />
+            {spaceName}
           </span>
         )}
       </div>
