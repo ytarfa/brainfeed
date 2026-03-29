@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 
 import Logo from "./Logo";
-import { useSpaces } from "../api/hooks";
+import { useSpaces, useDigestSummary } from "../api/hooks";
 import { useAuth } from "../contexts/AuthContext";
 import type { SpaceListItem } from "../api/hooks";
 
@@ -47,6 +47,13 @@ const LibraryIcon = () => (
   </svg>
 );
 
+const DigestIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <rect x="2" y="1.5" width="10" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
+    <path d="M5 5h4M5 7.5h4M5 10h2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+  </svg>
+);
+
 const ChevronIcon = ({ open }: { open: boolean }) => (
   <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms ease" }}>
     <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
@@ -58,7 +65,9 @@ export default function Sidebar({ collapsed = false, onToggle, dark = false }: S
   const { signOut } = useAuth();
   const [spacesOpen, setSpacesOpen] = useState(true);
   const { data: spacesData } = useSpaces();
+  const { data: digestSummary } = useDigestSummary();
   const spaces = spacesData?.data ?? [];
+  const digestCount = digestSummary?.total ?? 0;
 
   const sidebarStyle: React.CSSProperties = {
     width: collapsed ? "var(--sidebar-rail-width)" : "var(--sidebar-width)",
@@ -117,6 +126,55 @@ export default function Sidebar({ collapsed = false, onToggle, dark = false }: S
       >
         <LibraryIcon />
         {!collapsed && <span>Library</span>}
+      </NavLink>
+
+      {/* Digest */}
+      <NavLink
+        to="/digest"
+        style={({ isActive }) => ({
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          padding: collapsed ? "10px 0" : "10px 20px",
+          justifyContent: collapsed ? "center" : "flex-start",
+          color: isActive ? "var(--text-primary)" : "var(--text-secondary)",
+          background: isActive ? "var(--bg-raised)" : "transparent",
+          borderRight: isActive ? "2px solid var(--accent)" : "2px solid transparent",
+          fontSize: 13.5,
+          fontFamily: "var(--font-ui)",
+          fontWeight: isActive ? 500 : 400,
+          textDecoration: "none",
+          transition: "background var(--transition-fast), color var(--transition-fast)",
+          flexShrink: 0,
+        })}
+      >
+        <DigestIcon />
+        {!collapsed && (
+          <>
+            <span style={{ flex: 1 }}>Digest</span>
+            {digestCount > 0 && (
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  minWidth: 16,
+                  height: 16,
+                  padding: "0 4px",
+                  background: "var(--accent)",
+                  color: "#fff",
+                  borderRadius: 16,
+                  fontSize: 9,
+                  fontWeight: 500,
+                  fontFamily: "var(--font-ui)",
+                  flexShrink: 0,
+                }}
+              >
+                {digestCount > 99 ? "99+" : digestCount}
+              </span>
+            )}
+          </>
+        )}
       </NavLink>
 
       {/* Spaces list */}

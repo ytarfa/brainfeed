@@ -215,6 +215,72 @@ export type Database = {
           },
         ]
       }
+      digest_candidates: {
+        Row: {
+          created_at: string
+          description: string | null
+          expires_at: string
+          id: string
+          published_at: string | null
+          source_id: string | null
+          source_name: string
+          source_type: string
+          status: string
+          thumbnail_url: string | null
+          title: string | null
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          expires_at: string
+          id?: string
+          published_at?: string | null
+          source_id?: string | null
+          source_name: string
+          source_type: string
+          status?: string
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          expires_at?: string
+          id?: string
+          published_at?: string | null
+          source_id?: string | null
+          source_name?: string
+          source_type?: string
+          status?: string
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "digest_candidates_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "sync_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "digest_candidates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

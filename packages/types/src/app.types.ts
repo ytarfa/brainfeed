@@ -155,3 +155,16 @@ export interface ActivityEntry extends Tables<"activity_log"> {
 // ---------------------------------------------------------------------------
 
 export type Profile = Tables<"profiles">;
+
+// ---------------------------------------------------------------------------
+// DigestCandidate — derived from digest_candidates row
+// ---------------------------------------------------------------------------
+
+export type DigestCandidateStatus = "active" | "saved" | "dismissed";
+
+export interface DigestCandidate extends Omit<Tables<"digest_candidates">, "source_type" | "status"> {
+  /** digest_candidates.source_type narrowed to known values */
+  source_type: SourceType;
+  /** digest_candidates.status narrowed to known values */
+  status: DigestCandidateStatus;
+}

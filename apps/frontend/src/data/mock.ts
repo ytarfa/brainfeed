@@ -6,6 +6,7 @@ import type {
   Space,
   Bookmark,
   ActivityEntry,
+  DigestCandidate,
 } from "@brain-feed/types";
 
 export type {
@@ -19,6 +20,8 @@ export type {
   Bookmark,
   ActivityEntry,
   Profile,
+  DigestCandidate,
+  DigestCandidateStatus,
 } from "@brain-feed/types";
 
 export const mockCollaborators: Collaborator[] = [
@@ -438,3 +441,148 @@ export const mockUser = {
   email: "yannis@example.com",
   avatar: "Y",
 };
+
+// ---------------------------------------------------------------------------
+// Digest candidates — seeded data for the Digest review flow
+// ---------------------------------------------------------------------------
+
+const inDays = (days: number) => new Date(Date.now() + days * 86_400_000).toISOString();
+const ago = (hours: number) => new Date(Date.now() - hours * 3_600_000).toISOString();
+
+export const mockDigestCandidates: DigestCandidate[] = [
+  // ── YouTube — Fireship ──────────────────────────────────────────────────
+  {
+    id: "dc1",
+    user_id: "u1",
+    source_type: "youtube",
+    source_name: "Fireship",
+    source_id: null,
+    url: "https://youtube.com/watch?v=dQw4w9WgXcQ",
+    title: "God-Tier Developer Roadmap 2025",
+    description: "A mass comparison of every major programming language, framework, and tool you need to know in 2025.",
+    thumbnail_url: "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+    published_at: ago(3),
+    status: "active",
+    expires_at: inDays(12),
+    created_at: ago(2),
+    updated_at: ago(2),
+  },
+  {
+    id: "dc2",
+    user_id: "u1",
+    source_type: "youtube",
+    source_name: "Fireship",
+    source_id: null,
+    url: "https://youtube.com/watch?v=abc456def",
+    title: "10 Weird Algorithms You Didn't Know Existed",
+    description: "From bloom filters to HyperLogLog — obscure data structures that power the modern internet.",
+    thumbnail_url: "https://i.ytimg.com/vi/abc456def/maxresdefault.jpg",
+    published_at: ago(8),
+    status: "active",
+    expires_at: inDays(10),
+    created_at: ago(6),
+    updated_at: ago(6),
+  },
+
+  // ── Reddit — r/programming ─────────────────────────────────────────────
+  {
+    id: "dc3",
+    user_id: "u1",
+    source_type: "reddit",
+    source_name: "r/programming",
+    source_id: null,
+    url: "https://reddit.com/r/programming/comments/xyz/sqlite_is_not_a_toy",
+    title: "SQLite is not a toy database",
+    description: "An in-depth post explaining why SQLite handles far more than most developers give it credit for.",
+    thumbnail_url: null,
+    published_at: ago(5),
+    status: "active",
+    expires_at: inDays(9),
+    created_at: ago(4),
+    updated_at: ago(4),
+  },
+  {
+    id: "dc4",
+    user_id: "u1",
+    source_type: "reddit",
+    source_name: "r/programming",
+    source_id: null,
+    url: "https://reddit.com/r/programming/comments/abc/why_we_moved_to_monorepo",
+    title: "Why we moved back to a monorepo after 3 years of microservices",
+    description: "A war story about complexity, tooling, and the hidden costs of splitting everything up.",
+    thumbnail_url: null,
+    published_at: ago(12),
+    status: "active",
+    expires_at: inDays(7),
+    created_at: ago(10),
+    updated_at: ago(10),
+  },
+  {
+    id: "dc5",
+    user_id: "u1",
+    source_type: "reddit",
+    source_name: "r/programming",
+    source_id: null,
+    url: "https://reddit.com/r/programming/comments/def/bun_vs_deno_vs_node",
+    title: "Bun vs Deno vs Node — runtime benchmarks 2025",
+    description: "Comprehensive benchmarks across HTTP, file I/O, and startup time for the three major JS runtimes.",
+    thumbnail_url: null,
+    published_at: ago(18),
+    status: "active",
+    expires_at: inDays(5),
+    created_at: ago(16),
+    updated_at: ago(16),
+  },
+
+  // ── RSS — Hacker News ──────────────────────────────────────────────────
+  {
+    id: "dc6",
+    user_id: "u1",
+    source_type: "generic",
+    source_name: "Hacker News",
+    source_id: null,
+    url: "https://news.ycombinator.com/item?id=39912345",
+    title: "Show HN: I built a Postgres extension for vector search",
+    description: "A lightweight alternative to pgvector with HNSW indexing and better memory usage.",
+    thumbnail_url: null,
+    published_at: ago(6),
+    status: "active",
+    expires_at: inDays(11),
+    created_at: ago(5),
+    updated_at: ago(5),
+  },
+  {
+    id: "dc7",
+    user_id: "u1",
+    source_type: "generic",
+    source_name: "Hacker News",
+    source_id: null,
+    url: "https://news.ycombinator.com/item?id=39998877",
+    title: "The end of the Redis open-source era",
+    description: "Analysis of Redis Ltd's license change and what it means for the ecosystem.",
+    thumbnail_url: null,
+    published_at: ago(24),
+    status: "active",
+    expires_at: inDays(4),
+    created_at: ago(22),
+    updated_at: ago(22),
+  },
+
+  // ── YouTube — 3Blue1Brown ──────────────────────────────────────────────
+  {
+    id: "dc8",
+    user_id: "u1",
+    source_type: "youtube",
+    source_name: "3Blue1Brown",
+    source_id: null,
+    url: "https://youtube.com/watch?v=3b1b_visual",
+    title: "But what is a transformer? | Chapter 1, Visualizing attention",
+    description: "A visual explanation of how attention mechanisms work inside transformer models.",
+    thumbnail_url: "https://i.ytimg.com/vi/3b1b_visual/maxresdefault.jpg",
+    published_at: ago(48),
+    status: "active",
+    expires_at: inDays(3),
+    created_at: ago(46),
+    updated_at: ago(46),
+  },
+];

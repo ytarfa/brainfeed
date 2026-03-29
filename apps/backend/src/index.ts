@@ -13,6 +13,7 @@ import syncSourcesRouter from "./routes/syncSources";
 import searchRouter from "./routes/search";
 import publicRouter from "./routes/public";
 import settingsRouter from "./routes/settings";
+import digestRouter from "./routes/digest";
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -45,6 +46,7 @@ app.use("/api/v1/spaces/:spaceId/activity", activityRouter);
 app.use("/api/v1/sync-sources", syncSourcesRouter);
 app.use("/api/v1/search", searchRouter);
 app.use("/api/v1/settings", settingsRouter);
+app.use("/api/v1/digest", digestRouter);
 
 app.use(errorHandler);
 

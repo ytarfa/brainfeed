@@ -7,6 +7,7 @@ export { useSyncSources, useCreateSyncSource, useUpdateSyncSource, useDeleteSync
 export { useSearch, searchKeys } from "./useSearch";
 export { useProfile, useUpdateProfile, useDeleteAccount, settingsKeys } from "./useSettings";
 export { usePublicSpace, publicSpaceKeys } from "./usePublicSpace";
+export { useDigest, useDigestSummary, useSaveCandidate, useDismissCandidate, useDismissAll, useDismissGroup, usePurgeExpired, digestKeys, toDigestCandidate } from "./useDigest";
 
 export type { SpaceListItem, SpaceDetailResponse, SpaceMember, BookmarkInSpace } from "./useSpaces";
 export type { RuleRow } from "./useRules";
@@ -16,3 +17,4 @@ export type { SyncSourceRow, SyncSourceWithSpace } from "./useSyncSources";
 export type { SearchBookmark, SearchParams } from "./useSearch";
 export type { ProfileRow } from "./useSettings";
 export type { PublicSpaceResponse, PublicSpaceBookmark } from "./usePublicSpace";
+export type { DigestGroup, DigestSummaryGroup } from "./useDigest";

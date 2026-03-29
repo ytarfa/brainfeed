@@ -21,4 +21,6 @@ export type {
   Bookmark,
   ActivityEntry,
   Profile,
+  DigestCandidate,
+  DigestCandidateStatus,
 } from "./app.types";

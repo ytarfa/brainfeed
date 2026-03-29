@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useNavigate } from "react-router-dom";
 
 import BookmarkCard from "../components/BookmarkCard";
-import { useBookmarks, useSpaces, toBookmark } from "../api/hooks";
+import { useBookmarks, useSpaces, toBookmark, useDigestSummary } from "../api/hooks";
 
 type ContentFilter = "all" | "link" | "note" | "image" | "pdf" | "file";
 type SortOption = "saved" | "title" | "source";
@@ -22,6 +22,8 @@ export default function Library() {
   const { view, onCardClick } = useOutletContext<LayoutContext>();
   const [filter, setFilter] = useState<ContentFilter>("all");
   const [sort, setSort] = useState<SortOption>("saved");
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const navigate = useNavigate();
 
   const { data: bookmarksData, isLoading } = useBookmarks({
     type: filter === "all" ? undefined : filter,
@@ -29,6 +31,7 @@ export default function Library() {
     order: "desc",
   });
   const { data: spacesData } = useSpaces();
+  const { data: digestSummary } = useDigestSummary();
 
   const bookmarks = useMemo(
     () => (bookmarksData?.data ?? []).map(toBookmark),
@@ -38,6 +41,10 @@ export default function Library() {
   const total = bookmarksData?.total ?? bookmarks.length;
 
   const getSpace = (spaceId: string) => spaces.find((s) => s.id === spaceId);
+
+  const digestCount = digestSummary?.total ?? 0;
+  const digestGroups = digestSummary?.groups ?? [];
+  const showBanner = digestCount > 0 && !bannerDismissed;
 
   const filters: { label: string; value: ContentFilter }[] = [
     { label: "All", value: "all" },
@@ -50,6 +57,105 @@ export default function Library() {
 
   return (
     <div style={{ padding: "20px 24px" }}>
+      {/* Digest banner */}
+      {showBanner && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            padding: "12px 16px",
+            background: "var(--accent-subtle)",
+            border: "1px solid var(--terra-100)",
+            borderRadius: 10,
+            marginBottom: 16,
+            animation: "fadeIn 240ms both",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minWidth: 20,
+                height: 20,
+                padding: "0 5px",
+                background: "var(--accent)",
+                color: "#fff",
+                borderRadius: 20,
+                fontSize: 10,
+                fontWeight: 500,
+                fontFamily: "var(--font-ui)",
+                flexShrink: 0,
+              }}
+            >
+              {digestCount}
+            </span>
+            <span
+              style={{
+                fontSize: 13,
+                fontFamily: "var(--font-ui)",
+                color: "var(--text-primary)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              new {digestCount === 1 ? "item" : "items"} in your Digest
+              {digestGroups.length > 0 && (
+                <span style={{ color: "var(--text-muted)", marginLeft: 4 }}>
+                  from {digestGroups.map((g) => g.source_name).join(", ")}
+                </span>
+              )}
+            </span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+            <button
+              onClick={() => navigate("/digest")}
+              style={{
+                height: 28,
+                padding: "0 14px",
+                background: "var(--accent)",
+                border: "none",
+                borderRadius: 6,
+                fontSize: 12,
+                fontFamily: "var(--font-ui)",
+                fontWeight: 500,
+                color: "#fff",
+                cursor: "pointer",
+                transition: "opacity var(--transition-fast)",
+              }}
+            >
+              Review
+            </button>
+            <button
+              onClick={() => setBannerDismissed(true)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 24,
+                height: 24,
+                background: "transparent",
+                border: "none",
+                borderRadius: 4,
+                color: "var(--text-muted)",
+                cursor: "pointer",
+                fontSize: 14,
+                transition: "color var(--transition-fast)",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; }}
+              aria-label="Dismiss banner"
+            >
+              &times;
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <h1

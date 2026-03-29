@@ -295,3 +295,37 @@ create policy "Users can delete own uploads" on storage.objects
     bucket_id = 'user-uploads' and
     (storage.foldername(name))[2] = auth.uid()::text
   );
+
+-- ----------------------
+-- DIGEST CANDIDATES
+-- ----------------------
+create table if not exists public.digest_candidates (
+  id              uuid primary key default gen_random_uuid(),
+  user_id         uuid not null references public.profiles(id) on delete cascade,
+  source_type     text not null,
+  source_name     text not null,
+  source_id       uuid references public.sync_sources(id) on delete set null,
+  url             text not null,
+  title           text,
+  description     text,
+  thumbnail_url   text,
+  published_at    timestamptz,
+  status          text not null default 'active' check (status in ('active', 'saved', 'dismissed')),
+  expires_at      timestamptz not null,
+  created_at      timestamptz not null default now(),
+  updated_at      timestamptz not null default now()
+);
+
+-- Composite index for listing active candidates per user
+create index if not exists digest_candidates_user_status_idx
+  on public.digest_candidates (user_id, status);
+
+-- Index for expiry purge queries
+create index if not exists digest_candidates_expires_at_idx
+  on public.digest_candidates (expires_at);
+
+-- RLS
+alter table public.digest_candidates enable row level security;
+
+create policy "Users can CRUD own digest candidates" on public.digest_candidates
+  for all using (auth.uid() = user_id);

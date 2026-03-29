@@ -25,6 +25,7 @@ import SpaceSettings from "./pages/SpaceSettings";
 import PublicSpace from "./pages/PublicSpace";
 import Onboarding from "./pages/Onboarding";
 import UserSettings from "./pages/UserSettings";
+import DigestPage from "./pages/DigestPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -76,6 +77,7 @@ export default function App() {
             >
               <Route index element={<Navigate to="/library" replace />} />
               <Route path="library" element={<Library />} />
+              <Route path="digest" element={<DigestPage />} />
               <Route path="spaces" element={<AllSpaces />} />
               <Route path="spaces/:id" element={<SpaceView />} />
               <Route path="spaces/:id/settings" element={<SpaceSettings />} />
