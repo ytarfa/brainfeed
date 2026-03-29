@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { X } from "lucide-react";
 
 interface AISuggestionToastProps {
   spaceName: string;
@@ -26,92 +27,42 @@ export default function AISuggestionToast({
     return () => clearTimeout(timer);
   }, [onDismiss]);
 
-  const toastStyle: React.CSSProperties = {
-    position: "fixed",
-    bottom: 24,
-    right: 24,
-    background: "var(--bg-raised)",
-    border: "1px solid var(--border-subtle)",
-    borderRadius: 12,
-    boxShadow: "0 8px 32px rgba(30,28,26,0.14)",
-    padding: "14px 16px",
-    maxWidth: 320,
-    zIndex: 500,
-    transform: visible ? "translateY(0) scale(1)" : "translateY(12px) scale(0.97)",
-    opacity: visible ? 1 : 0,
-    transition: "transform 280ms cubic-bezier(0.32,0.72,0,1), opacity 280ms ease",
-  };
-
   return (
-    <div style={toastStyle}>
-      <p
-        style={{
-          fontSize: 13,
-          fontFamily: "var(--font-ui)",
-          color: "var(--text-secondary)",
-          marginBottom: 12,
-          lineHeight: 1.5,
-        }}
-      >
-        <span style={{ color: "var(--text-muted)", fontSize: 11, display: "block", marginBottom: 3 }}>AI suggestion</span>
+    <div
+      className="fixed bottom-6 right-6 bg-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-xl shadow-[0_8px_32px_rgba(30,28,26,0.14)] py-3.5 px-4 max-w-80 z-[500]"
+      style={{
+        transform: visible ? "translateY(0) scale(1)" : "translateY(12px) scale(0.97)",
+        opacity: visible ? 1 : 0,
+        transition: "transform 280ms cubic-bezier(0.32,0.72,0,1), opacity 280ms ease",
+      }}
+    >
+      <p className="text-[13px] font-ui text-[var(--text-secondary)] mb-3 leading-relaxed">
+        <span className="text-[var(--text-muted)] text-[11px] block mb-0.5">AI suggestion</span>
         Save{" "}
-        <em style={{ fontFamily: "var(--font-display)", fontStyle: "italic", color: "var(--text-primary)" }}>
-          {bookmarkTitle.length > 40 ? bookmarkTitle.slice(0, 40) + "…" : bookmarkTitle}
+        <em className="font-display italic text-[var(--text-primary)]">
+          {bookmarkTitle.length > 40 ? bookmarkTitle.slice(0, 40) + "\u2026" : bookmarkTitle}
         </em>{" "}
         to{" "}
-        <strong style={{ color: "var(--text-primary)", fontWeight: 500 }}>{spaceName}</strong>?
+        <strong className="text-[var(--text-primary)] font-medium">{spaceName}</strong>?
       </p>
-      <div style={{ display: "flex", gap: 6 }}>
+      <div className="flex gap-1.5">
         <button
           onClick={onConfirm}
-          style={{
-            flex: 1,
-            height: 30,
-            background: "var(--accent)",
-            color: "#fff",
-            border: "none",
-            borderRadius: 7,
-            fontSize: 12,
-            fontFamily: "var(--font-ui)",
-            fontWeight: 500,
-            cursor: "pointer",
-          }}
+          className="flex-1 h-[30px] bg-[var(--accent)] text-white border-none rounded-[7px] text-xs font-ui font-medium cursor-pointer transition-colors hover:bg-[var(--terra-600)]"
         >
           Confirm
         </button>
         <button
           onClick={onReassign}
-          style={{
-            flex: 1,
-            height: 30,
-            background: "var(--bg-surface)",
-            color: "var(--text-secondary)",
-            border: "1px solid var(--border-subtle)",
-            borderRadius: 7,
-            fontSize: 12,
-            fontFamily: "var(--font-ui)",
-            cursor: "pointer",
-          }}
+          className="flex-1 h-[30px] bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border-subtle)] rounded-[7px] text-xs font-ui cursor-pointer transition-colors hover:border-[var(--border-strong)]"
         >
           Reassign
         </button>
         <button
           onClick={() => { setVisible(false); setTimeout(onDismiss, 280); }}
-          style={{
-            width: 30,
-            height: 30,
-            background: "transparent",
-            color: "var(--text-muted)",
-            border: "none",
-            borderRadius: 7,
-            fontSize: 14,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
+          className="w-[30px] h-[30px] bg-transparent text-[var(--text-muted)] border-none rounded-[7px] cursor-pointer flex items-center justify-center hover:text-[var(--text-secondary)] transition-colors"
         >
-          ✕
+          <X size={14} />
         </button>
       </div>
     </div>

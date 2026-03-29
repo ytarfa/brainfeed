@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { X, ExternalLink, ChevronDown } from "lucide-react";
+import { cn } from "../lib/utils";
 import type { Bookmark } from "@brain-feed/types";
 
 interface BookmarkDetailProps {
@@ -7,19 +9,6 @@ interface BookmarkDetailProps {
   spaceName?: string;
   spaceColor?: string;
 }
-
-const CloseIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-    <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-  </svg>
-);
-
-const ExternalIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-    <path d="M5 2H2a1 1 0 00-1 1v7a1 1 0 001 1h7a1 1 0 001-1V7" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-    <path d="M8 1h3v3M11 1L6.5 5.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
 
 export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColor }: BookmarkDetailProps) {
   const [notes, setNotes] = useState("");
@@ -39,56 +28,19 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
     setTimeout(onClose, 280);
   };
 
-  // Overlay
-  const overlayStyle: React.CSSProperties = {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(30,28,26,0.3)",
-    backdropFilter: "blur(2px)",
-    zIndex: 200,
-    opacity: visible ? 1 : 0,
-    transition: "opacity 280ms ease",
-    pointerEvents: bookmark ? "all" : "none",
-  };
-
-  const panelStyle: React.CSSProperties = {
-    position: "fixed",
-    top: 0,
-    right: 0,
-    height: "100%",
-    width: "min(480px, 94vw)",
-    background: "var(--bg-base)",
-    borderLeft: "1px solid var(--border-subtle)",
-    boxShadow: "-8px 0 32px rgba(30,28,26,0.08)",
-    zIndex: 201,
-    display: "flex",
-    flexDirection: "column",
-    transform: visible ? "translateX(0)" : "translateX(100%)",
-    transition: "transform 280ms cubic-bezier(0.32,0.72,0,1)",
-    overflowY: "auto",
-  };
-
   if (!bookmark) return null;
 
   const renderMetadata = () => {
     if (!bookmark.metadata) return null;
     const entries = Object.entries(bookmark.metadata);
     return (
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 16 }}>
+      <div className="mb-4 flex flex-wrap gap-2">
         {entries.map(([key, val]) => (
           <div
             key={key}
-            style={{
-              padding: "4px 10px",
-              background: "var(--bg-surface)",
-              border: "1px solid var(--border-subtle)",
-              borderRadius: 6,
-              fontSize: 11,
-              fontFamily: "var(--font-ui)",
-              color: "var(--text-secondary)",
-            }}
+            className="rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2.5 py-1 font-ui text-[11px] text-[var(--text-secondary)]"
           >
-            <span style={{ textTransform: "capitalize", color: "var(--text-muted)" }}>{key}: </span>
+            <span className="capitalize text-[var(--text-muted)]">{key}: </span>
             {typeof val === "number" ? val.toLocaleString() : val}
           </div>
         ))}
@@ -98,93 +50,60 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
 
   return (
     <>
-      <div style={overlayStyle} onClick={handleClose} />
-      <aside style={panelStyle}>
+      {/* Overlay */}
+      <div
+        className={cn(
+          "fixed inset-0 z-[200] bg-ink-DEFAULT/30 backdrop-blur-sm transition-opacity duration-[280ms]",
+          visible ? "opacity-100" : "opacity-0",
+          bookmark ? "pointer-events-auto" : "pointer-events-none",
+        )}
+        onClick={handleClose}
+      />
+
+      {/* Panel */}
+      <aside
+        className={cn(
+          "fixed top-0 right-0 z-[201] flex h-full w-[min(480px,94vw)] flex-col border-l border-[var(--border-subtle)] bg-[var(--bg-base)] shadow-[-8px_0_32px_rgba(30,28,26,0.08)] transition-transform duration-[280ms] ease-[cubic-bezier(0.32,0.72,0,1)]",
+          visible ? "translate-x-0" : "translate-x-full",
+        )}
+      >
         {/* Header */}
-        <div
-          style={{
-            padding: "16px 20px",
-            borderBottom: "1px solid var(--border-subtle)",
-            display: "flex",
-            alignItems: "flex-start",
-            gap: 12,
-            flexShrink: 0,
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="flex shrink-0 items-start gap-3 border-b border-[var(--border-subtle)] px-5 py-4">
+          <div className="min-w-0 flex-1">
             <h2
-              style={{
-                fontFamily: "var(--font-display)",
-                fontStyle: bookmark.isArticle ? "italic" : "normal",
-                fontWeight: 500,
-                fontSize: 18,
-                lineHeight: 1.3,
-                color: "var(--text-primary)",
-              }}
+              className={cn(
+                "font-display text-lg font-medium leading-[1.3] text-[var(--text-primary)]",
+                bookmark.isArticle && "italic",
+              )}
             >
               {bookmark.title}
             </h2>
-            <p className="text-meta" style={{ marginTop: 4 }}>
+            <p className="text-meta mt-1">
               {bookmark.domain && `${bookmark.domain} · `}{bookmark.savedAt}
             </p>
           </div>
           <button
             onClick={handleClose}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 30,
-              height: 30,
-              borderRadius: 7,
-              color: "var(--text-muted)",
-              flexShrink: 0,
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "var(--bg-surface)";
-              (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "transparent";
-              (e.currentTarget as HTMLElement).style.color = "var(--text-muted)";
-            }}
+            className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[7px] text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
           >
-            <CloseIcon />
+            <X size={14} />
           </button>
         </div>
 
         {/* Body */}
-        <div style={{ flex: 1, padding: "20px", overflowY: "auto" }}>
+        <div className="flex-1 overflow-y-auto p-5">
           {/* Thumbnail */}
           {bookmark.thumbnail_url && (
-            <div
-              style={{
-                width: "100%",
-                height: 180,
-                background: "var(--bg-surface)",
-                borderRadius: 8,
-                marginBottom: 16,
-                overflow: "hidden",
-                border: "1px solid var(--border-subtle)",
-              }}
-            >
-              <img src={bookmark.thumbnail_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <div className="mb-4 h-[180px] w-full overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+              <img src={bookmark.thumbnail_url} alt="" className="h-full w-full object-cover" />
             </div>
           )}
 
           {/* Summary */}
           {bookmark.summary && (
-            <div style={{ marginBottom: 16 }}>
-              <p className="text-label" style={{ marginBottom: 6, color: "var(--text-muted)" }}>Summary</p>
-              <p
-                style={{
-                  fontFamily: "var(--font-ui)",
-                  fontSize: 14,
-                  lineHeight: 1.6,
-                  color: "var(--text-secondary)",
-                  whiteSpace: "pre-line",
-                }}
-              >
+            <div className="mb-4">
+              <p className="text-label mb-1.5 text-[var(--text-muted)]">Summary</p>
+              <p className="whitespace-pre-line font-ui text-sm leading-relaxed text-[var(--text-secondary)]">
                 {bookmark.summary}
               </p>
             </div>
@@ -192,131 +111,67 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
 
           {/* Metadata */}
           {bookmark.metadata && (
-            <div style={{ marginBottom: 16 }}>
-              <p className="text-label" style={{ marginBottom: 8, color: "var(--text-muted)" }}>Details</p>
+            <div className="mb-4">
+              <p className="text-label mb-2 text-[var(--text-muted)]">Details</p>
               {renderMetadata()}
             </div>
           )}
 
           {/* Tags */}
-          <div style={{ marginBottom: 16 }}>
-            <p className="text-label" style={{ marginBottom: 8, color: "var(--text-muted)" }}>Tags</p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          <div className="mb-4">
+            <p className="text-label mb-2 text-[var(--text-muted)]">Tags</p>
+            <div className="flex flex-wrap gap-1.5">
               {bookmark.tags.map((tag) => (
                 <span
                   key={tag.id}
-                  style={{
-                    padding: "3px 10px",
-                    background: "var(--accent-subtle)",
-                    color: "var(--accent-text)",
-                    borderRadius: 20,
-                    fontSize: 11,
-                    fontFamily: "var(--font-ui)",
-                    fontWeight: 500,
-                    cursor: "default",
-                  }}
+                  className="cursor-default rounded-full bg-[var(--accent-subtle)] px-2.5 py-[3px] font-ui text-[11px] font-medium text-[var(--accent-text)]"
                 >
                   {tag.label}
                 </span>
               ))}
-              <button
-                style={{
-                  padding: "3px 10px",
-                  background: "var(--bg-surface)",
-                  border: "1px dashed var(--border-strong)",
-                  color: "var(--text-muted)",
-                  borderRadius: 20,
-                  fontSize: 11,
-                  fontFamily: "var(--font-ui)",
-                  cursor: "pointer",
-                }}
-              >
+              <button className="rounded-full border border-dashed border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 py-[3px] font-ui text-[11px] text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent-text)]">
                 + Add tag
               </button>
             </div>
           </div>
 
           {/* Space */}
-          <div style={{ marginBottom: 16 }}>
-            <p className="text-label" style={{ marginBottom: 8, color: "var(--text-muted)" }}>Space</p>
+          <div className="mb-4">
+            <p className="text-label mb-2 text-[var(--text-muted)]">Space</p>
             {spaceName && (
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "5px 12px",
-                  background: "var(--bg-surface)",
-                  border: "1px solid var(--border-subtle)",
-                  borderRadius: 6,
-                  fontSize: 13,
-                  fontFamily: "var(--font-ui)",
-                  color: "var(--text-primary)",
-                  cursor: "pointer",
-                }}
-              >
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: spaceColor ?? "var(--text-muted)" }} />
+              <div className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-[5px] font-ui text-[13px] text-[var(--text-primary)] hover:border-[var(--border-strong)]">
+                <span
+                  className="h-2 w-2 rounded-full"
+                  style={{ background: spaceColor ?? "var(--text-muted)" }}
+                />
                 {spaceName}
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ marginLeft: 2 }}>
-                  <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-                </svg>
+                <ChevronDown size={10} className="ml-0.5" />
               </div>
             )}
           </div>
 
           {/* Notes */}
-          <div style={{ marginBottom: 16 }}>
-            <p className="text-label" style={{ marginBottom: 8, color: "var(--text-muted)" }}>Notes</p>
+          <div className="mb-4">
+            <p className="text-label mb-2 text-[var(--text-muted)]">Notes</p>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Add a note…"
-              style={{
-                width: "100%",
-                minHeight: 100,
-                padding: "10px 12px",
-                background: "var(--bg-surface)",
-                border: "1px solid var(--border-subtle)",
-                borderRadius: 8,
-                fontSize: 13,
-                fontFamily: "var(--font-ui)",
-                color: "var(--text-primary)",
-                lineHeight: 1.6,
-                resize: "vertical",
-                outline: "none",
-                transition: "border-color var(--transition-fast)",
-              }}
-              onFocus={(e) => ((e.target as HTMLElement).style.borderColor = "var(--border-strong)")}
-              onBlur={(e) => ((e.target as HTMLElement).style.borderColor = "var(--border-subtle)")}
+              placeholder="Add a note..."
+              className="w-full min-h-[100px] resize-y rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-2.5 font-ui text-[13px] leading-relaxed text-[var(--text-primary)] outline-none transition-[border-color] duration-[var(--transition-fast)] placeholder:text-[var(--text-muted)] focus:border-[var(--border-strong)]"
             />
           </div>
         </div>
 
         {/* Footer */}
         {bookmark.url && (
-          <div
-            style={{
-              padding: "12px 20px",
-              borderTop: "1px solid var(--border-subtle)",
-              flexShrink: 0,
-            }}
-          >
+          <div className="shrink-0 border-t border-[var(--border-subtle)] px-5 py-3">
             <a
               href={bookmark.url}
               target="_blank"
               rel="noopener noreferrer"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                fontSize: 13,
-                fontFamily: "var(--font-ui)",
-                color: "var(--accent)",
-                textDecoration: "none",
-                fontWeight: 500,
-              }}
+              className="inline-flex items-center gap-1.5 font-ui text-[13px] font-medium text-[var(--accent)] hover:underline"
             >
-              <ExternalIcon />
+              <ExternalLink size={12} />
               Open original source
             </a>
           </div>

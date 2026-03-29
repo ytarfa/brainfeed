@@ -1,9 +1,19 @@
 import React, { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import {
+  Library,
+  Newspaper,
+  ChevronDown,
+  Plus,
+  Settings,
+  LogOut,
+  RefreshCw,
+} from "lucide-react";
 
 import Logo from "./Logo";
 import { useSpaces, useDigestSummary } from "../api/hooks";
 import { useAuth } from "../contexts/AuthContext";
+import { cn } from "../lib/utils";
 import type { SpaceListItem } from "../api/hooks";
 
 interface SidebarProps {
@@ -11,54 +21,6 @@ interface SidebarProps {
   onToggle?: () => void;
   dark?: boolean;
 }
-
-const SyncIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ animation: "spin 2s linear infinite" }}>
-    <path d="M10.5 6A4.5 4.5 0 1 1 6 1.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-    <path d="M6 1.5 L8 3.5 L6 3.5" fill="currentColor" />
-  </svg>
-);
-
-const PlusIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-    <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-  </svg>
-);
-
-const SettingsIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <circle cx="8" cy="8" r="2.2" stroke="currentColor" strokeWidth="1.3" />
-    <path d="M8 1.5v1.3M8 13.2v1.3M1.5 8h1.3M13.2 8h1.3M3.4 3.4l.9.9M11.7 11.7l.9.9M3.4 12.6l.9-.9M11.7 4.3l.9-.9" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-  </svg>
-);
-
-const LogoutIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-    <path d="M6 14H3.333A1.333 1.333 0 0 1 2 12.667V3.333A1.333 1.333 0 0 1 3.333 2H6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M10.667 11.333 14 8l-3.333-3.333M14 8H6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-const LibraryIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-    <path d="M2 11V4.5L7 2l5 2.5V11" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M2 11h10" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-    <path d="M4.5 11V7h2v4M7.5 11V7h2v4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-const DigestIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-    <rect x="2" y="1.5" width="10" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-    <path d="M5 5h4M5 7.5h4M5 10h2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-  </svg>
-);
-
-const ChevronIcon = ({ open }: { open: boolean }) => (
-  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 200ms ease" }}>
-    <path d="M2.5 4.5L6 8l3.5-3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
 
 export default function Sidebar({ collapsed = false, onToggle, dark = false }: SidebarProps) {
   const navigate = useNavigate();
@@ -69,31 +31,23 @@ export default function Sidebar({ collapsed = false, onToggle, dark = false }: S
   const spaces = spacesData?.data ?? [];
   const digestCount = digestSummary?.total ?? 0;
 
-  const sidebarStyle: React.CSSProperties = {
-    width: collapsed ? "var(--sidebar-rail-width)" : "var(--sidebar-width)",
-    minWidth: collapsed ? "var(--sidebar-rail-width)" : "var(--sidebar-width)",
-    height: "100%",
-    background: "var(--bg-surface)",
-    borderRight: "1px solid var(--border-subtle)",
-    display: "flex",
-    flexDirection: "column",
-    overflow: "hidden",
-    transition: "width var(--transition-slow), min-width var(--transition-slow)",
-    flexShrink: 0,
-  };
-
   return (
-    <aside style={sidebarStyle}>
+    <aside
+      className={cn(
+        "flex h-full shrink-0 flex-col overflow-hidden border-r border-[var(--border-subtle)] bg-[var(--bg-surface)]",
+        "transition-[width,min-width] duration-300 ease-in-out",
+      )}
+      style={{
+        width: collapsed ? "var(--sidebar-rail-width)" : "var(--sidebar-width)",
+        minWidth: collapsed ? "var(--sidebar-rail-width)" : "var(--sidebar-width)",
+      }}
+    >
       {/* Logo */}
       <div
-        style={{
-          padding: collapsed ? "20px 16px" : "20px 20px 16px",
-          borderBottom: "1px solid var(--border-subtle)",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: collapsed ? "center" : "space-between",
-        }}
+        className={cn(
+          "flex cursor-pointer items-center border-b border-[var(--border-subtle)]",
+          collapsed ? "justify-center px-4 py-5" : "justify-between px-5 pb-4 pt-5",
+        )}
         onClick={onToggle}
         title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
@@ -104,72 +58,43 @@ export default function Sidebar({ collapsed = false, onToggle, dark = false }: S
         )}
       </div>
 
-      {/* Library */}
+      {/* Nav links */}
       <NavLink
         to="/library"
-        style={({ isActive }) => ({
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          padding: collapsed ? "10px 0" : "10px 20px",
-          justifyContent: collapsed ? "center" : "flex-start",
-          color: isActive ? "var(--text-primary)" : "var(--text-secondary)",
-          background: isActive ? "var(--bg-raised)" : "transparent",
-          borderRight: isActive ? "2px solid var(--accent)" : "2px solid transparent",
-          fontSize: 13.5,
-          fontFamily: "var(--font-ui)",
-          fontWeight: isActive ? 500 : 400,
-          textDecoration: "none",
-          transition: "background var(--transition-fast), color var(--transition-fast)",
-          flexShrink: 0,
-        })}
+        className={({ isActive }) =>
+          cn(
+            "group flex shrink-0 items-center gap-2 border-r-2 font-ui text-[13.5px] no-underline",
+            "transition-[background,color] duration-[120ms] ease-in-out",
+            collapsed ? "justify-center py-2.5" : "justify-start px-5 py-2.5",
+            isActive
+              ? "border-[var(--accent)] bg-[var(--bg-raised)] font-medium text-[var(--text-primary)]"
+              : "border-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-raised)] hover:text-[var(--text-primary)]",
+          )
+        }
       >
-        <LibraryIcon />
+        <Library size={14} strokeWidth={1.6} />
         {!collapsed && <span>Library</span>}
       </NavLink>
 
-      {/* Digest */}
       <NavLink
         to="/digest"
-        style={({ isActive }) => ({
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          padding: collapsed ? "10px 0" : "10px 20px",
-          justifyContent: collapsed ? "center" : "flex-start",
-          color: isActive ? "var(--text-primary)" : "var(--text-secondary)",
-          background: isActive ? "var(--bg-raised)" : "transparent",
-          borderRight: isActive ? "2px solid var(--accent)" : "2px solid transparent",
-          fontSize: 13.5,
-          fontFamily: "var(--font-ui)",
-          fontWeight: isActive ? 500 : 400,
-          textDecoration: "none",
-          transition: "background var(--transition-fast), color var(--transition-fast)",
-          flexShrink: 0,
-        })}
+        className={({ isActive }) =>
+          cn(
+            "group flex shrink-0 items-center gap-2 border-r-2 font-ui text-[13.5px] no-underline",
+            "transition-[background,color] duration-[120ms] ease-in-out",
+            collapsed ? "justify-center py-2.5" : "justify-start px-5 py-2.5",
+            isActive
+              ? "border-[var(--accent)] bg-[var(--bg-raised)] font-medium text-[var(--text-primary)]"
+              : "border-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-raised)] hover:text-[var(--text-primary)]",
+          )
+        }
       >
-        <DigestIcon />
+        <Newspaper size={14} strokeWidth={1.6} />
         {!collapsed && (
           <>
-            <span style={{ flex: 1 }}>Digest</span>
+            <span className="flex-1">Digest</span>
             {digestCount > 0 && (
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minWidth: 16,
-                  height: 16,
-                  padding: "0 4px",
-                  background: "var(--accent)",
-                  color: "#fff",
-                  borderRadius: 16,
-                  fontSize: 9,
-                  fontWeight: 500,
-                  fontFamily: "var(--font-ui)",
-                  flexShrink: 0,
-                }}
-              >
+              <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] px-1 font-ui text-[9px] font-medium text-white">
                 {digestCount > 99 ? "99+" : digestCount}
               </span>
             )}
@@ -178,97 +103,73 @@ export default function Sidebar({ collapsed = false, onToggle, dark = false }: S
       </NavLink>
 
       {/* Spaces list */}
-      <div style={{ flex: 1, overflowY: "auto", padding: collapsed ? "12px 8px" : "12px 0" }}>
+      <div
+        className={cn(
+          "flex-1 overflow-y-auto",
+          collapsed ? "px-2 py-3" : "py-3",
+        )}
+      >
         {!collapsed && (
           <button
             onClick={() => setSpacesOpen((v) => !v)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              width: "100%",
-              padding: "4px 20px",
-              color: "var(--text-muted)",
-              fontSize: 11,
-              fontFamily: "var(--font-ui)",
-              fontWeight: 500,
-              letterSpacing: "0.06em",
-              textTransform: "uppercase",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              textAlign: "left",
-            }}
+            className="flex w-full cursor-pointer items-center gap-1.5 px-5 py-1 text-left font-ui text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
           >
-            <ChevronIcon open={spacesOpen} />
+            <ChevronDown
+              size={12}
+              strokeWidth={1.8}
+              className={cn(
+                "transition-transform duration-200",
+                !spacesOpen && "-rotate-90",
+              )}
+            />
             Spaces
           </button>
         )}
 
         {(spacesOpen || collapsed) && (
-          <div style={{ marginTop: collapsed ? 0 : 4 }}>
+          <div className={cn(!collapsed && "mt-1")}>
             {spaces.map((space: SpaceListItem, i: number) => (
               <NavLink
                 key={space.id}
                 to={`/spaces/${space.id}`}
-                style={({ isActive }) => ({
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: collapsed ? "9px 0" : "7px 20px",
-                  justifyContent: collapsed ? "center" : "flex-start",
-                  borderRadius: 0,
-                  color: isActive ? "var(--text-primary)" : "var(--text-secondary)",
-                  background: isActive ? "var(--bg-raised)" : "transparent",
-                  borderRight: isActive ? "2px solid var(--accent)" : "2px solid transparent",
-                  fontSize: 13.5,
-                  fontFamily: "var(--font-ui)",
-                  fontWeight: isActive ? 500 : 400,
-                  textDecoration: "none",
-                  transition: "background var(--transition-fast), color var(--transition-fast)",
-                  animation: `fadeIn 200ms ${i * 40}ms both`,
-                })}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-2.5 border-r-2 font-ui text-[13.5px] no-underline",
+                    "transition-[background,color] duration-[120ms] ease-in-out",
+                    collapsed ? "justify-center py-2.5" : "justify-start px-5 py-[7px]",
+                    isActive
+                      ? "border-[var(--accent)] bg-[var(--bg-raised)] font-medium text-[var(--text-primary)]"
+                      : "border-transparent text-[var(--text-secondary)] hover:bg-[var(--bg-raised)] hover:text-[var(--text-primary)]",
+                  )
+                }
+                style={{
+                  animation: `fade-in 200ms ${i * 40}ms both`,
+                }}
               >
                 {/* Color dot */}
                 <span
-                  style={{
-                    width: 7,
-                    height: 7,
-                    borderRadius: "50%",
-                    background: space.color ?? "var(--text-muted)",
-                    flexShrink: 0,
-                  }}
+                  className="h-[7px] w-[7px] shrink-0 rounded-full"
+                  style={{ background: space.color ?? "var(--text-muted)" }}
                 />
                 {!collapsed && (
                   <>
-                    <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
                       {space.name}
                     </span>
-                    <span style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
-                      {space.space_members.length > 1 && (
-                        <span style={{ display: "flex", gap: 1 }}>
+                    {space.space_members.length > 1 && (
+                      <span className="flex shrink-0 items-center gap-1">
+                        <span className="flex gap-px">
                           {space.space_members.slice(0, 2).map((m) => (
                             <span
                               key={m.user_id}
-                              style={{
-                                width: 14,
-                                height: 14,
-                                borderRadius: "50%",
-                                background: "var(--sand-oat)",
-                                color: "var(--text-secondary)",
-                                fontSize: 8,
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                fontWeight: 500,
-                              }}
+                              className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-sand-oat text-[8px] font-medium text-[var(--text-secondary)]"
                             >
                               {m.profiles.display_name?.[0] ?? "?"}
                             </span>
                           ))}
                         </span>
-                      )}
-                    </span>
+                      </span>
+                    )}
                   </>
                 )}
               </NavLink>
@@ -279,90 +180,45 @@ export default function Sidebar({ collapsed = false, onToggle, dark = false }: S
 
       {/* Bottom actions */}
       <div
-        style={{
-          borderTop: "1px solid var(--border-subtle)",
-          padding: collapsed ? "12px 8px" : "12px 12px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-        }}
+        className={cn(
+          "flex flex-col gap-0.5 border-t border-[var(--border-subtle)]",
+          collapsed ? "px-2 py-3" : "px-3 py-3",
+        )}
       >
         <button
           onClick={() => navigate("/spaces")}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: collapsed ? "8px" : "8px 10px",
-            justifyContent: collapsed ? "center" : "flex-start",
-            borderRadius: 6,
-            color: "var(--text-secondary)",
-            fontSize: 13,
-            fontFamily: "var(--font-ui)",
-            transition: "background var(--transition-fast), color var(--transition-fast)",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "var(--bg-raised)";
-            (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "transparent";
-            (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
-          }}
+          className={cn(
+            "flex items-center gap-2 rounded-md font-ui text-[13px] text-[var(--text-secondary)]",
+            "transition-[background,color] duration-[120ms] ease-in-out",
+            "hover:bg-[var(--bg-raised)] hover:text-[var(--text-primary)]",
+            collapsed ? "justify-center p-2" : "justify-start px-2.5 py-2",
+          )}
         >
-          <PlusIcon />
+          <Plus size={14} strokeWidth={1.8} />
           {!collapsed && <span>New Space</span>}
         </button>
         <button
           onClick={() => navigate("/settings")}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: collapsed ? "8px" : "8px 10px",
-            justifyContent: collapsed ? "center" : "flex-start",
-            borderRadius: 6,
-            color: "var(--text-secondary)",
-            fontSize: 13,
-            fontFamily: "var(--font-ui)",
-            transition: "background var(--transition-fast), color var(--transition-fast)",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "var(--bg-raised)";
-            (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "transparent";
-            (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
-          }}
+          className={cn(
+            "flex items-center gap-2 rounded-md font-ui text-[13px] text-[var(--text-secondary)]",
+            "transition-[background,color] duration-[120ms] ease-in-out",
+            "hover:bg-[var(--bg-raised)] hover:text-[var(--text-primary)]",
+            collapsed ? "justify-center p-2" : "justify-start px-2.5 py-2",
+          )}
         >
-          <SettingsIcon />
+          <Settings size={16} strokeWidth={1.4} />
           {!collapsed && <span>Settings</span>}
         </button>
         <button
           onClick={signOut}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: collapsed ? "8px" : "8px 10px",
-            justifyContent: collapsed ? "center" : "flex-start",
-            borderRadius: 6,
-            color: "var(--text-secondary)",
-            fontSize: 13,
-            fontFamily: "var(--font-ui)",
-            transition: "background var(--transition-fast), color var(--transition-fast)",
-          }}
-          onMouseEnter={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "var(--bg-raised)";
-            (e.currentTarget as HTMLElement).style.color = "var(--text-primary)";
-          }}
-          onMouseLeave={(e) => {
-            (e.currentTarget as HTMLElement).style.background = "transparent";
-            (e.currentTarget as HTMLElement).style.color = "var(--text-secondary)";
-          }}
+          className={cn(
+            "flex items-center gap-2 rounded-md font-ui text-[13px] text-[var(--text-secondary)]",
+            "transition-[background,color] duration-[120ms] ease-in-out",
+            "hover:bg-[var(--bg-raised)] hover:text-[var(--text-primary)]",
+            collapsed ? "justify-center p-2" : "justify-start px-2.5 py-2",
+          )}
         >
-          <LogoutIcon />
+          <LogOut size={16} strokeWidth={1.4} />
           {!collapsed && <span>Sign out</span>}
         </button>
       </div>

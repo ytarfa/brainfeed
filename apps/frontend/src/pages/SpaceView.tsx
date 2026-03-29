@@ -1,5 +1,7 @@
 import React, { useMemo } from "react";
 import { useParams, Link, useOutletContext } from "react-router-dom";
+import { Settings, Diamond } from "lucide-react";
+import { cn } from "../lib/utils";
 
 import BookmarkCard from "../components/BookmarkCard";
 import ActivityLog from "../components/ActivityLog";
@@ -28,82 +30,56 @@ export default function SpaceView() {
 
   if (spaceLoading) {
     return (
-      <div style={{ padding: 40, textAlign: "center" }}>
-        <p style={{ color: "var(--text-muted)" }}>Loading space...</p>
+      <div className="p-10 text-center">
+        <p className="text-[var(--text-muted)]">Loading space...</p>
       </div>
     );
   }
 
   if (!space) {
     return (
-      <div style={{ padding: 40, textAlign: "center" }}>
-        <p style={{ color: "var(--text-muted)" }}>Space not found.</p>
+      <div className="p-10 text-center">
+        <p className="text-[var(--text-muted)]">Space not found.</p>
       </div>
     );
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-      <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
+    <div className="flex h-full flex-col">
+      <div className="flex-1 overflow-y-auto px-6 py-5">
         {/* Space header */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            marginBottom: 24,
-            gap: 16,
-            animation: "fadeIn 240ms both",
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+        <div className="mb-6 flex items-start justify-between gap-4 animate-fade-in">
+          <div className="min-w-0 flex-1">
+            <div className="mb-1.5 flex items-center gap-2.5">
               <span
-                style={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: "50%",
-                  background: space.color ?? "var(--text-muted)",
-                  flexShrink: 0,
-                }}
+                className="h-3 w-3 shrink-0 rounded-full"
+                style={{ background: space.color ?? "var(--text-muted)" }}
               />
-              <h1 className="text-display" style={{ color: "var(--text-primary)" }}>
-                {space.name}
-              </h1>
+              <h1 className="text-display text-[var(--text-primary)]">{space.name}</h1>
             </div>
             {space.description && (
-              <p className="text-body" style={{ color: "var(--text-secondary)", maxWidth: 560 }}>
+              <p className="text-body max-w-[560px] text-[var(--text-secondary)]">
                 {space.description}
               </p>
             )}
-            <p className="text-meta" style={{ marginTop: 6 }}>
+            <p className="text-meta mt-1.5">
               {itemCount} items
               {memberCount > 1 && ` \u00B7 shared with ${memberCount - 1} others`}
             </p>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <div className="flex shrink-0 items-center gap-2">
             {/* Collaborator avatars */}
             {memberCount > 1 && (
-              <div style={{ display: "flex" }}>
+              <div className="flex">
                 {space.space_members.slice(0, 3).map((m, i) => (
                   <div
                     key={m.user_id}
                     title={m.profiles.display_name}
+                    className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-[var(--bg-base)] font-ui text-[11px] font-medium text-white"
                     style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: "50%",
                       background: `hsl(${(m.user_id.charCodeAt(1) * 37) % 360}, 40%, 55%)`,
-                      color: "#fff",
-                      fontSize: 11,
-                      fontWeight: 500,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      border: "2px solid var(--bg-base)",
                       marginLeft: i > 0 ? -8 : 0,
-                      fontFamily: "var(--font-ui)",
                     }}
                   >
                     {m.profiles.display_name?.[0]?.toUpperCase() ?? "?"}
@@ -114,26 +90,9 @@ export default function SpaceView() {
 
             <Link
               to={`/spaces/${id}/settings`}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                height: 30,
-                padding: "0 12px",
-                background: "var(--bg-surface)",
-                border: "1px solid var(--border-subtle)",
-                borderRadius: 7,
-                fontSize: 12,
-                fontFamily: "var(--font-ui)",
-                color: "var(--text-secondary)",
-                textDecoration: "none",
-                transition: "border-color var(--transition-fast)",
-              }}
+              className="flex h-[30px] items-center gap-[5px] rounded-[7px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 font-ui text-xs text-[var(--text-secondary)] no-underline transition-[border-color] duration-[var(--transition-fast)] hover:border-[var(--border-strong)]"
             >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <circle cx="6" cy="6" r="2" stroke="currentColor" strokeWidth="1.3" />
-                <path d="M6 1v1M6 10v1M1 6h1M10 6h1M2.4 2.4l.7.7M8.9 8.9l.7.7M2.4 9.6l.7-.7M8.9 3.1l.7-.7" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
-              </svg>
+              <Settings size={12} />
               Settings
             </Link>
           </div>
@@ -141,61 +100,21 @@ export default function SpaceView() {
 
         {/* Empty state */}
         {bookmarks.length === 0 && (
-          <div style={{ textAlign: "center", padding: "60px 24px", animation: "fadeIn 320ms both" }}>
-            <div
-              style={{
-                width: 56,
-                height: 56,
-                background: "var(--bg-surface)",
-                borderRadius: 14,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto 16px",
-                fontSize: 24,
-                color: "var(--accent)",
-              }}
-            >
-              \u25C8
+          <div className="animate-fade-in py-[60px] text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-[14px] bg-[var(--bg-surface)] text-2xl text-[var(--accent)]">
+              <Diamond size={24} />
             </div>
-            <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 500, fontSize: 18, marginBottom: 8 }}>
-              This Space is empty
-            </h3>
-            <p style={{ fontSize: 13, color: "var(--text-muted)", maxWidth: 280, margin: "0 auto 20px" }}>
+            <h3 className="mb-2 font-display text-lg font-medium">This Space is empty</h3>
+            <p className="mx-auto mb-5 max-w-[280px] text-[13px] text-[var(--text-muted)]">
               Add a bookmark or connect a sync source to start filling this Space.
             </p>
-            <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-              <button
-                style={{
-                  height: 34,
-                  padding: "0 16px",
-                  background: "var(--accent)",
-                  border: "none",
-                  borderRadius: 7,
-                  fontSize: 13,
-                  fontFamily: "var(--font-ui)",
-                  fontWeight: 500,
-                  color: "#fff",
-                  cursor: "pointer",
-                }}
-              >
+            <div className="flex justify-center gap-2">
+              <button className="h-[34px] cursor-pointer rounded-[7px] bg-[var(--accent)] px-4 font-ui text-[13px] font-medium text-white hover:bg-terra-600">
                 + Add bookmark
               </button>
               <Link
                 to={`/spaces/${id}/settings`}
-                style={{
-                  height: 34,
-                  padding: "0 16px",
-                  background: "var(--bg-surface)",
-                  border: "1px solid var(--border-subtle)",
-                  borderRadius: 7,
-                  fontSize: 13,
-                  fontFamily: "var(--font-ui)",
-                  color: "var(--text-secondary)",
-                  display: "flex",
-                  alignItems: "center",
-                  textDecoration: "none",
-                }}
+                className="flex h-[34px] items-center rounded-[7px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 font-ui text-[13px] text-[var(--text-secondary)] no-underline hover:border-[var(--border-strong)]"
               >
                 Connect sync source
               </Link>
@@ -205,12 +124,11 @@ export default function SpaceView() {
 
         {/* Cards */}
         <div
-          style={{
-            display: view === "grid" ? "grid" : "flex",
-            gridTemplateColumns: view === "grid" ? "repeat(auto-fill, minmax(260px, 1fr))" : undefined,
-            flexDirection: view === "list" ? "column" : undefined,
-            gap: view === "grid" ? 14 : 8,
-          }}
+          className={cn(
+            view === "grid"
+              ? "grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3.5"
+              : "flex flex-col gap-2",
+          )}
         >
           {bookmarks.map((bookmark, i) => (
             <BookmarkCard

@@ -15,35 +15,17 @@ export default function PublicSpace() {
 
   if (isLoading) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          background: "var(--bg-base)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <p style={{ color: "var(--text-muted)", fontSize: 14 }}>Loading...</p>
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
+        <p className="text-[var(--text-muted)] text-sm">Loading...</p>
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          background: "var(--bg-base)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-          gap: 12,
-        }}
-      >
+      <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center flex-col gap-3">
         <Logo variant="mark" size="lg" />
-        <p style={{ color: "var(--text-muted)", fontSize: 14 }}>This Space doesn&apos;t exist or the link has been revoked.</p>
+        <p className="text-[var(--text-muted)] text-sm">This Space doesn&apos;t exist or the link has been revoked.</p>
       </div>
     );
   }
@@ -79,71 +61,33 @@ export default function PublicSpace() {
   const detail = detailBookmark ? toDisplayBookmark(detailBookmark) : null;
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-base)" }}>
+    <div className="min-h-screen bg-[var(--bg-base)]">
       {/* Minimal top bar */}
-      <header
-        style={{
-          height: 52,
-          borderBottom: "1px solid var(--border-subtle)",
-          display: "flex",
-          alignItems: "center",
-          padding: "0 24px",
-          gap: 12,
-        }}
-      >
+      <header className="h-[52px] border-b border-[var(--border-subtle)] flex items-center px-6 gap-3">
         <Logo variant="full" size="sm" />
-        <div
-          style={{
-            marginLeft: "auto",
-            padding: "3px 10px",
-            background: "var(--bg-surface)",
-            border: "1px solid var(--border-subtle)",
-            borderRadius: 20,
-            fontSize: 11,
-            fontFamily: "var(--font-ui)",
-            color: "var(--text-muted)",
-            fontWeight: 500,
-            letterSpacing: "0.04em",
-          }}
-        >
+        <div className="ml-auto py-[3px] px-2.5 bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-full text-[11px] font-ui text-[var(--text-muted)] font-medium tracking-wide">
           Read only
         </div>
       </header>
 
       {/* Space header */}
-      <div
-        style={{
-          maxWidth: 900,
-          margin: "0 auto",
-          padding: "32px 24px 20px",
-          animation: "fadeIn 320ms both",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-          <span style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--accent)" }} />
+      <div className="max-w-[900px] mx-auto pt-8 px-6 pb-5 animate-fade-in">
+        <div className="flex items-center gap-2.5 mb-2">
+          <span className="w-3 h-3 rounded-full bg-[var(--accent)]" />
           <h1 className="text-display">{space.name}</h1>
         </div>
         {space.description && (
-          <p className="text-body" style={{ color: "var(--text-secondary)", maxWidth: 540 }}>
+          <p className="text-body text-[var(--text-secondary)] max-w-[540px]">
             {space.description}
           </p>
         )}
-        <p className="text-meta" style={{ marginTop: 6 }}>
+        <p className="text-meta mt-1.5">
           {bookmarksData.total ?? bookmarks.length} items
         </p>
       </div>
 
       {/* Cards */}
-      <div
-        style={{
-          maxWidth: 900,
-          margin: "0 auto",
-          padding: "0 24px 48px",
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-          gap: 12,
-        }}
-      >
+      <div className="max-w-[900px] mx-auto px-6 pb-12 grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3">
         {bookmarks.map((b, i) => (
           <BookmarkCard
             key={b.id}
@@ -157,18 +101,12 @@ export default function PublicSpace() {
       </div>
 
       {/* Footer */}
-      <footer
-        style={{
-          borderTop: "1px solid var(--border-subtle)",
-          padding: "16px 24px",
-          textAlign: "center",
-        }}
-      >
-        <p style={{ fontSize: 12, color: "var(--text-muted)" }}>
+      <footer className="border-t border-[var(--border-subtle)] py-4 px-6 text-center">
+        <p className="text-xs text-[var(--text-muted)]">
           Curated with{" "}
           <a
             href="/"
-            style={{ color: "var(--accent)", fontWeight: 500, textDecoration: "none" }}
+            className="text-[var(--accent)] font-medium no-underline hover:underline"
           >
             brainfeed
           </a>

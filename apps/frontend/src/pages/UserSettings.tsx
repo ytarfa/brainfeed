@@ -1,8 +1,30 @@
 import React, { useState, useEffect } from "react";
+import { cn } from "../lib/utils";
 
 import { useProfile, useUpdateProfile, useDeleteAccount } from "../api/hooks";
 
 type Tab = "profile" | "accounts" | "notifications" | "danger";
+
+const tabs: { label: string; value: Tab }[] = [
+  { label: "Profile", value: "profile" },
+  { label: "Connected accounts", value: "accounts" },
+  { label: "Notifications", value: "notifications" },
+  { label: "Danger zone", value: "danger" },
+];
+
+const accountsList = [
+  { icon: "G", label: "Google", connected: true, color: "#4285F4" },
+  { icon: "\u25B6", label: "YouTube", connected: false, color: "#ff0000" },
+  { icon: "\u266A", label: "Spotify", connected: false, color: "#1db954" },
+  { icon: "\u25CE", label: "Reddit", connected: false, color: "#ff4500" },
+];
+
+const notificationPrefs = [
+  { label: "AI categorization activity", desc: "When AI adds items to your Spaces", enabled: true },
+  { label: "Sync errors", desc: "When a sync source fails to connect", enabled: true },
+  { label: "Collaborator activity", desc: "When someone joins or edits your Spaces", enabled: false },
+  { label: "Weekly digest", desc: "A summary of what's been saved", enabled: false },
+];
 
 export default function UserSettings() {
   const { data: profile, isLoading } = useProfile();
@@ -19,42 +41,10 @@ export default function UserSettings() {
     }
   }, [profile]);
 
-  const tabs: { label: string; value: Tab }[] = [
-    { label: "Profile", value: "profile" },
-    { label: "Connected accounts", value: "accounts" },
-    { label: "Notifications", value: "notifications" },
-    { label: "Danger zone", value: "danger" },
-  ];
-
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    height: 38,
-    padding: "0 12px",
-    background: "var(--bg-surface)",
-    border: "1px solid var(--border-subtle)",
-    borderRadius: 8,
-    fontSize: 14,
-    fontFamily: "var(--font-ui)",
-    color: "var(--text-primary)",
-    outline: "none",
-    transition: "border-color var(--transition-fast)",
-  };
-
-  const labelStyle: React.CSSProperties = {
-    display: "block",
-    marginBottom: 5,
-    fontSize: 11,
-    fontFamily: "var(--font-ui)",
-    fontWeight: 500,
-    letterSpacing: "0.06em",
-    textTransform: "uppercase",
-    color: "var(--text-secondary)",
-  };
-
   if (isLoading) {
     return (
-      <div style={{ padding: "24px 24px", maxWidth: 740 }}>
-        <p style={{ color: "var(--text-muted)" }}>Loading settings...</p>
+      <div className="max-w-[740px] p-6">
+        <p className="text-[var(--text-muted)]">Loading settings...</p>
       </div>
     );
   }
@@ -62,37 +52,25 @@ export default function UserSettings() {
   const avatarInitial = (profile?.display_name ?? "?")[0]?.toUpperCase() ?? "?";
 
   return (
-    <div style={{ padding: "24px 24px", maxWidth: 740, animation: "fadeIn 240ms both" }}>
-      <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 500, fontSize: 24, marginBottom: 24, color: "var(--text-primary)" }}>
-        Settings
-      </h1>
+    <div className="max-w-[740px] animate-fade-in p-6">
+      <h1 className="mb-6 font-display text-2xl font-medium text-[var(--text-primary)]">Settings</h1>
 
-      <div style={{ display: "flex", gap: 28 }}>
+      <div className="flex gap-7">
         {/* Nav */}
-        <nav style={{ width: 160, flexShrink: 0 }}>
+        <nav className="w-40 shrink-0">
           {tabs.map((t) => (
             <button
               key={t.value}
               onClick={() => setTab(t.value)}
-              style={{
-                display: "block",
-                width: "100%",
-                textAlign: "left",
-                padding: "7px 10px",
-                borderRadius: 7,
-                fontSize: 13,
-                fontFamily: "var(--font-ui)",
-                background: tab === t.value ? "var(--bg-surface)" : "transparent",
-                color: t.value === "danger"
-                  ? tab === t.value ? "var(--color-error)" : "var(--color-error)"
-                  : tab === t.value ? "var(--text-primary)" : "var(--text-secondary)",
-                fontWeight: tab === t.value ? 500 : 400,
-                border: "none",
-                cursor: "pointer",
-                marginBottom: 2,
-                transition: "background var(--transition-fast)",
-                opacity: t.value === "danger" ? 0.75 : 1,
-              }}
+              className={cn(
+                "mb-0.5 block w-full rounded-[7px] px-2.5 py-[7px] text-left font-ui text-[13px] transition-[background] duration-[var(--transition-fast)]",
+                tab === t.value
+                  ? "bg-[var(--bg-surface)] font-medium"
+                  : "bg-transparent",
+                t.value === "danger"
+                  ? "text-error opacity-75"
+                  : tab === t.value ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]",
+              )}
             >
               {t.label}
             </button>
@@ -100,85 +78,45 @@ export default function UserSettings() {
         </nav>
 
         {/* Content */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="min-w-0 flex-1">
           {tab === "profile" && (
             <div>
               {/* Avatar */}
-              <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
-                <div
-                  style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: "50%",
-                    background: "var(--accent)",
-                    color: "#fff",
-                    fontSize: 22,
-                    fontWeight: 500,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontFamily: "var(--font-ui)",
-                    flexShrink: 0,
-                  }}
-                >
+              <div className="mb-6 flex items-center gap-4">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] font-ui text-[22px] font-medium text-white">
                   {avatarInitial}
                 </div>
                 <div>
-                  <p style={{ fontSize: 14, fontWeight: 500, color: "var(--text-primary)", marginBottom: 3 }}>
+                  <p className="mb-0.5 text-sm font-medium text-[var(--text-primary)]">
                     {profile?.display_name ?? ""}
                   </p>
-                  <button
-                    style={{
-                      fontSize: 12,
-                      color: "var(--accent)",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      padding: 0,
-                      fontFamily: "var(--font-ui)",
-                    }}
-                  >
+                  <button className="p-0 font-ui text-xs text-[var(--accent)] hover:underline">
                     Upload photo
                   </button>
                 </div>
               </div>
 
-              <div style={{ marginBottom: 14 }}>
-                <label style={labelStyle}>Name</label>
+              <div className="mb-3.5">
+                <label className="text-label mb-[5px] block text-[var(--text-secondary)]">Name</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  style={inputStyle}
-                  onFocus={(e) => ((e.target as HTMLElement).style.borderColor = "var(--accent)")}
-                  onBlur={(e) => ((e.target as HTMLElement).style.borderColor = "var(--border-subtle)")}
+                  className="h-[38px] w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 font-ui text-sm text-[var(--text-primary)] outline-none transition-[border-color] duration-[var(--transition-fast)] focus:border-[var(--accent)]"
                 />
               </div>
-              <div style={{ marginBottom: 24 }}>
-                <label style={labelStyle}>Email</label>
+              <div className="mb-6">
+                <label className="text-label mb-[5px] block text-[var(--text-secondary)]">Email</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  style={inputStyle}
-                  onFocus={(e) => ((e.target as HTMLElement).style.borderColor = "var(--accent)")}
-                  onBlur={(e) => ((e.target as HTMLElement).style.borderColor = "var(--border-subtle)")}
+                  className="h-[38px] w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 font-ui text-sm text-[var(--text-primary)] outline-none transition-[border-color] duration-[var(--transition-fast)] focus:border-[var(--accent)]"
                 />
               </div>
               <button
                 onClick={() => updateProfile.mutate({ display_name: name })}
-                style={{
-                  height: 36,
-                  padding: "0 18px",
-                  background: "var(--accent)",
-                  border: "none",
-                  borderRadius: 8,
-                  fontSize: 13,
-                  fontFamily: "var(--font-ui)",
-                  fontWeight: 500,
-                  color: "#fff",
-                  cursor: "pointer",
-                }}
+                className="h-9 cursor-pointer rounded-lg bg-[var(--accent)] px-[18px] font-ui text-[13px] font-medium text-white hover:bg-terra-600"
               >
                 Save changes
               </button>
@@ -187,73 +125,34 @@ export default function UserSettings() {
 
           {tab === "accounts" && (
             <div>
-              <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 500, fontSize: 16, marginBottom: 4 }}>
-                Connected accounts
-              </h3>
-              <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 20 }}>
+              <h3 className="mb-1 font-display text-base font-medium">Connected accounts</h3>
+              <p className="mb-5 text-xs text-[var(--text-muted)]">
                 These accounts can sync content to your Spaces.
               </p>
-              {[
-                { icon: "G", label: "Google", connected: true, color: "#4285F4" },
-                { icon: "\u25B6", label: "YouTube", connected: false, color: "#ff0000" },
-                { icon: "\u266A", label: "Spotify", connected: false, color: "#1db954" },
-                { icon: "\u25CE", label: "Reddit", connected: false, color: "#ff4500" },
-              ].map((acc) => (
+              {accountsList.map((acc) => (
                 <div
                   key={acc.label}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    padding: "12px 14px",
-                    background: "var(--bg-surface)",
-                    border: "1px solid var(--border-subtle)",
-                    borderRadius: 9,
-                    marginBottom: 8,
-                  }}
+                  className="mb-2 flex items-center gap-3 rounded-[9px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3.5 py-3"
                 >
                   <div
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 8,
-                      background: acc.color + "18",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 14,
-                      color: acc.color,
-                      flexShrink: 0,
-                    }}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm"
+                    style={{ background: acc.color + "18", color: acc.color }}
                   >
                     {acc.icon}
                   </div>
-                  <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: "var(--text-primary)" }}>
+                  <span className="flex-1 text-[13px] font-medium text-[var(--text-primary)]">
                     {acc.label}
                   </span>
                   {acc.connected ? (
-                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--color-success)" }} />
-                      <span style={{ fontSize: 12, color: "var(--color-success)" }}>Connected</span>
-                      <button style={{ marginLeft: 8, fontSize: 11, color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer" }}>
+                    <div className="flex items-center gap-1.5">
+                      <span className="h-[7px] w-[7px] rounded-full bg-success" />
+                      <span className="text-xs text-success">Connected</span>
+                      <button className="ml-2 text-[11px] text-[var(--text-muted)] hover:text-error">
                         Disconnect
                       </button>
                     </div>
                   ) : (
-                    <button
-                      style={{
-                        height: 28,
-                        padding: "0 12px",
-                        background: "var(--bg-raised)",
-                        border: "1px solid var(--border-subtle)",
-                        borderRadius: 6,
-                        fontSize: 11,
-                        fontFamily: "var(--font-ui)",
-                        fontWeight: 500,
-                        color: "var(--text-secondary)",
-                        cursor: "pointer",
-                      }}
-                    >
+                    <button className="h-7 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-raised)] px-3 font-ui text-[11px] font-medium text-[var(--text-secondary)] hover:border-[var(--border-strong)]">
                       Connect
                     </button>
                   )}
@@ -264,52 +163,25 @@ export default function UserSettings() {
 
           {tab === "notifications" && (
             <div>
-              <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 500, fontSize: 16, marginBottom: 20 }}>
-                Notification preferences
-              </h3>
-              {[
-                { label: "AI categorization activity", desc: "When AI adds items to your Spaces", enabled: true },
-                { label: "Sync errors", desc: "When a sync source fails to connect", enabled: true },
-                { label: "Collaborator activity", desc: "When someone joins or edits your Spaces", enabled: false },
-                { label: "Weekly digest", desc: "A summary of what's been saved", enabled: false },
-              ].map((pref) => (
+              <h3 className="mb-5 font-display text-base font-medium">Notification preferences</h3>
+              {notificationPrefs.map((pref) => (
                 <div
                   key={pref.label}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    padding: "12px 0",
-                    borderBottom: "1px solid var(--border-subtle)",
-                  }}
+                  className="flex items-center gap-3 border-b border-[var(--border-subtle)] py-3"
                 >
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)", marginBottom: 2 }}>{pref.label}</p>
-                    <p style={{ fontSize: 11, color: "var(--text-muted)" }}>{pref.desc}</p>
+                  <div className="flex-1">
+                    <p className="mb-0.5 text-[13px] font-medium text-[var(--text-primary)]">{pref.label}</p>
+                    <p className="text-[11px] text-[var(--text-muted)]">{pref.desc}</p>
                   </div>
                   <div
-                    style={{
-                      width: 36,
-                      height: 20,
-                      background: pref.enabled ? "var(--accent)" : "var(--border-strong)",
-                      borderRadius: 10,
-                      position: "relative",
-                      cursor: "pointer",
-                      flexShrink: 0,
-                      transition: "background var(--transition-fast)",
-                    }}
+                    className={cn(
+                      "relative h-5 w-9 shrink-0 cursor-pointer rounded-[10px] transition-[background] duration-[var(--transition-fast)]",
+                      pref.enabled ? "bg-[var(--accent)]" : "bg-[var(--border-strong)]",
+                    )}
                   >
                     <div
-                      style={{
-                        width: 14,
-                        height: 14,
-                        background: "#fff",
-                        borderRadius: "50%",
-                        position: "absolute",
-                        top: 3,
-                        left: pref.enabled ? 19 : 3,
-                        transition: "left var(--transition-fast)",
-                      }}
+                      className="absolute top-[3px] h-3.5 w-3.5 rounded-full bg-white transition-[left] duration-[var(--transition-fast)]"
+                      style={{ left: pref.enabled ? 19 : 3 }}
                     />
                   </div>
                 </div>
@@ -319,34 +191,14 @@ export default function UserSettings() {
 
           {tab === "danger" && (
             <div>
-              <div
-                style={{
-                  padding: 20,
-                  background: "rgba(192,57,43,0.04)",
-                  border: "1px solid rgba(192,57,43,0.18)",
-                  borderRadius: 10,
-                }}
-              >
-                <h3 style={{ fontSize: 15, fontWeight: 500, color: "var(--color-error)", marginBottom: 6 }}>
-                  Delete account
-                </h3>
-                <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 16, lineHeight: 1.5 }}>
+              <div className="rounded-[10px] border border-error/20 bg-error/[0.04] p-5">
+                <h3 className="mb-1.5 text-[15px] font-medium text-error">Delete account</h3>
+                <p className="mb-4 text-[13px] leading-[1.5] text-[var(--text-muted)]">
                   This permanently deletes your account, all Spaces, and all saved content. This cannot be undone.
                 </p>
                 <button
                   onClick={() => deleteAccount.mutate()}
-                  style={{
-                    height: 36,
-                    padding: "0 18px",
-                    background: "var(--color-error)",
-                    border: "none",
-                    borderRadius: 8,
-                    fontSize: 13,
-                    fontFamily: "var(--font-ui)",
-                    fontWeight: 500,
-                    color: "#fff",
-                    cursor: "pointer",
-                  }}
+                  className="h-9 cursor-pointer rounded-lg bg-error px-[18px] font-ui text-[13px] font-medium text-white hover:opacity-90"
                 >
                   Delete my account
                 </button>

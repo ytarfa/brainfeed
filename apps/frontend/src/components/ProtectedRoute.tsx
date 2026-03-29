@@ -13,25 +13,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (loading) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "var(--bg-base)",
-        }}
-      >
-        <div
-          style={{
-            width: 32,
-            height: 32,
-            border: "3px solid var(--border-subtle)",
-            borderTopColor: "var(--accent)",
-            borderRadius: "50%",
-            animation: "spin 0.6s linear infinite",
-          }}
-        />
+      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-base)]">
+        <div className="w-8 h-8 border-3 border-[var(--border-subtle)] border-t-[var(--accent)] rounded-full animate-spin" />
       </div>
     );
   }

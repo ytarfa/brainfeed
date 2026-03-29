@@ -1,16 +1,10 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { Mail } from "lucide-react";
 
 import Logo from "../../components/Logo";
 import { useAuth } from "../../contexts/AuthContext";
 import { supabase } from "../../lib/supabase";
-
-const MailIcon = () => (
-  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="4" width="20" height="16" rx="2" />
-    <path d="M22 4L12 13L2 4" />
-  </svg>
-);
 
 export default function ConfirmEmail() {
   const { user, signOut } = useAuth();
@@ -42,153 +36,50 @@ export default function ConfirmEmail() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "var(--bg-base)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 24,
-      }}
-    >
+    <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center p-6">
       {/* Decorative background */}
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          pointerEvents: "none",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            top: "-20%",
-            right: "-10%",
-            width: 500,
-            height: 500,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(212,132,90,0.07) 0%, transparent 70%)",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: "-10%",
-            left: "-10%",
-            width: 400,
-            height: 400,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(74,122,91,0.05) 0%, transparent 70%)",
-          }}
-        />
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-[20%] -right-[10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(212,132,90,0.07)_0%,transparent_70%)]" />
+        <div className="absolute -bottom-[10%] -left-[10%] w-[400px] h-[400px] rounded-full bg-[radial-gradient(circle,rgba(74,122,91,0.05)_0%,transparent_70%)]" />
       </div>
 
-      <div
-        style={{
-          background: "var(--bg-raised)",
-          border: "1px solid var(--border-subtle)",
-          borderRadius: 16,
-          padding: "36px 36px 32px",
-          width: "100%",
-          maxWidth: 420,
-          boxShadow: "0 8px 40px rgba(30,28,26,0.06)",
-          animation: "fadeIn 320ms both",
-          position: "relative",
-          textAlign: "center",
-        }}
-      >
+      <div className="bg-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-2xl px-9 pt-9 pb-8 w-full max-w-[420px] shadow-[0_8px_40px_rgba(30,28,26,0.06)] animate-fade-in relative text-center">
         {/* Logo */}
-        <div style={{ marginBottom: 28 }}>
+        <div className="mb-7">
           <Logo variant="full" size="lg" />
         </div>
 
         {/* Mail icon */}
-        <div style={{ marginBottom: 20 }}>
-          <MailIcon />
+        <div className="mb-5">
+          <Mail size={48} strokeWidth={1.5} className="text-[var(--accent)] mx-auto" />
         </div>
 
-        <h2
-          style={{
-            fontSize: 20,
-            fontWeight: 600,
-            color: "var(--text-primary)",
-            fontFamily: "var(--font-ui)",
-            marginBottom: 10,
-          }}
-        >
+        <h2 className="text-xl font-semibold text-[var(--text-primary)] font-ui mb-2.5">
           Check your email
         </h2>
 
-        <p
-          style={{
-            fontSize: 14,
-            color: "var(--text-secondary)",
-            fontFamily: "var(--font-ui)",
-            lineHeight: 1.5,
-            marginBottom: 8,
-          }}
-        >
+        <p className="text-sm text-[var(--text-secondary)] font-ui leading-relaxed mb-2">
           We sent a confirmation link to
         </p>
 
-        <p
-          style={{
-            fontSize: 14,
-            fontWeight: 600,
-            color: "var(--text-primary)",
-            fontFamily: "var(--font-ui)",
-            marginBottom: 24,
-          }}
-        >
+        <p className="text-sm font-semibold text-[var(--text-primary)] font-ui mb-6">
           {user?.email ?? "your email address"}
         </p>
 
-        <p
-          style={{
-            fontSize: 13,
-            color: "var(--text-muted)",
-            fontFamily: "var(--font-ui)",
-            lineHeight: 1.5,
-            marginBottom: 28,
-          }}
-        >
+        <p className="text-[13px] text-[var(--text-muted)] font-ui leading-relaxed mb-7">
           Click the link in the email to verify your account. If you don{"'"}t see it, check your spam folder.
         </p>
 
         {/* Error message */}
         {error && (
-          <div
-            style={{
-              background: "rgba(220,38,38,0.08)",
-              border: "1px solid rgba(220,38,38,0.2)",
-              borderRadius: 8,
-              padding: "10px 14px",
-              marginBottom: 16,
-              fontSize: 13,
-              color: "var(--text-primary)",
-              fontFamily: "var(--font-ui)",
-            }}
-          >
+          <div className="bg-[rgba(220,38,38,0.08)] border border-[rgba(220,38,38,0.2)] rounded-lg px-3.5 py-2.5 mb-4 text-[13px] text-[var(--text-primary)] font-ui">
             {error}
           </div>
         )}
 
         {/* Success message */}
         {resent && (
-          <div
-            style={{
-              background: "rgba(74,122,91,0.08)",
-              border: "1px solid rgba(74,122,91,0.2)",
-              borderRadius: 8,
-              padding: "10px 14px",
-              marginBottom: 16,
-              fontSize: 13,
-              color: "var(--text-primary)",
-              fontFamily: "var(--font-ui)",
-            }}
-          >
+          <div className="bg-[rgba(74,122,91,0.08)] border border-[rgba(74,122,91,0.2)] rounded-lg px-3.5 py-2.5 mb-4 text-[13px] text-[var(--text-primary)] font-ui">
             Confirmation email resent successfully.
           </div>
         )}
@@ -198,23 +89,7 @@ export default function ConfirmEmail() {
           type="button"
           onClick={handleResend}
           disabled={resending}
-          style={{
-            width: "100%",
-            height: 40,
-            background: "var(--accent)",
-            border: "none",
-            borderRadius: 9,
-            fontSize: 14,
-            fontFamily: "var(--font-ui)",
-            fontWeight: 500,
-            color: "#fff",
-            cursor: resending ? "default" : "pointer",
-            opacity: resending ? 0.7 : 1,
-            marginBottom: 12,
-            transition: "background var(--transition-fast)",
-          }}
-          onMouseEnter={(e) => { if (!resending) (e.currentTarget as HTMLElement).style.background = "var(--terra-600)"; }}
-          onMouseLeave={(e) => { if (!resending) (e.currentTarget as HTMLElement).style.background = "var(--accent)"; }}
+          className="w-full h-10 bg-[var(--accent)] border-none rounded-[9px] text-sm font-ui font-medium text-white cursor-pointer mb-3 transition-colors hover:bg-[var(--terra-600)] disabled:opacity-70 disabled:cursor-default disabled:hover:bg-[var(--accent)]"
         >
           {resending ? "Sending..." : "Resend confirmation email"}
         </button>
@@ -223,35 +98,14 @@ export default function ConfirmEmail() {
         <button
           type="button"
           onClick={handleSignOut}
-          style={{
-            width: "100%",
-            height: 40,
-            background: "transparent",
-            border: "1px solid var(--border-subtle)",
-            borderRadius: 9,
-            fontSize: 14,
-            fontFamily: "var(--font-ui)",
-            fontWeight: 500,
-            color: "var(--text-secondary)",
-            cursor: "pointer",
-            transition: "border-color var(--transition-fast)",
-          }}
-          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)")}
-          onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.borderColor = "var(--border-subtle)")}
+          className="w-full h-10 bg-transparent border border-[var(--border-subtle)] rounded-[9px] text-sm font-ui font-medium text-[var(--text-secondary)] cursor-pointer transition-colors hover:border-[var(--border-strong)]"
         >
           Use a different email
         </button>
 
-        <p
-          style={{
-            marginTop: 20,
-            fontSize: 12,
-            color: "var(--text-muted)",
-            fontFamily: "var(--font-ui)",
-          }}
-        >
+        <p className="mt-5 text-xs text-[var(--text-muted)] font-ui">
           Already confirmed?{" "}
-          <Link to="/login" style={{ color: "var(--accent)", fontWeight: 500 }}>
+          <Link to="/login" className="text-[var(--accent)] font-medium">
             Sign in
           </Link>
         </p>

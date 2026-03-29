@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-
+import { Search, Clock } from "lucide-react";
+import { cn } from "../lib/utils";
 import { useSearch, useBookmarks, toBookmark } from "../api/hooks";
 import type { SearchBookmark } from "../api/hooks";
 
@@ -37,34 +38,6 @@ export default function GlobalSearch({ open, onClose, onSelect }: GlobalSearchPr
     setTimeout(onClose, 200);
   };
 
-  const overlayStyle: React.CSSProperties = {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(30,28,26,0.35)",
-    backdropFilter: "blur(3px)",
-    zIndex: 400,
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "center",
-    paddingTop: "12vh",
-    padding: "12vh 16px 16px",
-    opacity: visible ? 1 : 0,
-    transition: "opacity 200ms ease",
-    pointerEvents: open ? "all" : "none",
-  };
-
-  const panelStyle: React.CSSProperties = {
-    background: "var(--bg-base)",
-    border: "1px solid var(--border-subtle)",
-    borderRadius: 14,
-    boxShadow: "0 24px 64px rgba(30,28,26,0.18)",
-    width: "100%",
-    maxWidth: 560,
-    overflow: "hidden",
-    transform: visible ? "translateY(0)" : "translateY(-12px)",
-    transition: "transform 200ms cubic-bezier(0.32,0.72,0,1)",
-  };
-
   if (!open && !visible) return null;
 
   const getSpaceFromResult = (b: SearchBookmark) => {
@@ -73,50 +46,37 @@ export default function GlobalSearch({ open, onClose, onSelect }: GlobalSearchPr
   };
 
   return (
-    <div style={overlayStyle} onClick={handleClose}>
-      <div style={panelStyle} onClick={(e) => e.stopPropagation()}>
+    <div
+      className={cn(
+        "fixed inset-0 z-[400] flex items-start justify-center bg-ink-DEFAULT/35 backdrop-blur-sm pt-[12vh] px-4 pb-4 transition-opacity duration-200",
+        visible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
+      )}
+      onClick={handleClose}
+    >
+      <div
+        className={cn(
+          "w-full max-w-[560px] overflow-hidden rounded-[14px] border border-[var(--border-subtle)] bg-[var(--bg-base)] shadow-xl transition-transform duration-200 ease-[cubic-bezier(0.32,0.72,0,1)]",
+          visible ? "translate-y-0" : "-translate-y-3",
+        )}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Input */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            padding: "0 16px",
-            borderBottom: query && results.length > 0 ? "1px solid var(--border-subtle)" : "none",
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ color: "var(--text-muted)", flexShrink: 0 }}>
-            <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M11 11l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-          </svg>
+        <div className={cn(
+          "flex items-center gap-2.5 px-4",
+          query && results.length > 0 && "border-b border-[var(--border-subtle)]",
+        )}>
+          <Search size={16} className="shrink-0 text-[var(--text-muted)]" />
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === "Escape" && handleClose()}
-            placeholder="Search everything…"
-            style={{
-              flex: 1,
-              height: 52,
-              fontSize: 16,
-              fontFamily: "var(--font-ui)",
-              color: "var(--text-primary)",
-              background: "transparent",
-              border: "none",
-              outline: "none",
-            }}
+            placeholder="Search everything..."
+            className="h-[52px] flex-1 bg-transparent font-ui text-base text-[var(--text-primary)] outline-none placeholder:text-[var(--text-muted)]"
           />
           <kbd
-            style={{
-              fontSize: 10,
-              background: "var(--bg-surface)",
-              border: "1px solid var(--border-subtle)",
-              borderRadius: 4,
-              padding: "2px 6px",
-              color: "var(--text-muted)",
-              cursor: "pointer",
-            }}
+            className="cursor-pointer rounded border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-1.5 py-0.5 font-ui text-2xs text-[var(--text-muted)]"
             onClick={handleClose}
           >
             Esc
@@ -125,7 +85,7 @@ export default function GlobalSearch({ open, onClose, onSelect }: GlobalSearchPr
 
         {/* Results */}
         {query && results.length > 0 && (
-          <div style={{ maxHeight: 360, overflowY: "auto" }}>
+          <div className="max-h-[360px] overflow-y-auto">
             {results.map((b, i) => {
               const space = getSpaceFromResult(b);
               const domain = b.url ? new URL(b.url).hostname.replace("www.", "") : undefined;
@@ -133,69 +93,28 @@ export default function GlobalSearch({ open, onClose, onSelect }: GlobalSearchPr
                 <button
                   key={b.id}
                   onClick={() => { onSelect(b.id); handleClose(); }}
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: 12,
-                    width: "100%",
-                    padding: "12px 16px",
-                    background: "transparent",
-                    border: "none",
-                    borderBottom: i < results.length - 1 ? "1px solid var(--border-subtle)" : "none",
-                    cursor: "pointer",
-                    textAlign: "left",
-                    transition: "background var(--transition-fast)",
-                  }}
-                  onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.background = "var(--bg-surface)")}
-                  onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.background = "transparent")}
+                  className={cn(
+                    "flex w-full items-start gap-3 px-4 py-3 text-left transition-[background] duration-[var(--transition-fast)] hover:bg-[var(--bg-surface)]",
+                    i < results.length - 1 && "border-b border-[var(--border-subtle)]",
+                  )}
                 >
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p
-                      style={{
-                        fontFamily: "var(--font-display)",
-                        fontWeight: 500,
-                        fontSize: 14,
-                        color: "var(--text-primary)",
-                        marginBottom: 3,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
+                  <div className="min-w-0 flex-1">
+                    <p className="mb-0.5 truncate font-display text-sm font-medium text-[var(--text-primary)]">
                       {b.title}
                     </p>
                     {b.description && (
-                      <p
-                        style={{
-                          fontSize: 12,
-                          color: "var(--text-muted)",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
+                      <p className="truncate text-xs text-[var(--text-muted)]">
                         {b.description}
                       </p>
                     )}
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
                     {space && (
-                      <span
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 4,
-                          padding: "2px 7px",
-                          background: "var(--bg-surface)",
-                          border: "1px solid var(--border-subtle)",
-                          borderRadius: 4,
-                          fontSize: 10,
-                          fontFamily: "var(--font-ui)",
-                          fontWeight: 500,
-                          color: "var(--text-secondary)",
-                        }}
-                      >
-                        <span style={{ width: 5, height: 5, borderRadius: "50%", background: space.color }} />
+                      <span className="inline-flex items-center gap-1 rounded-sm border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-[7px] py-0.5 font-ui text-2xs font-medium text-[var(--text-secondary)]">
+                        <span
+                          className="h-[5px] w-[5px] rounded-full"
+                          style={{ background: space.color }}
+                        />
                         {space.name}
                       </span>
                     )}
@@ -208,38 +127,22 @@ export default function GlobalSearch({ open, onClose, onSelect }: GlobalSearchPr
         )}
 
         {query && results.length === 0 && (
-          <div style={{ padding: "28px 16px", textAlign: "center", color: "var(--text-muted)", fontSize: 13 }}>
+          <div className="px-4 py-7 text-center text-[13px] text-[var(--text-muted)]">
             No results for <em>&quot;{query}&quot;</em> — try a broader search.
           </div>
         )}
 
         {!query && (
-          <div style={{ padding: "20px 16px" }}>
-            <p className="text-label" style={{ color: "var(--text-muted)", marginBottom: 10 }}>Recent</p>
+          <div className="px-4 py-5">
+            <p className="text-label mb-2.5 text-[var(--text-muted)]">Recent</p>
             {recentBookmarks.map((b) => (
               <button
                 key={b.id}
                 onClick={() => { onSelect(b.id); handleClose(); }}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  width: "100%",
-                  padding: "7px 0",
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  color: "var(--text-secondary)",
-                  fontSize: 13,
-                  fontFamily: "var(--font-ui)",
-                }}
+                className="flex w-full items-center gap-2 py-[7px] text-left font-ui text-[13px] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               >
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ color: "var(--text-muted)", flexShrink: 0 }}>
-                  <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.2" />
-                  <path d="M6 3.5V6l1.5 1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                </svg>
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{b.title}</span>
+                <Clock size={12} className="shrink-0 text-[var(--text-muted)]" />
+                <span className="truncate">{b.title}</span>
               </button>
             ))}
           </div>

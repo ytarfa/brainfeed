@@ -1,16 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
+import { X, Check } from "lucide-react";
+import { cn } from "../lib/utils";
 import { useSpaces } from "../api/hooks";
 
 interface SaveItemModalProps {
   open: boolean;
   onClose: () => void;
 }
-
-const CloseIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-    <path d="M2 2l10 10M12 2L2 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-  </svg>
-);
 
 type Step = "input" | "enriching" | "done";
 
@@ -53,80 +49,41 @@ export default function SaveItemModal({ open, onClose }: SaveItemModalProps) {
     if (e.key === "Escape") handleClose();
   };
 
-  const overlayStyle: React.CSSProperties = {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(30,28,26,0.35)",
-    backdropFilter: "blur(3px)",
-    zIndex: 300,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-    opacity: visible ? 1 : 0,
-    transition: "opacity 220ms ease",
-    pointerEvents: open ? "all" : "none",
-  };
-
-  const modalStyle: React.CSSProperties = {
-    background: "var(--bg-base)",
-    border: "1px solid var(--border-subtle)",
-    borderRadius: 14,
-    boxShadow: "0 24px 64px rgba(30,28,26,0.18)",
-    width: "100%",
-    maxWidth: 480,
-    overflow: "hidden",
-    transform: visible ? "scale(1) translateY(0)" : "scale(0.97) translateY(8px)",
-    transition: "transform 220ms cubic-bezier(0.32,0.72,0,1), opacity 220ms ease",
-    opacity: visible ? 1 : 0,
-  };
-
   if (!open && !visible) return null;
 
   return (
-    <div style={overlayStyle} onClick={handleClose} onKeyDown={handleKeyDown}>
-      <div style={modalStyle} onClick={(e) => e.stopPropagation()}>
+    <div
+      className={cn(
+        "fixed inset-0 z-[300] flex items-center justify-center p-4 bg-ink-DEFAULT/35 backdrop-blur-sm transition-opacity duration-[220ms]",
+        visible ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none",
+      )}
+      onClick={handleClose}
+      onKeyDown={handleKeyDown}
+    >
+      <div
+        className={cn(
+          "w-full max-w-[480px] overflow-hidden rounded-[14px] border border-[var(--border-subtle)] bg-[var(--bg-base)] shadow-xl transition-[transform,opacity] duration-[220ms] ease-[cubic-bezier(0.32,0.72,0,1)]",
+          visible ? "scale-100 translate-y-0 opacity-100" : "scale-[0.97] translate-y-2 opacity-0",
+        )}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div
-          style={{
-            padding: "16px 20px",
-            borderBottom: "1px solid var(--border-subtle)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 500, fontSize: 17 }}>
-            Save to brainfeed
-          </h2>
+        <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-5 py-4">
+          <h2 className="font-display text-[17px] font-medium">Save to brainfeed</h2>
           <button
             onClick={handleClose}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 28,
-              height: 28,
-              borderRadius: 6,
-              color: "var(--text-muted)",
-            }}
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "var(--bg-surface)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.background = "transparent";
-            }}
+            className="flex h-7 w-7 items-center justify-center rounded-md text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
           >
-            <CloseIcon />
+            <X size={14} />
           </button>
         </div>
 
         {/* Body */}
-        <div style={{ padding: 20 }}>
+        <div className="p-5">
           {step === "input" && (
             <form onSubmit={handleSubmit}>
-              <div style={{ marginBottom: 14 }}>
-                <label className="text-label" style={{ display: "block", marginBottom: 6, color: "var(--text-muted)" }}>
+              <div className="mb-3.5">
+                <label className="text-label mb-1.5 block text-[var(--text-muted)]">
                   URL or paste text
                 </label>
                 <input
@@ -134,88 +91,47 @@ export default function SaveItemModal({ open, onClose }: SaveItemModalProps) {
                   type="text"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://example.com or paste any text…"
-                  style={{
-                    width: "100%",
-                    height: 40,
-                    padding: "0 12px",
-                    background: "var(--bg-surface)",
-                    border: "1px solid var(--border-subtle)",
-                    borderRadius: 8,
-                    fontSize: 14,
-                    fontFamily: "var(--font-ui)",
-                    color: "var(--text-primary)",
-                    outline: "none",
-                    transition: "border-color var(--transition-fast)",
-                  }}
-                  onFocus={(e) => ((e.target as HTMLElement).style.borderColor = "var(--accent)")}
-                  onBlur={(e) => ((e.target as HTMLElement).style.borderColor = "var(--border-subtle)")}
+                  placeholder="https://example.com or paste any text..."
+                  className="h-10 w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 font-ui text-sm text-[var(--text-primary)] outline-none transition-[border-color] duration-[var(--transition-fast)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]"
                 />
               </div>
 
-              <div style={{ marginBottom: 20 }}>
-                <label className="text-label" style={{ display: "block", marginBottom: 6, color: "var(--text-muted)" }}>
+              <div className="mb-5">
+                <label className="text-label mb-1.5 block text-[var(--text-muted)]">
                   Space (optional)
                 </label>
                 <select
                   value={selectedSpace}
                   onChange={(e) => setSelectedSpace(e.target.value)}
-                  style={{
-                    width: "100%",
-                    height: 40,
-                    padding: "0 12px",
-                    background: "var(--bg-surface)",
-                    border: "1px solid var(--border-subtle)",
-                    borderRadius: 8,
-                    fontSize: 14,
-                    fontFamily: "var(--font-ui)",
-                    color: selectedSpace ? "var(--text-primary)" : "var(--text-muted)",
-                    outline: "none",
-                    cursor: "pointer",
-                    appearance: "none",
-                  }}
+                  className={cn(
+                    "h-10 w-full cursor-pointer appearance-none rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 font-ui text-sm outline-none",
+                    selectedSpace ? "text-[var(--text-primary)]" : "text-[var(--text-muted)]",
+                  )}
                 >
-                  <option value="">Let AI suggest a Space…</option>
+                  <option value="">Let AI suggest a Space...</option>
                   {spaces.map((s) => (
                     <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
                 </select>
               </div>
 
-              <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <div className="flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={handleClose}
-                  style={{
-                    height: 36,
-                    padding: "0 16px",
-                    background: "var(--bg-surface)",
-                    border: "1px solid var(--border-subtle)",
-                    borderRadius: 8,
-                    fontSize: 13,
-                    fontFamily: "var(--font-ui)",
-                    color: "var(--text-secondary)",
-                    cursor: "pointer",
-                  }}
+                  className="h-9 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 font-ui text-[13px] text-[var(--text-secondary)] hover:bg-[var(--bg-raised)]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={!url.trim()}
-                  style={{
-                    height: 36,
-                    padding: "0 20px",
-                    background: url.trim() ? "var(--accent)" : "var(--border-subtle)",
-                    border: "none",
-                    borderRadius: 8,
-                    fontSize: 13,
-                    fontFamily: "var(--font-ui)",
-                    fontWeight: 500,
-                    color: url.trim() ? "#fff" : "var(--text-muted)",
-                    cursor: url.trim() ? "pointer" : "default",
-                    transition: "background var(--transition-fast)",
-                  }}
+                  className={cn(
+                    "h-9 rounded-lg border-none px-5 font-ui text-[13px] font-medium transition-[background] duration-[var(--transition-fast)]",
+                    url.trim()
+                      ? "cursor-pointer bg-[var(--accent)] text-white hover:bg-terra-600"
+                      : "cursor-default bg-[var(--border-subtle)] text-[var(--text-muted)]",
+                  )}
                 >
                   Save
                 </button>
@@ -224,59 +140,32 @@ export default function SaveItemModal({ open, onClose }: SaveItemModalProps) {
           )}
 
           {step === "enriching" && (
-            <div style={{ padding: "20px 0" }}>
-              <p className="text-label" style={{ marginBottom: 16, color: "var(--text-muted)" }}>
-                Enriching content…
+            <div className="py-5">
+              <p className="text-label mb-4 text-[var(--text-muted)]">
+                Enriching content...
               </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <div className="skeleton" style={{ height: 16, width: "75%", borderRadius: 4 }} />
-                <div className="skeleton" style={{ height: 12, width: "100%", borderRadius: 4 }} />
-                <div className="skeleton" style={{ height: 12, width: "85%", borderRadius: 4 }} />
-                <div className="skeleton" style={{ height: 12, width: "60%", borderRadius: 4 }} />
-                <div className="skeleton" style={{ height: 80, width: "100%", borderRadius: 6, marginTop: 4 }} />
+              <div className="flex flex-col gap-2.5">
+                <div className="skeleton h-4 w-3/4 rounded" />
+                <div className="skeleton h-3 w-full rounded" />
+                <div className="skeleton h-3 w-[85%] rounded" />
+                <div className="skeleton h-3 w-3/5 rounded" />
+                <div className="skeleton mt-1 h-20 w-full rounded-md" />
               </div>
             </div>
           )}
 
           {step === "done" && (
-            <div style={{ textAlign: "center", padding: "24px 0" }}>
-              <div
-                style={{
-                  width: 48,
-                  height: 48,
-                  background: "var(--accent-subtle)",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  margin: "0 auto 14px",
-                  fontSize: 22,
-                  color: "var(--accent)",
-                }}
-              >
-                ✓
+            <div className="py-6 text-center">
+              <div className="mx-auto mb-3.5 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent-subtle)] text-[var(--accent)]">
+                <Check size={22} />
               </div>
-              <p style={{ fontFamily: "var(--font-display)", fontWeight: 500, fontSize: 16, marginBottom: 6 }}>
-                Saved!
-              </p>
-              <p style={{ fontSize: 13, color: "var(--text-muted)" }}>
-                Added to <strong style={{ color: "var(--text-secondary)" }}>Dev Tools</strong> by AI
+              <p className="mb-1.5 font-display text-base font-medium">Saved!</p>
+              <p className="text-[13px] text-[var(--text-muted)]">
+                Added to <strong className="text-[var(--text-secondary)]">Dev Tools</strong> by AI
               </p>
               <button
                 onClick={handleClose}
-                style={{
-                  marginTop: 20,
-                  height: 36,
-                  padding: "0 20px",
-                  background: "var(--accent)",
-                  border: "none",
-                  borderRadius: 8,
-                  fontSize: 13,
-                  fontFamily: "var(--font-ui)",
-                  fontWeight: 500,
-                  color: "#fff",
-                  cursor: "pointer",
-                }}
+                className="mt-5 h-9 cursor-pointer rounded-lg border-none bg-[var(--accent)] px-5 font-ui text-[13px] font-medium text-white hover:bg-terra-600"
               >
                 Done
               </button>

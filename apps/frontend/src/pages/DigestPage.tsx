@@ -1,53 +1,27 @@
 import React, { useState } from "react";
+import { Plus, X } from "lucide-react";
+import { cn } from "../lib/utils";
 
 import { useDigest, useSaveCandidate, useDismissCandidate, useDismissGroup } from "../api/hooks";
 import type { DigestCandidate } from "../data/mock";
 
 // ---------------------------------------------------------------------------
-// Inline SVG icons
+// Type icon/color maps
 // ---------------------------------------------------------------------------
 
-const SaveIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-    <path d="M7 1v12M1 7h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-  </svg>
-);
-
-const SkipIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-    <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-  </svg>
-);
-
 const typeIcons: Record<string, string> = {
-  github: "\u2B21",
-  youtube: "\u25B6",
-  twitter: "\uD835\uDD4F",
-  news: "\u25C9",
-  amazon: "\u2606",
-  paper: "\u222B",
-  generic: "\u25C8",
-  note: "\u270E",
-  reddit: "\u25CE",
-  spotify: "\u266A",
-  article: "\u25C9",
-  academic: "\u222B",
+  github: "\u2B21", youtube: "\u25B6", twitter: "\uD835\uDD4F",
+  news: "\u25C9", amazon: "\u2606", paper: "\u222B",
+  generic: "\u25C8", note: "\u270E", reddit: "\u25CE",
+  spotify: "\u266A", article: "\u25C9", academic: "\u222B",
   instagram: "\u25CB",
 };
 
 const typeColors: Record<string, string> = {
-  github: "#24292e",
-  youtube: "#ff0000",
-  twitter: "#1da1f2",
-  news: "#d4845a",
-  amazon: "#ff9900",
-  paper: "#4a7a5b",
-  generic: "#6a6660",
-  note: "#8b5e3c",
-  reddit: "#ff4500",
-  spotify: "#1db954",
-  article: "#d4845a",
-  academic: "#4a7a5b",
+  github: "#24292e", youtube: "#ff0000", twitter: "#1da1f2",
+  news: "#d4845a", amazon: "#ff9900", paper: "#4a7a5b",
+  generic: "#6a6660", note: "#8b5e3c", reddit: "#ff4500",
+  spotify: "#1db954", article: "#d4845a", academic: "#4a7a5b",
   instagram: "#c13584",
 };
 
@@ -69,64 +43,35 @@ function DigestCandidateCard({ candidate, index, onSave, onDismiss, savingId, di
   const isBusy = savingId === candidate.id || dismissingId === candidate.id;
   const domain = candidate.url ? (() => { try { return new URL(candidate.url).hostname.replace("www.", ""); } catch { return null; } })() : null;
 
-  const cardStyle: React.CSSProperties = {
-    background: "var(--bg-raised)",
-    border: `1px solid ${hovered ? "var(--border-strong)" : "var(--border-subtle)"}`,
-    borderRadius: 10,
-    padding: "14px 14px 12px",
-    transition: "border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast), opacity 200ms",
-    transform: hovered ? "translateY(-1px)" : "none",
-    boxShadow: hovered ? "0 4px 16px rgba(30,28,26,0.07)" : "none",
-    animation: `fadeIn 240ms ${index * 30}ms both`,
-    opacity: isBusy ? 0.5 : 1,
-    pointerEvents: isBusy ? "none" : "auto",
-  };
-
   return (
     <article
-      style={cardStyle}
+      className={cn(
+        "rounded-[10px] border bg-[var(--bg-raised)] p-[14px_14px_12px] transition-[border-color,transform,box-shadow,opacity] duration-[var(--transition-fast)]",
+        hovered
+          ? "border-[var(--border-strong)] -translate-y-px shadow-md"
+          : "border-[var(--border-subtle)] translate-y-0 shadow-none",
+        isBusy && "pointer-events-none opacity-50",
+      )}
+      style={{ animation: `fade-in 240ms ${index * 30}ms both` }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
       {/* Thumbnail */}
       {candidate.thumbnail_url && (
-        <div
-          style={{
-            width: "100%",
-            height: 120,
-            background: "var(--bg-surface)",
-            borderRadius: 6,
-            marginBottom: 10,
-            overflow: "hidden",
-          }}
-        >
+        <div className="mb-2.5 h-[120px] w-full overflow-hidden rounded-md bg-[var(--bg-surface)]">
           <img
             src={candidate.thumbnail_url}
             alt=""
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            className="h-full w-full object-cover"
             onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
           />
         </div>
       )}
 
       {/* Source type badge */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-        <span
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-            padding: "2px 6px",
-            background: "var(--accent-subtle)",
-            border: "1px solid var(--terra-100)",
-            borderRadius: 4,
-            fontSize: 10,
-            fontFamily: "var(--font-ui)",
-            fontWeight: 500,
-            color: "var(--accent-text)",
-          }}
-        >
-          <span style={{ fontSize: 9, color: typeColors[candidate.source_type] ?? "var(--text-muted)" }}>
+      <div className="mb-2 flex items-center gap-1.5">
+        <span className="inline-flex items-center gap-1 rounded-sm border border-terra-100 bg-[var(--accent-subtle)] px-1.5 py-0.5 font-ui text-2xs font-medium text-[var(--accent-text)]">
+          <span className="text-[9px]" style={{ color: typeColors[candidate.source_type] ?? "var(--text-muted)" }}>
             {typeIcons[candidate.source_type] ?? "\u25C8"}
           </span>
           {candidate.source_type}
@@ -134,96 +79,45 @@ function DigestCandidateCard({ candidate, index, onSave, onDismiss, savingId, di
       </div>
 
       {/* Title */}
-      <h3
-        style={{
-          fontFamily: "var(--font-display)",
-          fontWeight: 500,
-          fontSize: 15,
-          lineHeight: 1.35,
-          color: "var(--text-primary)",
-          marginBottom: 6,
-          display: "-webkit-box",
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical",
-          overflow: "hidden",
-        }}
-      >
+      <h3 className="mb-1.5 line-clamp-2 font-display text-[15px] font-medium leading-[1.35] text-[var(--text-primary)]">
         {candidate.title ?? candidate.url}
       </h3>
 
       {/* Description */}
       {candidate.description && (
-        <p
-          style={{
-            fontFamily: "var(--font-ui)",
-            fontSize: 13,
-            lineHeight: 1.55,
-            color: "var(--text-secondary)",
-            display: "-webkit-box",
-            WebkitLineClamp: 3,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-            marginBottom: 8,
-          }}
-        >
+        <p className="mb-2 line-clamp-3 font-ui text-[13px] leading-[1.55] text-[var(--text-secondary)]">
           {candidate.description}
         </p>
       )}
 
       {/* Meta + actions row */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+      <div className="flex items-center justify-between gap-2">
         <span className="text-meta">
           {domain ?? ""}{candidate.published_at ? ` \u00B7 ${new Date(candidate.published_at).toLocaleDateString()}` : ""}
         </span>
 
-        <div style={{ display: "flex", gap: 4 }}>
+        <div className="flex gap-1">
           <button
             onClick={() => onSave(candidate.id)}
             disabled={isBusy}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              height: 26,
-              padding: "0 10px",
-              background: "var(--accent)",
-              border: "none",
-              borderRadius: 6,
-              fontSize: 11,
-              fontFamily: "var(--font-ui)",
-              fontWeight: 500,
-              color: "#fff",
-              cursor: "pointer",
-              transition: "opacity var(--transition-fast)",
-              opacity: hovered ? 1 : 0.85,
-            }}
+            className={cn(
+              "inline-flex h-[26px] items-center gap-1 rounded-md bg-[var(--accent)] px-2.5 font-ui text-[11px] font-medium text-white transition-opacity duration-[var(--transition-fast)]",
+              hovered ? "opacity-100" : "opacity-85",
+            )}
             aria-label="Save to library"
           >
-            <SaveIcon /> Save
+            <Plus size={12} /> Save
           </button>
           <button
             onClick={() => onDismiss(candidate.id)}
             disabled={isBusy}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
-              height: 26,
-              padding: "0 10px",
-              background: "var(--bg-surface)",
-              border: "1px solid var(--border-subtle)",
-              borderRadius: 6,
-              fontSize: 11,
-              fontFamily: "var(--font-ui)",
-              fontWeight: 500,
-              color: "var(--text-secondary)",
-              cursor: "pointer",
-              transition: "opacity var(--transition-fast)",
-              opacity: hovered ? 1 : 0.85,
-            }}
+            className={cn(
+              "inline-flex h-[26px] items-center gap-1 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2.5 font-ui text-[11px] font-medium text-[var(--text-secondary)] transition-opacity duration-[var(--transition-fast)]",
+              hovered ? "opacity-100" : "opacity-85",
+            )}
             aria-label="Skip"
           >
-            <SkipIcon /> Skip
+            <X size={12} /> Skip
           </button>
         </div>
       </div>
@@ -248,16 +142,12 @@ export default function DigestPage() {
 
   const handleSave = (id: string) => {
     setSavingId(id);
-    saveCandidate.mutate(id, {
-      onSettled: () => setSavingId(null),
-    });
+    saveCandidate.mutate(id, { onSettled: () => setSavingId(null) });
   };
 
   const handleDismiss = (id: string) => {
     setDismissingId(id);
-    dismissCandidate.mutate(id, {
-      onSettled: () => setDismissingId(null),
-    });
+    dismissCandidate.mutate(id, { onSettled: () => setDismissingId(null) });
   };
 
   const handleSkipGroup = (sourceName: string, sourceType: string) => {
@@ -265,70 +155,28 @@ export default function DigestPage() {
   };
 
   return (
-    <div style={{ padding: "20px 24px" }}>
+    <div className="px-6 py-5">
       {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1
-          style={{
-            fontFamily: "var(--font-display)",
-            fontWeight: 500,
-            fontSize: 24,
-            color: "var(--text-primary)",
-            marginBottom: 2,
-          }}
-        >
-          Digest
-        </h1>
-        <p style={{ fontSize: 13, color: "var(--text-muted)" }}>
+      <div className="mb-5">
+        <h1 className="mb-0.5 font-display text-2xl font-medium text-[var(--text-primary)]">Digest</h1>
+        <p className="text-[13px] text-[var(--text-muted)]">
           {totalCandidates} new {totalCandidates === 1 ? "item" : "items"} to review
         </p>
       </div>
 
       {/* Loading state */}
       {isLoading && (
-        <div style={{ textAlign: "center", padding: "60px 24px", color: "var(--text-muted)", fontSize: 13 }}>
+        <div className="py-[60px] text-center text-[13px] text-[var(--text-muted)]">
           Loading digest...
         </div>
       )}
 
       {/* Empty state */}
       {!isLoading && totalCandidates === 0 && (
-        <div
-          style={{
-            textAlign: "center",
-            padding: "80px 24px",
-            animation: "fadeIn 320ms both",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 48,
-              marginBottom: 16,
-              opacity: 0.3,
-              fontFamily: "var(--font-display)",
-              color: "var(--accent)",
-            }}
-          >
-            b.
-          </div>
-          <h3
-            style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 500,
-              fontSize: 20,
-              marginBottom: 8,
-            }}
-          >
-            You're all caught up
-          </h3>
-          <p
-            style={{
-              fontSize: 13,
-              color: "var(--text-muted)",
-              maxWidth: 300,
-              margin: "0 auto",
-            }}
-          >
+        <div className="animate-fade-in py-20 text-center">
+          <div className="mb-4 font-display text-5xl text-[var(--accent)] opacity-30">b.</div>
+          <h3 className="mb-2 font-display text-xl font-medium">You're all caught up</h3>
+          <p className="mx-auto max-w-[300px] text-[13px] text-[var(--text-muted)]">
             No new content to review right now. Check back later or connect more sources.
           </p>
         </div>
@@ -336,47 +184,25 @@ export default function DigestPage() {
 
       {/* Grouped feed */}
       {!isLoading && groups && groups.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+        <div className="flex flex-col gap-8">
           {groups.map((group, gi) => (
             <section
               key={`${group.source_name}-${group.source_type}`}
-              style={{ animation: `fadeIn 240ms ${gi * 60}ms both` }}
+              style={{ animation: `fade-in 240ms ${gi * 60}ms both` }}
             >
               {/* Group header */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  marginBottom: 12,
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div className="mb-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
                   <span
-                    style={{
-                      fontSize: 14,
-                      color: typeColors[group.source_type] ?? "var(--text-muted)",
-                    }}
+                    className="text-sm"
+                    style={{ color: typeColors[group.source_type] ?? "var(--text-muted)" }}
                   >
                     {typeIcons[group.source_type] ?? "\u25C8"}
                   </span>
-                  <h2
-                    style={{
-                      fontFamily: "var(--font-display)",
-                      fontWeight: 500,
-                      fontSize: 16,
-                      color: "var(--text-primary)",
-                    }}
-                  >
+                  <h2 className="font-display text-base font-medium text-[var(--text-primary)]">
                     {group.source_name}
                   </h2>
-                  <span
-                    style={{
-                      fontSize: 12,
-                      fontFamily: "var(--font-ui)",
-                      color: "var(--text-muted)",
-                    }}
-                  >
+                  <span className="font-ui text-xs text-[var(--text-muted)]">
                     {group.candidates.length} {group.candidates.length === 1 ? "item" : "items"}
                   </span>
                 </div>
@@ -384,34 +210,14 @@ export default function DigestPage() {
                 <button
                   onClick={() => handleSkipGroup(group.source_name, group.source_type)}
                   disabled={dismissGroup.isPending}
-                  style={{
-                    height: 26,
-                    padding: "0 10px",
-                    background: "var(--bg-surface)",
-                    border: "1px solid var(--border-subtle)",
-                    borderRadius: 6,
-                    fontSize: 11,
-                    fontFamily: "var(--font-ui)",
-                    fontWeight: 500,
-                    color: "var(--text-secondary)",
-                    cursor: "pointer",
-                    transition: "all var(--transition-fast)",
-                  }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--bg-raised)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--bg-surface)"; }}
+                  className="h-[26px] rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2.5 font-ui text-[11px] font-medium text-[var(--text-secondary)] transition-all duration-[var(--transition-fast)] hover:bg-[var(--bg-raised)]"
                 >
                   Skip All
                 </button>
               </div>
 
               {/* Candidate cards grid */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-                  gap: 14,
-                }}
-              >
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3.5">
                 {group.candidates.map((candidate, ci) => (
                   <DigestCandidateCard
                     key={candidate.id}

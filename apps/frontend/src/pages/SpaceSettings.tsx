@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { cn } from "../lib/utils";
 
 import {
   useSpace,
@@ -19,6 +20,21 @@ import {
 import type { RuleRow, MemberRow, SyncSourceWithSpace } from "../api/hooks";
 
 type Section = "general" | "rules" | "collaborators" | "sync" | "sharing";
+
+const navItems: { label: string; value: Section }[] = [
+  { label: "General", value: "general" },
+  { label: "Categorization", value: "rules" },
+  { label: "Collaborators", value: "collaborators" },
+  { label: "Sync sources", value: "sync" },
+  { label: "Public sharing", value: "sharing" },
+];
+
+const sourceOptions = [
+  { type: "youtube", label: "YouTube", icon: "\u25B6", color: "#ff0000" },
+  { type: "spotify", label: "Spotify", icon: "\u266A", color: "#1db954" },
+  { type: "reddit", label: "Reddit", icon: "\u25CE", color: "#ff4500" },
+  { type: "rss", label: "RSS feed", icon: "\u229B", color: "#f79c42" },
+];
 
 export default function SpaceSettings() {
   const { id } = useParams<{ id: string }>();
@@ -44,30 +60,18 @@ export default function SpaceSettings() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (space) {
-      setSpaceName(space.name);
-    }
+    if (space) setSpaceName(space.name);
   }, [space]);
 
   const rules: RuleRow[] = rulesData?.data ?? [];
   const members: MemberRow[] = membersData?.data ?? [];
-  const syncSources: SyncSourceWithSpace[] = (syncData?.data ?? []).filter(
-    (s) => s.space_id === id,
-  );
+  const syncSources: SyncSourceWithSpace[] = (syncData?.data ?? []).filter((s) => s.space_id === id);
 
   if (spaceLoading) {
-    return <div style={{ padding: 40, color: "var(--text-muted)" }}>Loading...</div>;
+    return <div className="p-10 text-[var(--text-muted)]">Loading...</div>;
   }
 
-  if (!space) return <div style={{ padding: 40, color: "var(--text-muted)" }}>Space not found.</div>;
-
-  const navItems: { label: string; value: Section }[] = [
-    { label: "General", value: "general" },
-    { label: "Categorization", value: "rules" },
-    { label: "Collaborators", value: "collaborators" },
-    { label: "Sync sources", value: "sync" },
-    { label: "Public sharing", value: "sharing" },
-  ];
+  if (!space) return <div className="p-10 text-[var(--text-muted)]">Space not found.</div>;
 
   const handleCopy = () => {
     if (space.share_token) {
@@ -80,76 +84,32 @@ export default function SpaceSettings() {
   const syncStatusColor = (isActive: boolean) =>
     isActive ? "var(--color-success)" : "var(--text-muted)";
 
-  const sectionInputStyle: React.CSSProperties = {
-    width: "100%",
-    height: 38,
-    padding: "0 12px",
-    background: "var(--bg-surface)",
-    border: "1px solid var(--border-subtle)",
-    borderRadius: 8,
-    fontSize: 14,
-    fontFamily: "var(--font-ui)",
-    color: "var(--text-primary)",
-    outline: "none",
-  };
-
-  const labelStyle: React.CSSProperties = {
-    display: "block",
-    marginBottom: 5,
-    color: "var(--text-secondary)",
-    fontSize: 11,
-    fontFamily: "var(--font-ui)",
-    fontWeight: 500,
-    letterSpacing: "0.06em",
-    textTransform: "uppercase",
-  };
-
   return (
-    <div style={{ padding: "24px 24px", maxWidth: 800, animation: "fadeIn 240ms both" }}>
+    <div className="max-w-[800px] animate-fade-in p-6">
       {/* Breadcrumb */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 20 }}>
-        <Link to={`/spaces/${id}`} style={{ fontSize: 13, color: "var(--accent)" }}>
-          {space.name}
-        </Link>
-        <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{"\u203A"}</span>
-        <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Settings</span>
+      <div className="mb-5 flex items-center gap-1.5">
+        <Link to={`/spaces/${id}`} className="text-[13px] text-[var(--accent)]">{space.name}</Link>
+        <span className="text-[13px] text-[var(--text-muted)]">&rsaquo;</span>
+        <span className="text-[13px] text-[var(--text-muted)]">Settings</span>
       </div>
 
-      <h1
-        style={{
-          fontFamily: "var(--font-display)",
-          fontWeight: 500,
-          fontSize: 22,
-          marginBottom: 24,
-          color: "var(--text-primary)",
-        }}
-      >
+      <h1 className="mb-6 font-display text-[22px] font-medium text-[var(--text-primary)]">
         Space Settings
       </h1>
 
-      <div style={{ display: "flex", gap: 28 }}>
+      <div className="flex gap-7">
         {/* Nav */}
-        <nav style={{ width: 160, flexShrink: 0 }}>
+        <nav className="w-40 shrink-0">
           {navItems.map((item) => (
             <button
               key={item.value}
               onClick={() => setSection(item.value)}
-              style={{
-                display: "block",
-                width: "100%",
-                textAlign: "left",
-                padding: "7px 10px",
-                borderRadius: 7,
-                fontSize: 13,
-                fontFamily: "var(--font-ui)",
-                background: section === item.value ? "var(--bg-surface)" : "transparent",
-                color: section === item.value ? "var(--text-primary)" : "var(--text-secondary)",
-                fontWeight: section === item.value ? 500 : 400,
-                border: "none",
-                cursor: "pointer",
-                marginBottom: 2,
-                transition: "background var(--transition-fast)",
-              }}
+              className={cn(
+                "mb-0.5 block w-full rounded-[7px] px-2.5 py-[7px] text-left font-ui text-[13px] transition-[background] duration-[var(--transition-fast)]",
+                section === item.value
+                  ? "bg-[var(--bg-surface)] font-medium text-[var(--text-primary)]"
+                  : "bg-transparent text-[var(--text-secondary)]",
+              )}
             >
               {item.label}
             </button>
@@ -157,82 +117,44 @@ export default function SpaceSettings() {
         </nav>
 
         {/* Content */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="min-w-0 flex-1">
           {section === "general" && (
             <div>
-              <div style={{ marginBottom: 20 }}>
-                <label style={labelStyle}>Space name</label>
+              <div className="mb-5">
+                <label className="text-label mb-[5px] block text-[var(--text-secondary)]">Space name</label>
                 <input
                   type="text"
                   value={spaceName}
                   onChange={(e) => setSpaceName(e.target.value)}
-                  style={sectionInputStyle}
+                  className="h-[38px] w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 font-ui text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
                 />
               </div>
-              <div style={{ marginBottom: 28 }}>
-                <label style={labelStyle}>Description</label>
+              <div className="mb-7">
+                <label className="text-label mb-[5px] block text-[var(--text-secondary)]">Description</label>
                 <textarea
                   defaultValue={space.description ?? ""}
                   rows={3}
-                  style={{
-                    ...sectionInputStyle,
-                    height: "auto",
-                    padding: "10px 12px",
-                    resize: "vertical",
-                    lineHeight: 1.5,
-                  }}
+                  className="w-full resize-y rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-2.5 font-ui text-sm leading-[1.5] text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
                 />
               </div>
               <button
                 onClick={() => updateSpace.mutate({ id: id!, name: spaceName })}
-                style={{
-                  height: 36,
-                  padding: "0 18px",
-                  background: "var(--accent)",
-                  border: "none",
-                  borderRadius: 8,
-                  fontSize: 13,
-                  fontFamily: "var(--font-ui)",
-                  fontWeight: 500,
-                  color: "#fff",
-                  cursor: "pointer",
-                  marginBottom: 48,
-                }}
+                className="mb-12 h-9 cursor-pointer rounded-lg bg-[var(--accent)] px-[18px] font-ui text-[13px] font-medium text-white hover:bg-terra-600"
               >
                 Save changes
               </button>
 
               {/* Danger zone */}
-              <div
-                style={{
-                  borderTop: "1px solid var(--border-subtle)",
-                  paddingTop: 24,
-                }}
-              >
-                <p className="text-label" style={{ color: "var(--color-error)", marginBottom: 8 }}>
-                  Danger zone
-                </p>
-                <p style={{ fontSize: 13, color: "var(--text-muted)", marginBottom: 14 }}>
+              <div className="border-t border-[var(--border-subtle)] pt-6">
+                <p className="text-label mb-2 text-error">Danger zone</p>
+                <p className="mb-3.5 text-[13px] text-[var(--text-muted)]">
                   Deleting this Space removes all its bookmarks and cannot be undone.
                 </p>
                 <button
                   onClick={() => {
-                    deleteSpace.mutate(id!, {
-                      onSuccess: () => navigate("/spaces"),
-                    });
+                    deleteSpace.mutate(id!, { onSuccess: () => navigate("/spaces") });
                   }}
-                  style={{
-                    height: 36,
-                    padding: "0 18px",
-                    background: "transparent",
-                    border: "1px solid var(--color-error)",
-                    borderRadius: 8,
-                    fontSize: 13,
-                    fontFamily: "var(--font-ui)",
-                    fontWeight: 500,
-                    color: "var(--color-error)",
-                    cursor: "pointer",
-                  }}
+                  className="h-9 cursor-pointer rounded-lg border border-error bg-transparent px-[18px] font-ui text-[13px] font-medium text-error hover:bg-error/10"
                 >
                   Delete Space
                 </button>
@@ -242,40 +164,25 @@ export default function SpaceSettings() {
 
           {section === "rules" && (
             <div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 500, fontSize: 16 }}>
-                    Categorization rules
-                  </h3>
-                  <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 3 }}>
+                  <h3 className="font-display text-base font-medium">Categorization rules</h3>
+                  <p className="mt-0.5 text-xs text-[var(--text-muted)]">
                     Auto-assign bookmarks matching these rules to this Space.
                   </p>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 12, color: "var(--text-muted)" }}>AI auto-categorize</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-[var(--text-muted)]">AI auto-categorize</span>
                   <div
                     onClick={() => updateSpace.mutate({ id: id!, ai_auto_categorize: !space.ai_auto_categorize })}
-                    style={{
-                      width: 36,
-                      height: 20,
-                      background: space.ai_auto_categorize ? "var(--accent)" : "var(--border-strong)",
-                      borderRadius: 10,
-                      position: "relative",
-                      cursor: "pointer",
-                      transition: "background var(--transition-fast)",
-                    }}
+                    className={cn(
+                      "relative h-5 w-9 cursor-pointer rounded-[10px] transition-[background] duration-[var(--transition-fast)]",
+                      space.ai_auto_categorize ? "bg-[var(--accent)]" : "bg-[var(--border-strong)]",
+                    )}
                   >
                     <div
-                      style={{
-                        width: 14,
-                        height: 14,
-                        background: "#fff",
-                        borderRadius: "50%",
-                        position: "absolute",
-                        top: 3,
-                        left: space.ai_auto_categorize ? 19 : 3,
-                        transition: "left var(--transition-fast)",
-                      }}
+                      className="absolute top-[3px] h-3.5 w-3.5 rounded-full bg-white transition-[left] duration-[var(--transition-fast)]"
+                      style={{ left: space.ai_auto_categorize ? 19 : 3 }}
                     />
                   </div>
                 </div>
@@ -284,49 +191,21 @@ export default function SpaceSettings() {
               {rules.map((rule) => (
                 <div
                   key={rule.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "10px 14px",
-                    background: "var(--bg-surface)",
-                    border: "1px solid var(--border-subtle)",
-                    borderRadius: 8,
-                    marginBottom: 8,
-                    fontSize: 13,
-                    fontFamily: "var(--font-ui)",
-                    color: "var(--text-secondary)",
-                  }}
+                  className="mb-2 flex items-center gap-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3.5 py-2.5 font-ui text-[13px] text-[var(--text-secondary)]"
                 >
-                  <code style={{ color: "var(--accent)", fontFamily: "monospace", fontSize: 12 }}>{rule.rule_type}</code>
+                  <code className="font-mono text-xs text-[var(--accent)]">{rule.rule_type}</code>
                   <span>contains</span>
-                  <code style={{ color: "var(--text-primary)", fontFamily: "monospace", fontSize: 12 }}>&quot;{rule.rule_value}&quot;</code>
+                  <code className="font-mono text-xs text-[var(--text-primary)]">&quot;{rule.rule_value}&quot;</code>
                   <button
                     onClick={() => deleteRule.mutate({ spaceId: id!, ruleId: rule.id })}
-                    style={{ marginLeft: "auto", color: "var(--color-error)", fontSize: 11, background: "none", border: "none", cursor: "pointer" }}
+                    className="ml-auto text-[11px] text-error hover:underline"
                   >
                     Remove
                   </button>
                 </div>
               ))}
 
-              <button
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  height: 34,
-                  padding: "0 14px",
-                  background: "transparent",
-                  border: "1.5px dashed var(--border-strong)",
-                  borderRadius: 8,
-                  fontSize: 12,
-                  fontFamily: "var(--font-ui)",
-                  color: "var(--text-muted)",
-                  cursor: "pointer",
-                  marginTop: 4,
-                }}
-              >
+              <button className="mt-1 flex h-[34px] items-center gap-1.5 rounded-lg border-[1.5px] border-dashed border-[var(--border-strong)] bg-transparent px-3.5 font-ui text-xs text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent)]">
                 + Add rule
               </button>
             </div>
@@ -334,17 +213,15 @@ export default function SpaceSettings() {
 
           {section === "collaborators" && (
             <div>
-              <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 500, fontSize: 16, marginBottom: 16 }}>
-                Collaborators
-              </h3>
+              <h3 className="mb-4 font-display text-base font-medium">Collaborators</h3>
 
-              <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+              <div className="mb-6 flex gap-2">
                 <input
                   type="email"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   placeholder="name@example.com"
-                  style={{ ...sectionInputStyle, flex: 1 }}
+                  className="h-[38px] flex-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 font-ui text-sm text-[var(--text-primary)] outline-none focus:border-[var(--accent)]"
                 />
                 <button
                   onClick={() => {
@@ -355,87 +232,42 @@ export default function SpaceSettings() {
                       );
                     }
                   }}
-                  style={{
-                    height: 38,
-                    padding: "0 16px",
-                    background: "var(--accent)",
-                    border: "none",
-                    borderRadius: 8,
-                    fontSize: 13,
-                    fontFamily: "var(--font-ui)",
-                    fontWeight: 500,
-                    color: "#fff",
-                    cursor: "pointer",
-                    flexShrink: 0,
-                  }}
+                  className="h-[38px] shrink-0 cursor-pointer rounded-lg bg-[var(--accent)] px-4 font-ui text-[13px] font-medium text-white hover:bg-terra-600"
                 >
                   Invite
                 </button>
               </div>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <div className="flex flex-col gap-1">
                 {members.map((m) => (
                   <div
                     key={m.id}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 10,
-                      padding: "10px 14px",
-                      background: "var(--bg-surface)",
-                      border: "1px solid var(--border-subtle)",
-                      borderRadius: 8,
-                    }}
+                    className="flex items-center gap-2.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3.5 py-2.5"
                   >
                     <div
-                      style={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
-                        background: `hsl(${(m.profiles.id.charCodeAt(1) * 37) % 360}, 40%, 55%)`,
-                        color: "#fff",
-                        fontSize: 12,
-                        fontWeight: 500,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontFamily: "var(--font-ui)",
-                      }}
+                      className="flex h-8 w-8 items-center justify-center rounded-full font-ui text-xs font-medium text-white"
+                      style={{ background: `hsl(${(m.profiles.id.charCodeAt(1) * 37) % 360}, 40%, 55%)` }}
                     >
                       {m.profiles.display_name?.[0]?.toUpperCase() ?? "?"}
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)" }}>{m.profiles.display_name}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] font-medium text-[var(--text-primary)]">{m.profiles.display_name}</p>
                       <p className="text-meta">{m.role}</p>
                     </div>
                     <span
-                      style={{
-                        padding: "2px 8px",
-                        background: m.role === "owner" ? "var(--accent-subtle)" : "var(--bg-raised)",
-                        border: `1px solid ${m.role === "owner" ? "var(--terra-100)" : "var(--border-subtle)"}`,
-                        borderRadius: 4,
-                        fontSize: 10,
-                        fontFamily: "var(--font-ui)",
-                        fontWeight: 500,
-                        color: m.role === "owner" ? "var(--accent-text)" : "var(--text-secondary)",
-                        textTransform: "capitalize",
-                      }}
+                      className={cn(
+                        "rounded px-2 py-0.5 font-ui text-2xs font-medium capitalize",
+                        m.role === "owner"
+                          ? "border border-terra-100 bg-[var(--accent-subtle)] text-[var(--accent-text)]"
+                          : "border border-[var(--border-subtle)] bg-[var(--bg-raised)] text-[var(--text-secondary)]",
+                      )}
                     >
                       {m.role}
                     </span>
                     {m.role !== "owner" && (
                       <button
                         onClick={() => removeMember.mutate({ spaceId: id!, memberId: m.id })}
-                        style={{
-                          fontSize: 11,
-                          color: "var(--text-muted)",
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          padding: "0 4px",
-                        }}
-                        onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--color-error)")}
-                        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "var(--text-muted)")}
+                        className="px-1 text-[11px] text-[var(--text-muted)] hover:text-error"
                       >
                         Remove
                       </button>
@@ -448,65 +280,38 @@ export default function SpaceSettings() {
 
           {section === "sync" && (
             <div>
-              <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 500, fontSize: 16, marginBottom: 4 }}>
-                Sync sources
-              </h3>
-              <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 20 }}>
+              <h3 className="mb-1 font-display text-base font-medium">Sync sources</h3>
+              <p className="mb-5 text-xs text-[var(--text-muted)]">
                 Automatically pull content from connected sources into this Space.
               </p>
 
-              {/* Connected sources */}
               {syncSources.length > 0 && (
-                <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+                <div className="mb-5 flex flex-col gap-2">
                   {syncSources.map((src) => (
-                    <div
-                      key={src.id}
-                      style={{
-                        padding: "12px 14px",
-                        background: "var(--bg-surface)",
-                        border: "1px solid var(--border-subtle)",
-                        borderRadius: 10,
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                    <div key={src.id} className="rounded-[10px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3.5 py-3">
+                      <div className="mb-2 flex items-center gap-2.5">
                         <div
-                          style={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: "50%",
-                            background: syncStatusColor(src.is_active),
-                            flexShrink: 0,
-                          }}
+                          className="h-2 w-2 shrink-0 rounded-full"
+                          style={{ background: syncStatusColor(src.is_active) }}
                         />
-                        <span style={{ fontSize: 13, fontWeight: 500, color: "var(--text-primary)", flex: 1 }}>
+                        <span className="flex-1 text-[13px] font-medium text-[var(--text-primary)]">
                           {src.external_name ?? src.platform}
                         </span>
                         <span
-                          style={{
-                            fontSize: 10,
-                            fontFamily: "var(--font-ui)",
-                            color: syncStatusColor(src.is_active),
-                            textTransform: "uppercase",
-                            letterSpacing: "0.05em",
-                          }}
+                          className="font-ui text-2xs uppercase tracking-wide"
+                          style={{ color: syncStatusColor(src.is_active) }}
                         >
                           {src.is_active ? "active" : "inactive"}
                         </span>
                         <button
                           onClick={() => deleteSyncSource.mutate(src.id)}
-                          style={{
-                            fontSize: 11,
-                            color: "var(--color-error)",
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                          }}
+                          className="text-[11px] text-error hover:underline"
                         >
                           Disconnect
                         </button>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5">
                           <span className="text-meta">Frequency:</span>
                           <span className="text-meta">{src.sync_frequency}</span>
                         </div>
@@ -516,37 +321,14 @@ export default function SpaceSettings() {
                 </div>
               )}
 
-              {/* Connect new source */}
-              <p className="text-label" style={{ marginBottom: 10, color: "var(--text-muted)" }}>Connect a source</p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {[
-                  { type: "youtube", label: "YouTube", icon: "\u25B6", color: "#ff0000" },
-                  { type: "spotify", label: "Spotify", icon: "\u266A", color: "#1db954" },
-                  { type: "reddit", label: "Reddit", icon: "\u25CE", color: "#ff4500" },
-                  { type: "rss", label: "RSS feed", icon: "\u229B", color: "#f79c42" },
-                ].map((source) => (
+              <p className="text-label mb-2.5 text-[var(--text-muted)]">Connect a source</p>
+              <div className="flex flex-wrap gap-2">
+                {sourceOptions.map((source) => (
                   <button
                     key={source.type}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 6,
-                      height: 34,
-                      padding: "0 14px",
-                      background: "var(--bg-surface)",
-                      border: "1px solid var(--border-subtle)",
-                      borderRadius: 7,
-                      fontSize: 12,
-                      fontFamily: "var(--font-ui)",
-                      fontWeight: 500,
-                      color: "var(--text-secondary)",
-                      cursor: "pointer",
-                      transition: "border-color var(--transition-fast)",
-                    }}
-                    onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.borderColor = "var(--border-strong)")}
-                    onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.borderColor = "var(--border-subtle)")}
+                    className="flex h-[34px] items-center gap-1.5 rounded-[7px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3.5 font-ui text-xs font-medium text-[var(--text-secondary)] transition-[border-color] duration-[var(--transition-fast)] hover:border-[var(--border-strong)]"
                   >
-                    <span style={{ color: source.color, fontSize: 11 }}>{source.icon}</span>
+                    <span className="text-[11px]" style={{ color: source.color }}>{source.icon}</span>
                     {source.label}
                   </button>
                 ))}
@@ -556,58 +338,26 @@ export default function SpaceSettings() {
 
           {section === "sharing" && (
             <div>
-              <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 500, fontSize: 16, marginBottom: 4 }}>
-                Public sharing
-              </h3>
-              <p style={{ fontSize: 12, color: "var(--text-muted)", marginBottom: 20 }}>
+              <h3 className="mb-1 font-display text-base font-medium">Public sharing</h3>
+              <p className="mb-5 text-xs text-[var(--text-muted)]">
                 Share a read-only view of this Space with anyone — no account needed.
               </p>
 
               {space.share_token ? (
-                <div
-                  style={{
-                    padding: 16,
-                    background: "var(--bg-surface)",
-                    border: "1px solid var(--border-subtle)",
-                    borderRadius: 10,
-                    marginBottom: 14,
-                  }}
-                >
-                  <p className="text-label" style={{ marginBottom: 8, color: "var(--text-muted)" }}>Share link</p>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <code
-                      style={{
-                        flex: 1,
-                        padding: "8px 12px",
-                        background: "var(--bg-raised)",
-                        border: "1px solid var(--border-subtle)",
-                        borderRadius: 7,
-                        fontSize: 12,
-                        fontFamily: "monospace",
-                        color: "var(--text-secondary)",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
+                <div className="mb-3.5 rounded-[10px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-4">
+                  <p className="text-label mb-2 text-[var(--text-muted)]">Share link</p>
+                  <div className="flex gap-2">
+                    <code className="flex-1 truncate rounded-[7px] border border-[var(--border-subtle)] bg-[var(--bg-raised)] px-3 py-2 font-mono text-xs text-[var(--text-secondary)]">
                       https://brainfeed.app/p/{space.share_token}
                     </code>
                     <button
                       onClick={handleCopy}
-                      style={{
-                        height: 36,
-                        padding: "0 14px",
-                        background: copied ? "var(--accent-subtle)" : "var(--bg-raised)",
-                        border: "1px solid var(--border-subtle)",
-                        borderRadius: 7,
-                        fontSize: 12,
-                        fontFamily: "var(--font-ui)",
-                        fontWeight: 500,
-                        color: copied ? "var(--accent-text)" : "var(--text-secondary)",
-                        cursor: "pointer",
-                        flexShrink: 0,
-                        transition: "all var(--transition-fast)",
-                      }}
+                      className={cn(
+                        "h-9 shrink-0 rounded-[7px] border border-[var(--border-subtle)] px-3.5 font-ui text-xs font-medium transition-all duration-[var(--transition-fast)]",
+                        copied
+                          ? "bg-[var(--accent-subtle)] text-[var(--accent-text)]"
+                          : "bg-[var(--bg-raised)] text-[var(--text-secondary)]",
+                      )}
                     >
                       {copied ? "Copied!" : "Copy"}
                     </button>
@@ -616,19 +366,7 @@ export default function SpaceSettings() {
               ) : (
                 <button
                   onClick={() => shareSpace.mutate(id!)}
-                  style={{
-                    height: 36,
-                    padding: "0 18px",
-                    background: "var(--accent)",
-                    border: "none",
-                    borderRadius: 8,
-                    fontSize: 13,
-                    fontFamily: "var(--font-ui)",
-                    fontWeight: 500,
-                    color: "#fff",
-                    cursor: "pointer",
-                    marginBottom: 14,
-                  }}
+                  className="mb-3.5 h-9 cursor-pointer rounded-lg bg-[var(--accent)] px-[18px] font-ui text-[13px] font-medium text-white hover:bg-terra-600"
                 >
                   Generate share link
                 </button>
@@ -637,17 +375,7 @@ export default function SpaceSettings() {
               {space.share_token && (
                 <button
                   onClick={() => unshareSpace.mutate(id!)}
-                  style={{
-                    height: 34,
-                    padding: "0 14px",
-                    background: "transparent",
-                    border: "1px solid var(--color-error)",
-                    borderRadius: 7,
-                    fontSize: 12,
-                    fontFamily: "var(--font-ui)",
-                    color: "var(--color-error)",
-                    cursor: "pointer",
-                  }}
+                  className="h-[34px] cursor-pointer rounded-[7px] border border-error bg-transparent px-3.5 font-ui text-xs text-error hover:bg-error/10"
                 >
                   Revoke link
                 </button>

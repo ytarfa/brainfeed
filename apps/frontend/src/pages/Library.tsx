@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
+import { X } from "lucide-react";
+import { cn } from "../lib/utils";
 
 import BookmarkCard from "../components/BookmarkCard";
 import { useBookmarks, useSpaces, toBookmark, useDigestSummary } from "../api/hooks";
@@ -17,6 +19,15 @@ const sortMap: Record<SortOption, string> = {
   title: "title",
   source: "source_type",
 };
+
+const filters: { label: string; value: ContentFilter }[] = [
+  { label: "All", value: "all" },
+  { label: "Links", value: "link" },
+  { label: "Notes", value: "note" },
+  { label: "Images", value: "image" },
+  { label: "PDFs", value: "pdf" },
+  { label: "Files", value: "file" },
+];
 
 export default function Library() {
   const { view, onCardClick } = useOutletContext<LayoutContext>();
@@ -46,186 +57,73 @@ export default function Library() {
   const digestGroups = digestSummary?.groups ?? [];
   const showBanner = digestCount > 0 && !bannerDismissed;
 
-  const filters: { label: string; value: ContentFilter }[] = [
-    { label: "All", value: "all" },
-    { label: "Links", value: "link" },
-    { label: "Notes", value: "note" },
-    { label: "Images", value: "image" },
-    { label: "PDFs", value: "pdf" },
-    { label: "Files", value: "file" },
-  ];
-
   return (
-    <div style={{ padding: "20px 24px" }}>
+    <div className="px-6 py-5">
       {/* Digest banner */}
       {showBanner && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-            padding: "12px 16px",
-            background: "var(--accent-subtle)",
-            border: "1px solid var(--terra-100)",
-            borderRadius: 10,
-            marginBottom: 16,
-            animation: "fadeIn 240ms both",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 10, flex: 1, minWidth: 0 }}>
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                minWidth: 20,
-                height: 20,
-                padding: "0 5px",
-                background: "var(--accent)",
-                color: "#fff",
-                borderRadius: 20,
-                fontSize: 10,
-                fontWeight: 500,
-                fontFamily: "var(--font-ui)",
-                flexShrink: 0,
-              }}
-            >
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-[10px] border border-terra-100 bg-[var(--accent-subtle)] px-4 py-3 animate-fade-in">
+          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+            <span className="inline-flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full bg-[var(--accent)] px-[5px] font-ui text-2xs font-medium text-white">
               {digestCount}
             </span>
-            <span
-              style={{
-                fontSize: 13,
-                fontFamily: "var(--font-ui)",
-                color: "var(--text-primary)",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
+            <span className="truncate font-ui text-[13px] text-[var(--text-primary)]">
               new {digestCount === 1 ? "item" : "items"} in your Digest
               {digestGroups.length > 0 && (
-                <span style={{ color: "var(--text-muted)", marginLeft: 4 }}>
+                <span className="ml-1 text-[var(--text-muted)]">
                   from {digestGroups.map((g) => g.source_name).join(", ")}
                 </span>
               )}
             </span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+          <div className="flex shrink-0 items-center gap-1.5">
             <button
               onClick={() => navigate("/digest")}
-              style={{
-                height: 28,
-                padding: "0 14px",
-                background: "var(--accent)",
-                border: "none",
-                borderRadius: 6,
-                fontSize: 12,
-                fontFamily: "var(--font-ui)",
-                fontWeight: 500,
-                color: "#fff",
-                cursor: "pointer",
-                transition: "opacity var(--transition-fast)",
-              }}
+              className="h-7 cursor-pointer rounded-md bg-[var(--accent)] px-3.5 font-ui text-xs font-medium text-white transition-opacity duration-[var(--transition-fast)] hover:opacity-90"
             >
               Review
             </button>
             <button
               onClick={() => setBannerDismissed(true)}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 24,
-                height: 24,
-                background: "transparent",
-                border: "none",
-                borderRadius: 4,
-                color: "var(--text-muted)",
-                cursor: "pointer",
-                fontSize: 14,
-                transition: "color var(--transition-fast)",
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-muted)"; }}
+              className="flex h-6 w-6 items-center justify-center rounded text-[var(--text-muted)] hover:text-[var(--text-primary)]"
               aria-label="Dismiss banner"
             >
-              &times;
+              <X size={14} />
             </button>
           </div>
         </div>
       )}
 
       {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h1
-          style={{
-            fontFamily: "var(--font-display)",
-            fontWeight: 500,
-            fontSize: 24,
-            color: "var(--text-primary)",
-            marginBottom: 2,
-          }}
-        >
-          Library
-        </h1>
-        <p style={{ fontSize: 13, color: "var(--text-muted)" }}>
-          {total} items across all Spaces
-        </p>
+      <div className="mb-5">
+        <h1 className="mb-0.5 font-display text-2xl font-medium text-[var(--text-primary)]">Library</h1>
+        <p className="text-[13px] text-[var(--text-muted)]">{total} items across all Spaces</p>
       </div>
 
       {/* Filter + Sort bar */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-          marginBottom: 20,
-          flexWrap: "wrap",
-        }}
-      >
-        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-1">
           {filters.map((f) => (
             <button
               key={f.value}
               onClick={() => setFilter(f.value)}
-              style={{
-                height: 28,
-                padding: "0 12px",
-                background: filter === f.value ? "var(--accent-subtle)" : "var(--bg-surface)",
-                border: `1px solid ${filter === f.value ? "var(--terra-100)" : "var(--border-subtle)"}`,
-                borderRadius: 20,
-                fontSize: 12,
-                fontFamily: "var(--font-ui)",
-                fontWeight: 500,
-                color: filter === f.value ? "var(--accent-text)" : "var(--text-secondary)",
-                cursor: "pointer",
-                transition: "all var(--transition-fast)",
-              }}
+              className={cn(
+                "h-7 rounded-full px-3 font-ui text-xs font-medium transition-all duration-[var(--transition-fast)]",
+                filter === f.value
+                  ? "border border-terra-100 bg-[var(--accent-subtle)] text-[var(--accent-text)]"
+                  : "border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-secondary)]",
+              )}
             >
               {f.label}
             </button>
           ))}
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span className="text-meta" style={{ flexShrink: 0 }}>Sort by</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-meta shrink-0">Sort by</span>
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as SortOption)}
-            style={{
-              height: 28,
-              padding: "0 8px",
-              background: "var(--bg-surface)",
-              border: "1px solid var(--border-subtle)",
-              borderRadius: 6,
-              fontSize: 12,
-              fontFamily: "var(--font-ui)",
-              color: "var(--text-secondary)",
-              outline: "none",
-              cursor: "pointer",
-            }}
+            className="h-7 cursor-pointer rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2 font-ui text-xs text-[var(--text-secondary)] outline-none"
           >
             <option value="saved">Date saved</option>
             <option value="title">Title</option>
@@ -236,51 +134,20 @@ export default function Library() {
 
       {/* Loading state */}
       {isLoading && (
-        <div style={{ textAlign: "center", padding: "60px 24px", color: "var(--text-muted)", fontSize: 13 }}>
+        <div className="py-[60px] text-center text-[13px] text-[var(--text-muted)]">
           Loading bookmarks...
         </div>
       )}
 
       {/* Empty state */}
       {!isLoading && bookmarks.length === 0 && (
-        <div
-          style={{
-            textAlign: "center",
-            padding: "80px 24px",
-            animation: "fadeIn 320ms both",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 48,
-              marginBottom: 16,
-              opacity: 0.3,
-              fontFamily: "var(--font-display)",
-              color: "var(--accent)",
-            }}
-          >
-            b.
-          </div>
-          <h3 style={{ fontFamily: "var(--font-display)", fontWeight: 500, fontSize: 20, marginBottom: 8 }}>
-            Nothing saved yet
-          </h3>
-          <p style={{ fontSize: 13, color: "var(--text-muted)", maxWidth: 300, margin: "0 auto 20px" }}>
+        <div className="animate-fade-in py-20 text-center">
+          <div className="mb-4 font-display text-5xl text-[var(--accent)] opacity-30">b.</div>
+          <h3 className="mb-2 font-display text-xl font-medium">Nothing saved yet</h3>
+          <p className="mx-auto mb-5 max-w-[300px] text-[13px] text-[var(--text-muted)]">
             Save your first bookmark or install the browser extension to start building your library.
           </p>
-          <button
-            style={{
-              height: 36,
-              padding: "0 20px",
-              background: "var(--accent)",
-              border: "none",
-              borderRadius: 8,
-              fontSize: 13,
-              fontFamily: "var(--font-ui)",
-              fontWeight: 500,
-              color: "#fff",
-              cursor: "pointer",
-            }}
-          >
+          <button className="h-9 cursor-pointer rounded-lg bg-[var(--accent)] px-5 font-ui text-[13px] font-medium text-white hover:bg-terra-600">
             + Save something
           </button>
         </div>
@@ -289,12 +156,11 @@ export default function Library() {
       {/* Card grid / list */}
       {!isLoading && bookmarks.length > 0 && (
         <div
-          style={{
-            display: view === "grid" ? "grid" : "flex",
-            gridTemplateColumns: view === "grid" ? "repeat(auto-fill, minmax(260px, 1fr))" : undefined,
-            flexDirection: view === "list" ? "column" : undefined,
-            gap: view === "grid" ? 14 : 8,
-          }}
+          className={cn(
+            view === "grid"
+              ? "grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3.5"
+              : "flex flex-col gap-2",
+          )}
         >
           {bookmarks.map((bookmark, i) => {
             const space = getSpace(bookmark.spaceId);

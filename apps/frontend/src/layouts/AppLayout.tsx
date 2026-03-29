@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 
 import Sidebar from "../components/Sidebar";
@@ -7,6 +7,7 @@ import SaveItemModal from "../components/SaveItemModal";
 import GlobalSearch from "../components/GlobalSearch";
 import BookmarkDetail from "../components/BookmarkDetail";
 import { useBookmark, useSpaces, toBookmark } from "../api/hooks";
+import { cn } from "../lib/utils";
 
 interface AppLayoutProps {
   dark: boolean;
@@ -47,14 +48,7 @@ export default function AppLayout({ dark, onToggleDark }: AppLayoutProps) {
   }, []);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        height: "100vh",
-        overflow: "hidden",
-        background: "var(--bg-base)",
-      }}
-    >
+    <div className="flex h-screen overflow-hidden bg-[var(--bg-base)]">
       {/* Sidebar */}
       <Sidebar
         collapsed={sidebarCollapsed}
@@ -63,7 +57,7 @@ export default function AppLayout({ dark, onToggleDark }: AppLayoutProps) {
       />
 
       {/* Main area */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div className="flex flex-1 flex-col overflow-hidden">
         <TopBar
           onAddClick={() => setSaveOpen(true)}
           onSearchClick={() => setSearchOpen(true)}
@@ -75,7 +69,7 @@ export default function AppLayout({ dark, onToggleDark }: AppLayoutProps) {
         />
 
         {/* Page content via Outlet, with view context */}
-        <main style={{ flex: 1, overflowY: "auto" }}>
+        <main className="flex-1 overflow-y-auto">
           <Outlet context={{ view, onCardClick: setDetailBookmarkId }} />
         </main>
       </div>
