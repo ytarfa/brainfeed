@@ -12,7 +12,8 @@
     "start": "ts-node --transpile-only src/index.ts",
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:pipeline": "ts-node --transpile-only src/test-pipeline.ts"
   },
   "dependencies": {
     "@brain-feed/types": "workspace:*",
