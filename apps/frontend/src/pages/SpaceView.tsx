@@ -1,11 +1,11 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useRef, useState, useMemo } from "react";
 import { useParams, Link, useOutletContext } from "react-router-dom";
 import { Settings, Diamond } from "lucide-react";
 import { cn } from "../lib/utils";
 
 import BookmarkCard from "../components/BookmarkCard";
 import ActivityLog from "../components/ActivityLog";
-import { useSpace, useActivity, toBookmark } from "../api/hooks";
+import { useSpace, useActivity, useDeleteBookmark, toBookmark } from "../api/hooks";
 import type { ActivityRow } from "../api/hooks";
 
 interface LayoutContext {
@@ -20,6 +20,19 @@ export default function SpaceView() {
 
   const { data: space, isLoading: spaceLoading } = useSpace(id);
   const { data: activityData } = useActivity(id);
+  const deleteBookmark = useDeleteBookmark();
+  const [exitingId, setExitingId] = useState<string | null>(null);
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const handleDelete = useCallback((id: string) => {
+    deleteBookmark.mutate(id, {
+      onSuccess: () => {
+        setExitingId(id);
+        clearTimeout(exitTimerRef.current);
+        exitTimerRef.current = setTimeout(() => setExitingId(null), 600);
+      },
+    });
+  }, [deleteBookmark]);
 
   const bookmarks = useMemo(
     () => (space?.bookmarks?.data ?? []).map((raw) => toBookmark({ ...raw, bookmark_spaces: raw.bookmark_spaces.map((bs) => ({ ...bs, spaces: { id: bs.space_id, name: space?.name ?? "" } })) })),
@@ -140,6 +153,9 @@ export default function SpaceView() {
               bookmark={bookmark}
               view={view}
               onClick={() => onCardClick(bookmark.id)}
+              onDelete={handleDelete}
+              isDeleting={deleteBookmark.isPending && deleteBookmark.variables === bookmark.id}
+              isExiting={exitingId === bookmark.id}
               index={i}
             />
           ))}

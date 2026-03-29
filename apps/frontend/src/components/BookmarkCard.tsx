@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Code2,
   Play,
@@ -25,6 +25,9 @@ interface BookmarkCardProps {
   bookmark: Bookmark;
   view: "grid" | "list";
   onClick: () => void;
+  onDelete?: (id: string) => void;
+  isDeleting?: boolean;
+  isExiting?: boolean;
   showSpace?: boolean;
   spaceName?: string;
   spaceColor?: string;
@@ -54,35 +57,87 @@ const menuItems = [
   { label: "Delete", icon: <Trash2 size={13} />, danger: true },
 ];
 
-export default function BookmarkCard({ bookmark, view, onClick, showSpace = false, spaceName, spaceColor, index = 0, readonly = false }: BookmarkCardProps) {
+export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDeleting = false, isExiting = false, showSpace = false, spaceName, spaceColor, index = 0, readonly = false }: BookmarkCardProps) {
   const [hovered, setHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
   const isArticle = bookmark.isArticle || bookmark.source_type === "paper";
   const isGrid = view === "grid";
 
-  const handleMoreClick = (e: React.MouseEvent) => {
+  const disabled = isDeleting || isExiting;
+
+  // Capture card height for collapse animation
+  useEffect(() => {
+    if (isExiting && cardRef.current) {
+      const h = cardRef.current.offsetHeight;
+      cardRef.current.style.setProperty("--card-height", `${h}px`);
+    }
+  }, [isExiting]);
+
+  // Close menu when delete starts
+  useEffect(() => {
+    if (isDeleting) setMenuOpen(false);
+  }, [isDeleting]);
+
+  const handleMoreClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     setMenuOpen((v) => !v);
+  }, []);
+
+  const handleMenuAction = (e: React.MouseEvent, label: string) => {
+    e.stopPropagation();
+    setMenuOpen(false);
+    if (label === "Delete" && onDelete) {
+      onDelete(bookmark.id);
+    } else if (label === "Open source" && bookmark.url) {
+      window.open(bookmark.url, "_blank", "noopener,noreferrer");
+    }
   };
 
   return (
     <article
+      ref={cardRef}
       className={cn(
-        "relative cursor-pointer rounded-[10px] border bg-[var(--bg-raised)] transition-[border-color,transform,box-shadow] duration-[var(--transition-fast)]",
+        "relative cursor-pointer rounded-[10px] border bg-[var(--bg-raised)] overflow-hidden",
         isGrid ? "block p-[14px_14px_12px]" : "flex items-start gap-3 p-[12px_16px]",
-        hovered
+        // Default state
+        !disabled && (hovered
           ? "border-[var(--border-strong)] -translate-y-px shadow-md"
-          : "border-[var(--border-subtle)] translate-y-0 shadow-none",
+          : "border-[var(--border-subtle)] translate-y-0 shadow-none"),
+        // Pending delete: pulsing border
+        isDeleting && !isExiting && "animate-delete-pulse pointer-events-none",
+        // Exit phase: card shrinks, fades, then collapses
+        isExiting && "pointer-events-none animate-card-exit",
+        // Transition for default hover state (not during animations)
+        !disabled && "transition-[border-color,transform,box-shadow] duration-[var(--transition-fast)]",
       )}
-      style={{ animation: `fade-in 240ms ${index * 30}ms both` }}
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => { setHovered(false); setMenuOpen(false); }}
-      tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && onClick()}
+      style={{
+        animation: isExiting
+          ? undefined  // let the class handle it
+          : `fade-in 240ms ${index * 30}ms both`,
+      }}
+      onClick={disabled ? undefined : onClick}
+      onMouseEnter={() => !disabled && setHovered(true)}
+      onMouseLeave={() => { if (!disabled) { setHovered(false); setMenuOpen(false); } }}
+      tabIndex={disabled ? -1 : 0}
+      onKeyDown={(e) => !disabled && e.key === "Enter" && onClick()}
       role="button"
       aria-label={bookmark.title ?? undefined}
     >
+      {/* Deleting shimmer overlay — warm, contextual, not a generic spinner */}
+      {isDeleting && !isExiting && (
+        <div className="absolute inset-0 z-50 rounded-[10px] overflow-hidden pointer-events-none">
+          <div
+            className="absolute inset-0 opacity-[0.08]"
+            style={{
+              background: "linear-gradient(90deg, transparent 25%, var(--color-error) 50%, transparent 75%)",
+              backgroundSize: "400px 100%",
+              animation: "shimmer 1.2s infinite linear",
+            }}
+          />
+        </div>
+      )}
+
       {/* Thumbnail (grid only) */}
       {isGrid && bookmark.thumbnail_url && (
         <div className="mb-2.5 h-[120px] w-full overflow-hidden rounded-md bg-[var(--bg-surface)]">
@@ -179,6 +234,7 @@ export default function BookmarkCard({ bookmark, view, onClick, showSpace = fals
                   {menuItems.map((item) => (
                     <button
                       key={item.label}
+                      onClick={(e) => handleMenuAction(e, item.label)}
                       className={cn(
                         "flex w-full items-center gap-2 px-3 py-2 text-left font-ui text-[13px] transition-[background] duration-[var(--transition-fast)] hover:bg-[var(--bg-surface)]",
                         item.danger ? "text-error" : "text-[var(--text-primary)]",

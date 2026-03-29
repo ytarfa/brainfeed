@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useCallback, useRef, useState, useMemo } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
 import { cn } from "../lib/utils";
 
 import BookmarkCard from "../components/BookmarkCard";
-import { useBookmarks, useSpaces, toBookmark, useDigestSummary } from "../api/hooks";
+import { useBookmarks, useSpaces, useDeleteBookmark, toBookmark, useDigestSummary } from "../api/hooks";
 
 type ContentFilter = "all" | "link" | "note" | "image" | "pdf" | "file";
 type SortOption = "saved" | "title" | "source";
@@ -44,6 +44,19 @@ export default function Library() {
   });
   const { data: spacesData } = useSpaces();
   const { data: digestSummary } = useDigestSummary();
+  const deleteBookmark = useDeleteBookmark();
+  const [exitingId, setExitingId] = useState<string | null>(null);
+  const exitTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const handleDelete = useCallback((id: string) => {
+    deleteBookmark.mutate(id, {
+      onSuccess: () => {
+        setExitingId(id);
+        clearTimeout(exitTimerRef.current);
+        exitTimerRef.current = setTimeout(() => setExitingId(null), 600);
+      },
+    });
+  }, [deleteBookmark]);
 
   const bookmarks = useMemo(
     () => (bookmarksData?.data ?? []).map(toBookmark),
@@ -174,6 +187,9 @@ export default function Library() {
                 bookmark={bookmark}
                 view={view}
                 onClick={() => onCardClick(bookmark.id)}
+                onDelete={handleDelete}
+                isDeleting={deleteBookmark.isPending && deleteBookmark.variables === bookmark.id}
+                isExiting={exitingId === bookmark.id}
                 showSpace
                 spaceName={space?.name}
                 spaceColor={space?.color ?? undefined}
