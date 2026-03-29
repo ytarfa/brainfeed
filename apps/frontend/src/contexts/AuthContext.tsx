@@ -87,6 +87,22 @@ export default function AuthProvider({ children }: AuthProviderProps) {
       const tokens = hashSession ?? getStoredTokens();
 
       if (!tokens) {
+        // Dev auto-login: if env credentials are set and no session exists,
+        // sign in automatically to bypass the login page during development.
+        const devEmail = import.meta.env.VITE_DEV_EMAIL;
+        const devPassword = import.meta.env.VITE_DEV_PASSWORD;
+        if (devEmail && devPassword) {
+          try {
+            const result = await apiSignIn(devEmail, devPassword);
+            if (!cancelled && result.user && result.session) {
+              setUser(result.user);
+              setSession(result.session);
+              scheduleRefresh(result.session);
+            }
+          } catch (err) {
+            console.warn("[dev-auto-login] Auto-login failed:", err);
+          }
+        }
         if (!cancelled) setLoading(false);
         return;
       }
