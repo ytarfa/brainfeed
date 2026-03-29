@@ -9,14 +9,17 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # Copy workspace manifests
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/backend/package.json ./apps/backend/
+COPY packages/types/package.json ./packages/types/
 
-# Install only backend deps (no frontend)
+# Install only backend deps (includes workspace dep @brain-feed/types)
 RUN pnpm install --frozen-lockfile --filter @brain-feed/backend
 
 # Copy source and tsconfig
 COPY tsconfig.json ./
 COPY apps/backend/tsconfig.json ./apps/backend/
 COPY apps/backend/src ./apps/backend/src
+COPY packages/types/src ./packages/types/src
+COPY packages/types/tsconfig.json ./packages/types/
 
 # Build TypeScript
 RUN pnpm --filter @brain-feed/backend run build
@@ -33,6 +36,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # Copy workspace manifests for production install
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/backend/package.json ./apps/backend/
+COPY packages/types/package.json ./packages/types/
 
 # Install only production dependencies
 RUN pnpm install --frozen-lockfile --filter @brain-feed/backend --prod
