@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { apiGet, apiPost, apiDelete } from "../client";
 import type { DigestCandidate, Bookmark } from "../../data/mock";
+import { timeAgo } from "../../lib/utils";
 
 // --- Response types ---
 
@@ -88,7 +89,7 @@ export function toDigestCandidate(raw: DigestBookmarkRow): DigestCandidate {
     published_at: raw.published_at,
     expires_at: raw.expires_at,
     spaceId: "",
-    savedAt: raw.created_at,
+    savedAt: timeAgo(raw.created_at),
     domain: raw.url ? (() => { try { return new URL(raw.url).hostname.replace("www.", ""); } catch { return undefined; } })() : undefined,
   };
 }

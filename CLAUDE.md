@@ -46,6 +46,7 @@ The backend is an Express + TypeScript API (`apps/backend/src/index.ts`) with fu
 - **MCP server:** `@supabase/mcp-server-supabase` — use this to create/edit tables, run SQL, manage RLS policies, and manage storage buckets.
 - **Schema migration:** `supabase/migrations.sql` — full schema (tables, indexes, RLS, storage policies). Run in Supabase SQL editor when setting up a fresh project.
 - **Auth:** Supabase Auth (email/password + OAuth). The Express API verifies JWTs via `serviceClient.auth.getUser(token)` in `src/middleware/auth.ts`.
+- **Database ops:** When needed, you can create or insert data by running SQL scripts. **Never run destructive actions** (DROP, DELETE, TRUNCATE, or destructive ALTER) unless explicitly asked.
 - **Two Supabase clients:**
   - `serviceClient` — service role key, bypasses RLS. Used in `public/` routes and admin ops (account deletion, invite lookup).
   - `createUserClient(token)` — per-request, uses the user's JWT so RLS is enforced. Attached to `req.supabase` by the auth middleware.

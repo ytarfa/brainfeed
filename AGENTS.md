@@ -189,6 +189,10 @@ Define icon components as small inline functions at the top of the file that nee
 - Handle image load failures via `onError`: `(e.target as HTMLImageElement).style.display = "none"`.
 - Backend: always add error middleware and wrap async route handlers; return JSON error responses.
 
+### Supabase Database
+
+When needed, you can create or insert data in the Supabase database by running SQL scripts (via the Supabase MCP tools). **Never run destructive actions** (DROP, DELETE, TRUNCATE, or destructive ALTER) against the database unless explicitly asked by the user.
+
 ---
 
 ## CI / CD

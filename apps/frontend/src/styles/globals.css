@@ -156,6 +156,11 @@
     }
   }
 
+  @keyframes card-hover-glow {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
   --animate-card-exit: card-exit 320ms cubic-bezier(0.4, 0, 0.7, 0.2) both;
   --animate-card-exit-collapse: card-exit-collapse 280ms 300ms cubic-bezier(0.4, 0, 1, 1) both;
   --animate-delete-pulse: delete-pulse 1.2s ease infinite;
@@ -187,6 +192,12 @@
   --accent-subtle: var(--color-terra-50);
   --accent-text: var(--color-terra-600);
 
+  /* Card */
+  --card-shadow: 0 1px 2px rgba(30, 28, 26, 0.03), 0 1px 3px rgba(30, 28, 26, 0.04);
+  --card-shadow-hover: 0 4px 12px rgba(30, 28, 26, 0.06), 0 1px 3px rgba(30, 28, 26, 0.04);
+  --card-glow: 0 0 0 1px rgba(212, 132, 90, 0.08);
+  --thumbnail-overlay: linear-gradient(to bottom, transparent 50%, rgba(30, 28, 26, 0.04) 100%);
+
   /* Layout */
   --sidebar-width: 240px;
   --sidebar-rail-width: 56px;
@@ -209,6 +220,10 @@
   --accent: var(--color-terra-DEFAULT);
   --accent-subtle: var(--color-dark-accent-subtle);
   --accent-text: var(--color-terra-200);
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
+  --card-shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.16), 0 2px 4px rgba(0, 0, 0, 0.1);
+  --card-glow: 0 0 0 1px rgba(212, 132, 90, 0.12);
+  --thumbnail-overlay: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.08) 100%);
 }
 
 /* ────────────────────────────────────────────────────────

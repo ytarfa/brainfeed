@@ -6,6 +6,7 @@ import Logo from "../components/Logo";
 import BookmarkDetail from "../components/BookmarkDetail";
 import { usePublicSpace } from "../api/hooks";
 import type { PublicSpaceBookmark } from "../api/hooks";
+import { timeAgo } from "../lib/utils";
 import type { Bookmark } from "@brain-feed/types";
 
 export default function PublicSpace() {
@@ -47,7 +48,7 @@ export default function PublicSpace() {
     updated_at: b.created_at,
     user_id: "",
     spaceId: space.id,
-    savedAt: b.created_at,
+    savedAt: timeAgo(b.created_at),
     domain: b.url ? new URL(b.url).hostname.replace("www.", "") : undefined,
     raw_content: null,
     file_path: null,
@@ -92,7 +93,7 @@ export default function PublicSpace() {
       </div>
 
       {/* Cards */}
-      <div className="max-w-[900px] mx-auto px-6 pb-12 grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3">
+      <div className="max-w-[900px] mx-auto px-6 pb-12 grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
         {bookmarks.map((b, i) => (
           <BookmarkCard
             key={b.id}

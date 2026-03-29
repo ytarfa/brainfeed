@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import type { Bookmark } from "@brain-feed/types";
+import renderSourceMeta from "./BookmarkCard/variants/renderSourceMeta";
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
@@ -63,8 +64,10 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
   const cardRef = useRef<HTMLDivElement>(null);
   const isArticle = bookmark.isArticle || bookmark.source_type === "paper";
   const isGrid = view === "grid";
+  const hasThumbnail = isGrid && !!bookmark.thumbnail_url;
 
   const disabled = isDeleting || isExiting;
+  const sourceMeta = renderSourceMeta(bookmark);
 
   // Capture card height for collapse animation
   useEffect(() => {
@@ -98,23 +101,28 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
     <article
       ref={cardRef}
       className={cn(
-        "relative cursor-pointer rounded-[10px] border bg-[var(--bg-raised)] overflow-hidden",
-        isGrid ? "block p-[14px_14px_12px]" : "flex items-start gap-3 p-[12px_16px]",
+        "group/card relative cursor-pointer overflow-hidden rounded-xl border",
+        isGrid ? "block" : "flex items-start gap-4 p-[14px_18px]",
         // Default state
         !disabled && (hovered
-          ? "border-[var(--border-strong)] -translate-y-px shadow-md"
-          : "border-[var(--border-subtle)] translate-y-0 shadow-none"),
+          ? "border-[var(--border-strong)]"
+          : "border-[var(--border-subtle)]"),
         // Pending delete: pulsing border
         isDeleting && !isExiting && "animate-delete-pulse pointer-events-none",
         // Exit phase: card shrinks, fades, then collapses
         isExiting && "pointer-events-none animate-card-exit",
         // Transition for default hover state (not during animations)
-        !disabled && "transition-[border-color,transform,box-shadow] duration-[var(--transition-fast)]",
+        !disabled && "transition-[border-color,transform,box-shadow] duration-200",
       )}
       style={{
         animation: isExiting
-          ? undefined  // let the class handle it
+          ? undefined
           : `fade-in 240ms ${index * 30}ms both`,
+        background: "var(--bg-raised)",
+        boxShadow: !disabled
+          ? (hovered ? "var(--card-shadow-hover), var(--card-glow)" : "var(--card-shadow)")
+          : undefined,
+        transform: !disabled && hovered ? "translateY(-2px)" : undefined,
       }}
       onClick={disabled ? undefined : onClick}
       onMouseEnter={() => !disabled && setHovered(true)}
@@ -124,9 +132,9 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
       role="button"
       aria-label={bookmark.title ?? undefined}
     >
-      {/* Deleting shimmer overlay — warm, contextual, not a generic spinner */}
+      {/* Deleting shimmer overlay */}
       {isDeleting && !isExiting && (
-        <div className="absolute inset-0 z-50 rounded-[10px] overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 z-50 overflow-hidden rounded-xl pointer-events-none">
           <div
             className="absolute inset-0 opacity-[0.08]"
             style={{
@@ -138,55 +146,94 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
         </div>
       )}
 
-      {/* Thumbnail (grid only) */}
-      {isGrid && bookmark.thumbnail_url && (
-        <div className="mb-2.5 h-[120px] w-full overflow-hidden rounded-md bg-[var(--bg-surface)]">
+      {/* ── Thumbnail (grid only) ── */}
+      {hasThumbnail && (
+        <div className="relative h-[140px] w-full overflow-hidden bg-[var(--bg-surface)]">
           <img
-            src={bookmark.thumbnail_url}
+            src={bookmark.thumbnail_url!}
             alt=""
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover transition-transform duration-300"
+            style={{
+              transform: hovered ? "scale(1.03)" : "scale(1)",
+            }}
             onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
           />
+          {/* Gradient fade at bottom of thumbnail */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: "var(--thumbnail-overlay)" }}
+          />
+          {/* Type badge floating on thumbnail */}
+          <div className="absolute left-3 top-3">
+            <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-[3px] font-ui text-2xs font-medium text-white/90 backdrop-blur-sm"
+              style={{ background: "rgba(30, 28, 26, 0.55)" }}
+            >
+              {typeIcons[bookmark.source_type ?? ""] || <Diamond size={10} />}
+              {bookmark.source_type}
+            </span>
+          </div>
         </div>
       )}
 
-      {/* Type badge + space badge */}
+      {/* ── Card body ── */}
       <div className={cn(
-        "flex items-center gap-1.5",
-        isGrid ? "mb-2" : "order-[-1] shrink-0",
+        isGrid ? "px-[16px] pt-[12px] pb-[14px]" : "min-w-0 flex-1",
       )}>
-        <span className="inline-flex items-center gap-1 rounded-sm border border-terra-100 bg-[var(--accent-subtle)] px-1.5 py-0.5 font-ui text-2xs font-medium text-[var(--accent-text)]">
-          {typeIcons[bookmark.source_type ?? ""] || <Diamond size={10} />}
-          {bookmark.source_type}
-        </span>
+        {/* Type badge + space badge (when no thumbnail) */}
+        {!hasThumbnail && (
+          <div className={cn(
+            "flex items-center gap-1.5",
+            isGrid ? "mb-2.5" : "mb-2",
+          )}>
+            <span className="inline-flex items-center gap-1 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-1.5 py-[3px] font-ui text-2xs font-medium text-[var(--text-muted)]">
+              {typeIcons[bookmark.source_type ?? ""] || <Diamond size={10} />}
+              {bookmark.source_type}
+            </span>
 
-        {showSpace && spaceName && (
-          <span className="inline-flex items-center gap-1 rounded-sm border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-1.5 py-0.5 font-ui text-2xs font-medium text-[var(--text-secondary)]">
-            <span
-              className="h-[5px] w-[5px] shrink-0 rounded-full"
-              style={{ background: spaceColor ?? "var(--text-muted)" }}
-            />
-            {spaceName}
-          </span>
+            {showSpace && spaceName && (
+              <span className="inline-flex items-center gap-1 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-1.5 py-[3px] font-ui text-2xs font-medium text-[var(--text-secondary)]">
+                <span
+                  className="h-[5px] w-[5px] shrink-0 rounded-full"
+                  style={{ background: spaceColor ?? "var(--text-muted)" }}
+                />
+                {spaceName}
+              </span>
+            )}
+          </div>
         )}
-      </div>
 
-      {/* Main content */}
-      <div className="min-w-0 flex-1">
+        {/* Space badge (when has thumbnail — show inline below thumbnail) */}
+        {hasThumbnail && showSpace && spaceName && (
+          <div className="mb-2.5 flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-1.5 py-[3px] font-ui text-2xs font-medium text-[var(--text-secondary)]">
+              <span
+                className="h-[5px] w-[5px] shrink-0 rounded-full"
+                style={{ background: spaceColor ?? "var(--text-muted)" }}
+              />
+              {spaceName}
+            </span>
+          </div>
+        )}
+
+        {/* Title */}
         <h3
           className={cn(
-            "font-display text-[15px] font-medium leading-[1.35] text-[var(--text-primary)] line-clamp-2",
-            isGrid ? "mb-1.5 line-clamp-2" : "mb-1 line-clamp-1",
+            "font-display text-[15px] font-medium leading-[1.35] text-[var(--text-primary)]",
+            isGrid ? "mb-1 line-clamp-2" : "mb-0.5 line-clamp-1",
             isArticle && "italic",
           )}
         >
           {bookmark.title}
         </h3>
 
+        {/* Source-specific metadata line (factory pattern) */}
+        {sourceMeta}
+
+        {/* Summary */}
         {bookmark.summary && (
           <p className={cn(
-            "mb-2 font-ui text-[13px] leading-[1.55] text-[var(--text-secondary)]",
-            isGrid ? "line-clamp-3" : "line-clamp-2",
+            "font-ui text-[13px] leading-[1.55] text-[var(--text-secondary)]",
+            isGrid ? "mb-2.5 line-clamp-3" : "mb-2 line-clamp-2",
           )}>
             {bookmark.summary}
           </p>
@@ -194,11 +241,11 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
 
         {/* Tags */}
         {bookmark.tags.length > 0 && (
-          <div className="mb-2 flex flex-wrap gap-1">
+          <div className="mb-2.5 flex flex-wrap gap-1">
             {bookmark.tags.map((tag) => (
               <span
                 key={tag.id}
-                className="rounded-full bg-[var(--accent-subtle)] px-[7px] py-0.5 font-ui text-2xs font-medium text-[var(--accent-text)]"
+                className="rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2 py-[2px] font-ui text-2xs font-medium text-[var(--text-secondary)] transition-colors duration-150"
               >
                 {tag.label}
               </span>
@@ -206,19 +253,27 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
           </div>
         )}
 
-        {/* Meta row */}
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-meta">
-            {bookmark.domain && `${bookmark.domain} · `}{bookmark.savedAt}
-          </span>
+        {/* Meta row — domain, saved time, more button */}
+        <div className="flex items-center justify-between gap-2 pt-0.5">
+          <div className="flex items-center gap-1.5 text-meta">
+            {bookmark.domain && (
+              <>
+                <span className="max-w-[140px] truncate">{bookmark.domain}</span>
+                <span className="text-[var(--border-strong)]">&middot;</span>
+              </>
+            )}
+            <span>{bookmark.savedAt}</span>
+          </div>
 
           {!readonly && (
             <div className="relative">
               <button
                 onClick={handleMoreClick}
                 className={cn(
-                  "flex h-6 w-6 items-center justify-center rounded-[5px] text-[var(--text-muted)] transition-[background] duration-[var(--transition-fast)]",
-                  menuOpen ? "bg-[var(--bg-surface)]" : "bg-transparent",
+                  "flex h-6 w-6 items-center justify-center rounded-md text-[var(--text-muted)] transition-all duration-150",
+                  menuOpen
+                    ? "bg-[var(--bg-surface)] opacity-100"
+                    : "bg-transparent",
                   hovered ? "opacity-100" : "opacity-0",
                 )}
                 aria-label="More options"
@@ -228,7 +283,8 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
 
               {menuOpen && (
                 <div
-                  className="absolute bottom-7 right-0 z-[100] min-w-[140px] overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-raised)] shadow-lg animate-slide-in-up"
+                  className="absolute bottom-7 right-0 z-[100] min-w-[152px] overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-raised)] py-1 animate-slide-in-up"
+                  style={{ boxShadow: "var(--shadow-lg)" }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   {menuItems.map((item) => (
@@ -236,8 +292,10 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
                       key={item.label}
                       onClick={(e) => handleMenuAction(e, item.label)}
                       className={cn(
-                        "flex w-full items-center gap-2 px-3 py-2 text-left font-ui text-[13px] transition-[background] duration-[var(--transition-fast)] hover:bg-[var(--bg-surface)]",
-                        item.danger ? "text-error" : "text-[var(--text-primary)]",
+                        "flex w-full items-center gap-2.5 px-3 py-[7px] text-left font-ui text-[13px] transition-colors duration-100",
+                        item.danger
+                          ? "text-error hover:bg-error/5"
+                          : "text-[var(--text-primary)] hover:bg-[var(--bg-surface)]",
                       )}
                     >
                       {item.icon}

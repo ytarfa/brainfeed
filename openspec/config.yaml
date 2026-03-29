@@ -9,6 +9,9 @@ context: |
   your implementation, create new tests, or update existing tests. Whenever
   building frontend features, test the feature using the Playwright skill
   (browser automation) to catch layout, interaction, and rendering issues.
+  Database: You can create/insert data in Supabase by running SQL scripts when
+  needed. Never run destructive actions (DROP, DELETE, TRUNCATE, destructive
+  ALTER) unless explicitly asked.
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.

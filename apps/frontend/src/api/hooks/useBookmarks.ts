@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { apiGet, apiPost, apiPatch, apiDelete, apiPostFormData } from "../client";
 import type { Bookmark } from "../../data/mock";
+import { timeAgo } from "../../lib/utils";
 
 // --- Response types ---
 
@@ -175,7 +176,7 @@ export function toBookmark(raw: BookmarkWithSpaces): Bookmark {
     updated_at: raw.updated_at,
     user_id: raw.user_id,
     spaceId,
-    savedAt: raw.created_at,
+    savedAt: timeAgo(raw.created_at),
     domain: raw.url ? new URL(raw.url).hostname.replace("www.", "") : undefined,
     raw_content: (raw.raw_content as string) ?? null,
     file_path: (raw.file_path as string) ?? null,

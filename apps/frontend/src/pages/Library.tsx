@@ -175,8 +175,8 @@ export default function Library() {
         <div
           className={cn(
             view === "grid"
-              ? "grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3.5"
-              : "flex flex-col gap-2",
+              ? "grid grid-cols-[repeat(auto-fill,minmax(272px,1fr))] gap-4"
+              : "flex flex-col gap-2.5",
           )}
         >
           {bookmarks.map((bookmark, i) => {
