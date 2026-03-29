@@ -21,6 +21,7 @@ import {
 import { cn } from "../lib/utils";
 import type { Bookmark } from "@brain-feed/types";
 import renderSourceMeta from "./BookmarkCard/variants/renderSourceMeta";
+import ThumbnailPlaceholder from "./ThumbnailPlaceholder";
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
@@ -146,8 +147,8 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
         </div>
       )}
 
-      {/* ── Thumbnail (grid only) ── */}
-      {hasThumbnail && (
+      {/* ── Thumbnail / Placeholder (grid only) ── */}
+      {isGrid && (hasThumbnail ? (
         <div className="relative h-[140px] w-full overflow-hidden bg-[var(--bg-surface)]">
           <img
             src={bookmark.thumbnail_url!}
@@ -173,18 +174,28 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
             </span>
           </div>
         </div>
-      )}
+      ) : (
+        <div className="relative h-[140px] w-full overflow-hidden">
+          <ThumbnailPlaceholder sourceType={bookmark.source_type} height={140} />
+          {/* Type badge floating on placeholder */}
+          <div className="absolute left-3 top-3 z-[1]">
+            <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-[3px] font-ui text-2xs font-medium text-white/90 backdrop-blur-sm"
+              style={{ background: "rgba(30, 28, 26, 0.55)" }}
+            >
+              {typeIcons[bookmark.source_type ?? ""] || <Diamond size={10} />}
+              {bookmark.source_type}
+            </span>
+          </div>
+        </div>
+      ))}
 
       {/* ── Card body ── */}
       <div className={cn(
         isGrid ? "px-[16px] pt-[12px] pb-[14px]" : "min-w-0 flex-1",
       )}>
-        {/* Type badge + space badge (when no thumbnail) */}
-        {!hasThumbnail && (
-          <div className={cn(
-            "flex items-center gap-1.5",
-            isGrid ? "mb-2.5" : "mb-2",
-          )}>
+        {/* Type badge + space badge (list view only — grid has badges on placeholder/thumbnail) */}
+        {!isGrid && (
+          <div className="flex items-center gap-1.5 mb-2">
             <span className="inline-flex items-center gap-1 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-1.5 py-[3px] font-ui text-2xs font-medium text-[var(--text-muted)]">
               {typeIcons[bookmark.source_type ?? ""] || <Diamond size={10} />}
               {bookmark.source_type}
@@ -202,8 +213,8 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
           </div>
         )}
 
-        {/* Space badge (when has thumbnail — show inline below thumbnail) */}
-        {hasThumbnail && showSpace && spaceName && (
+        {/* Space badge (grid view — show inline below thumbnail/placeholder) */}
+        {isGrid && showSpace && spaceName && (
           <div className="mb-2.5 flex items-center gap-1.5">
             <span className="inline-flex items-center gap-1 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-1.5 py-[3px] font-ui text-2xs font-medium text-[var(--text-secondary)]">
               <span

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { X, ExternalLink, ChevronDown, Loader2, AlertCircle, ArrowUpRight, Hash, Sparkles } from "lucide-react";
 import { cn } from "../lib/utils";
 import type { Bookmark } from "@brain-feed/types";
+import ThumbnailPlaceholder from "./ThumbnailPlaceholder";
 
 interface BookmarkDetailProps {
   bookmark: Bookmark | null;
@@ -105,7 +106,7 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
         </button>
 
         {/* Hero image — tall, edge-to-edge, with gradient fade */}
-        {hasThumbnail && (
+        {hasThumbnail ? (
           <div className="relative w-full shrink-0 overflow-hidden bg-[var(--bg-surface)]" style={{ minHeight: 260, maxHeight: 320 }}>
             <img
               src={bookmark.thumbnail_url!}
@@ -130,14 +131,23 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
               <div className="absolute inset-0 skeleton" />
             )}
           </div>
+        ) : (
+          <div className="relative w-full shrink-0 overflow-hidden">
+            <ThumbnailPlaceholder
+              sourceType={bookmark.source_type}
+              height={160}
+              className="rounded-none"
+              fadeTarget="var(--bg-base)"
+              iconSize={44}
+            />
+          </div>
         )}
 
         {/* Scrollable body */}
         <div
           ref={bodyRef}
           className={cn(
-            "flex-1 overflow-y-auto",
-            hasThumbnail ? "px-7 pb-5 pt-1" : "px-7 pb-5 pt-6",
+            "flex-1 overflow-y-auto px-7 pb-5 pt-1",
           )}
         >
           {/* Title area */}
