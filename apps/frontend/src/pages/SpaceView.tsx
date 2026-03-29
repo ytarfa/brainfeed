@@ -11,11 +11,12 @@ import type { ActivityRow } from "../api/hooks";
 interface LayoutContext {
   view: "grid" | "list";
   onCardClick: (id: string) => void;
+  onAddClick: () => void;
 }
 
 export default function SpaceView() {
   const { id } = useParams<{ id: string }>();
-  const { view, onCardClick } = useOutletContext<LayoutContext>();
+  const { view, onCardClick, onAddClick } = useOutletContext<LayoutContext>();
 
   const { data: space, isLoading: spaceLoading } = useSpace(id);
   const { data: activityData } = useActivity(id);
@@ -109,7 +110,10 @@ export default function SpaceView() {
               Add a bookmark or connect a sync source to start filling this Space.
             </p>
             <div className="flex justify-center gap-2">
-              <button className="h-[34px] cursor-pointer rounded-[7px] bg-[var(--accent)] px-4 font-ui text-[13px] font-medium text-white hover:bg-terra-600">
+              <button
+                onClick={onAddClick}
+                className="h-[34px] cursor-pointer rounded-[7px] bg-[var(--accent)] px-4 font-ui text-[13px] font-medium text-white hover:bg-terra-600"
+              >
                 + Add bookmark
               </button>
               <Link

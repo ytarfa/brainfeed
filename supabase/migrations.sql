@@ -329,3 +329,81 @@ alter table public.digest_candidates enable row level security;
 
 create policy "Users can CRUD own digest candidates" on public.digest_candidates
   for all using (auth.uid() = user_id);
+
+-- Fix infinite recursion between bookmarks and bookmark_spaces RLS policies.
+-- The cycle: bookmarks SELECT policy -> bookmark_spaces -> bookmark_spaces ALL policy -> bookmarks -> ...
+-- Solution: SECURITY DEFINER function bypasses RLS when checking bookmark ownership.
+
+create or replace function public.owns_bookmark(bk_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.bookmarks
+    where id = bk_id and user_id = auth.uid()
+  );
+$$;
+
+drop policy if exists "Bookmark owner can manage bookmark_spaces" on public.bookmark_spaces;
+
+create policy "Bookmark owner can manage bookmark_spaces"
+  on public.bookmark_spaces
+  for all
+  to public
+  using (public.owns_bookmark(bookmark_id))
+  with check (public.owns_bookmark(bookmark_id));
+
+-- Fix infinite recursion between spaces and space_members RLS policies.
+-- The cycle: space_members policies -> spaces -> spaces SELECT policy -> space_members -> ...
+-- Solution: SECURITY DEFINER functions bypass RLS for ownership/membership checks.
+
+create or replace function public.owns_space(sp_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.spaces
+    where id = sp_id and owner_id = auth.uid()
+  );
+$$;
+
+create or replace function public.is_space_member(sp_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.space_members
+    where space_id = sp_id and user_id = auth.uid()
+  );
+$$;
+
+drop policy if exists "Members can view memberships" on public.space_members;
+create policy "Members can view memberships"
+  on public.space_members
+  for select
+  to public
+  using (user_id = auth.uid() or public.owns_space(space_id));
+
+drop policy if exists "Owner can manage members" on public.space_members;
+create policy "Owner can manage members"
+  on public.space_members
+  for all
+  to public
+  using (public.owns_space(space_id))
+  with check (public.owns_space(space_id));
+
+drop policy if exists "Members can view spaces" on public.spaces;
+create policy "Members can view spaces"
+  on public.spaces
+  for select
+  to public
+  using (public.is_space_member(id));

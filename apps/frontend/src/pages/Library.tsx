@@ -12,6 +12,7 @@ type SortOption = "saved" | "title" | "source";
 interface LayoutContext {
   view: "grid" | "list";
   onCardClick: (id: string) => void;
+  onAddClick: () => void;
 }
 
 const sortMap: Record<SortOption, string> = {
@@ -30,7 +31,7 @@ const filters: { label: string; value: ContentFilter }[] = [
 ];
 
 export default function Library() {
-  const { view, onCardClick } = useOutletContext<LayoutContext>();
+  const { view, onCardClick, onAddClick } = useOutletContext<LayoutContext>();
   const [filter, setFilter] = useState<ContentFilter>("all");
   const [sort, setSort] = useState<SortOption>("saved");
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -147,7 +148,10 @@ export default function Library() {
           <p className="mx-auto mb-5 max-w-[300px] text-[13px] text-[var(--text-muted)]">
             Save your first bookmark or install the browser extension to start building your library.
           </p>
-          <button className="h-9 cursor-pointer rounded-lg bg-[var(--accent)] px-5 font-ui text-[13px] font-medium text-white hover:bg-terra-600">
+          <button
+            onClick={onAddClick}
+            className="h-9 cursor-pointer rounded-lg bg-[var(--accent)] px-5 font-ui text-[13px] font-medium text-white hover:bg-terra-600"
+          >
             + Save something
           </button>
         </div>

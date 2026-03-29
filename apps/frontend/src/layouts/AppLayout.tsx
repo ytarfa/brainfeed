@@ -70,7 +70,7 @@ export default function AppLayout({ dark, onToggleDark }: AppLayoutProps) {
 
         {/* Page content via Outlet, with view context */}
         <main className="flex-1 overflow-y-auto">
-          <Outlet context={{ view, onCardClick: setDetailBookmarkId }} />
+          <Outlet context={{ view, onCardClick: setDetailBookmarkId, onAddClick: () => setSaveOpen(true) }} />
         </main>
       </div>
 

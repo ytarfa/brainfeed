@@ -1,29 +1,28 @@
 import React, { useState, useEffect, useRef } from "react";
-import { X, Check } from "lucide-react";
+import { X, Check, AlertCircle } from "lucide-react";
 import { cn } from "../lib/utils";
-import { useSpaces } from "../api/hooks";
+import { useCreateBookmark } from "../api/hooks";
 
 interface SaveItemModalProps {
   open: boolean;
   onClose: () => void;
 }
 
-type Step = "input" | "enriching" | "done";
+type Step = "input" | "saving" | "done" | "error";
 
 export default function SaveItemModal({ open, onClose }: SaveItemModalProps) {
   const [step, setStep] = useState<Step>("input");
   const [url, setUrl] = useState("");
-  const [selectedSpace, setSelectedSpace] = useState<string>("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [visible, setVisible] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const { data: spacesData } = useSpaces();
-  const spaces = spacesData?.data ?? [];
+  const createBookmark = useCreateBookmark();
 
   useEffect(() => {
     if (open) {
       setStep("input");
       setUrl("");
-      setSelectedSpace("");
+      setErrorMessage("");
       requestAnimationFrame(() => {
         setVisible(true);
         setTimeout(() => inputRef.current?.focus(), 100);
@@ -41,8 +40,24 @@ export default function SaveItemModal({ open, onClose }: SaveItemModalProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
-    setStep("enriching");
-    setTimeout(() => setStep("done"), 2200);
+    setStep("saving");
+
+    const trimmed = url.trim();
+    const isUrl = /^https?:\/\//i.test(trimmed);
+
+    createBookmark.mutate(
+      {
+        content_type: isUrl ? "link" : "note",
+        ...(isUrl ? { url: trimmed } : { raw_content: trimmed }),
+      },
+      {
+        onSuccess: () => setStep("done"),
+        onError: (err) => {
+          setErrorMessage(err instanceof Error ? err.message : "Something went wrong");
+          setStep("error");
+        },
+      },
+    );
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -96,25 +111,6 @@ export default function SaveItemModal({ open, onClose }: SaveItemModalProps) {
                 />
               </div>
 
-              <div className="mb-5">
-                <label className="text-label mb-1.5 block text-[var(--text-muted)]">
-                  Space (optional)
-                </label>
-                <select
-                  value={selectedSpace}
-                  onChange={(e) => setSelectedSpace(e.target.value)}
-                  className={cn(
-                    "h-10 w-full cursor-pointer appearance-none rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 font-ui text-sm outline-none",
-                    selectedSpace ? "text-[var(--text-primary)]" : "text-[var(--text-muted)]",
-                  )}
-                >
-                  <option value="">Let AI suggest a Space...</option>
-                  {spaces.map((s) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
-                </select>
-              </div>
-
               <div className="flex justify-end gap-2">
                 <button
                   type="button"
@@ -139,10 +135,10 @@ export default function SaveItemModal({ open, onClose }: SaveItemModalProps) {
             </form>
           )}
 
-          {step === "enriching" && (
+          {step === "saving" && (
             <div className="py-5">
               <p className="text-label mb-4 text-[var(--text-muted)]">
-                Enriching content...
+                Saving...
               </p>
               <div className="flex flex-col gap-2.5">
                 <div className="skeleton h-4 w-3/4 rounded" />
@@ -161,13 +157,31 @@ export default function SaveItemModal({ open, onClose }: SaveItemModalProps) {
               </div>
               <p className="mb-1.5 font-display text-base font-medium">Saved!</p>
               <p className="text-[13px] text-[var(--text-muted)]">
-                Added to <strong className="text-[var(--text-secondary)]">Dev Tools</strong> by AI
+                Your bookmark has been added to your library.
               </p>
               <button
                 onClick={handleClose}
                 className="mt-5 h-9 cursor-pointer rounded-lg border-none bg-[var(--accent)] px-5 font-ui text-[13px] font-medium text-white hover:bg-terra-600"
               >
                 Done
+              </button>
+            </div>
+          )}
+
+          {step === "error" && (
+            <div className="py-6 text-center">
+              <div className="mx-auto mb-3.5 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-500">
+                <AlertCircle size={22} />
+              </div>
+              <p className="mb-1.5 font-display text-base font-medium">Failed to save</p>
+              <p className="text-[13px] text-[var(--text-muted)]">
+                {errorMessage}
+              </p>
+              <button
+                onClick={() => setStep("input")}
+                className="mt-5 h-9 cursor-pointer rounded-lg border-none bg-[var(--accent)] px-5 font-ui text-[13px] font-medium text-white hover:bg-terra-600"
+              >
+                Try again
               </button>
             </div>
           )}
