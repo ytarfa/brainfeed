@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { X, ExternalLink, ChevronDown, Loader2, AlertCircle } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { X, ExternalLink, ChevronDown, Loader2, AlertCircle, ArrowUpRight, Hash, Sparkles } from "lucide-react";
 import { cn } from "../lib/utils";
 import type { Bookmark } from "@brain-feed/types";
 
@@ -13,10 +13,15 @@ interface BookmarkDetailProps {
 export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColor }: BookmarkDetailProps) {
   const [notes, setNotes] = useState("");
   const [visible, setVisible] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
+  const bodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (bookmark) {
       setNotes(bookmark.notes || "");
+      setImgLoaded(false);
+      setImgError(false);
       requestAnimationFrame(() => setVisible(true));
     } else {
       setVisible(false);
@@ -39,35 +44,36 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
 
   if (!bookmark) return null;
 
-  const renderMetadata = () => {
-    const meta = bookmark.enriched_data?.metadata;
-    if (!meta) return null;
-    const entries = Object.entries(meta);
-    return (
-      <div className="mb-4 flex flex-wrap gap-2">
-        {entries.map(([key, val]) => (
-          <div
-            key={key}
-            className="rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2.5 py-1 font-ui text-[11px] text-[var(--text-secondary)]"
-          >
-            <span className="capitalize text-[var(--text-muted)]">{key}: </span>
-            {typeof val === "number" ? val.toLocaleString() : String(val)}
-          </div>
-        ))}
-      </div>
-    );
-  };
+  const enrichedSummary = bookmark.enriched_data?.summary;
+  const displaySummary = enrichedSummary || bookmark.summary;
+  const isEnriching =
+    bookmark.enrichment_status === "pending" ||
+    bookmark.enrichment_status === "processing";
+  const isFailed = bookmark.enrichment_status === "failed";
+  const hasThumbnail = bookmark.thumbnail_url && !imgError;
+  const hasTopics = bookmark.enriched_data?.topics && bookmark.enriched_data.topics.length > 0;
+  const hasEntities = bookmark.enriched_data?.entities && bookmark.enriched_data.entities.length > 0;
+  const hasMeta = bookmark.enriched_data?.metadata;
+
+  const metaEntries = hasMeta ? Object.entries(bookmark.enriched_data!.metadata!) : [];
 
   return (
     <>
-      {/* Overlay — backdrop blur + centering container */}
+      {/* Overlay */}
       <div
         className={cn(
-          "fixed inset-0 z-[200] flex items-center justify-center bg-ink-DEFAULT/30 backdrop-blur-sm transition-opacity duration-[280ms]",
+          "fixed inset-0 z-[200] flex items-center justify-center transition-all duration-[320ms]",
           visible ? "opacity-100" : "opacity-0",
           bookmark ? "pointer-events-auto" : "pointer-events-none",
         )}
         onClick={handleClose}
+        style={{
+          background: visible
+            ? "rgba(30, 28, 26, 0.45)"
+            : "rgba(30, 28, 26, 0)",
+          backdropFilter: visible ? "blur(12px) saturate(0.8)" : "blur(0px)",
+          WebkitBackdropFilter: visible ? "blur(12px) saturate(0.8)" : "blur(0px)",
+        }}
       >
 
       {/* Modal */}
@@ -76,187 +82,261 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          "flex max-h-[min(800px,88vh)] w-[min(800px,94vw)] flex-col rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-base)] shadow-xl transition-all duration-[280ms] ease-[cubic-bezier(0.32,0.72,0,1)]",
-          visible ? "scale-100 opacity-100" : "scale-[0.96] opacity-0",
+          "relative flex max-h-[min(860px,90vh)] w-[min(720px,94vw)] flex-col overflow-hidden rounded-[20px] border border-[var(--border-subtle)] bg-[var(--bg-base)] transition-all duration-[320ms] ease-[cubic-bezier(0.32,0.72,0,1)]",
+          visible ? "scale-100 opacity-100" : "scale-[0.94] opacity-0 translate-y-3",
         )}
+        style={{
+          boxShadow: visible
+            ? "0 24px 80px rgba(30, 28, 26, 0.18), 0 8px 24px rgba(30, 28, 26, 0.08), 0 0 0 1px rgba(30, 28, 26, 0.03)"
+            : "0 0 0 rgba(0,0,0,0)",
+        }}
       >
-        {/* Header */}
-        <div className="flex shrink-0 items-start gap-3 border-b border-[var(--border-subtle)] px-5 py-4">
-          <div className="min-w-0 flex-1">
+        {/* Close button — floating over content */}
+        <button
+          onClick={handleClose}
+          className={cn(
+            "absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full transition-all duration-150",
+            hasThumbnail
+              ? "bg-black/30 text-white/90 backdrop-blur-sm hover:bg-black/50"
+              : "bg-[var(--bg-surface)] text-[var(--text-muted)] hover:bg-[var(--border-subtle)] hover:text-[var(--text-primary)]",
+          )}
+        >
+          <X size={14} strokeWidth={2.5} />
+        </button>
+
+        {/* Hero image — tall, edge-to-edge, with gradient fade */}
+        {hasThumbnail && (
+          <div className="relative w-full shrink-0 overflow-hidden bg-[var(--bg-surface)]" style={{ minHeight: 260, maxHeight: 320 }}>
+            <img
+              src={bookmark.thumbnail_url!}
+              alt=""
+              onLoad={() => setImgLoaded(true)}
+              onError={() => setImgError(true)}
+              className={cn(
+                "h-full w-full object-cover transition-opacity duration-500",
+                imgLoaded ? "opacity-100" : "opacity-0",
+              )}
+              style={{ minHeight: 260, maxHeight: 320 }}
+            />
+            {/* Subtle gradient at bottom for text readability */}
+            <div
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-24"
+              style={{
+                background: "linear-gradient(to top, var(--bg-base) 0%, transparent 100%)",
+              }}
+            />
+            {/* Loading skeleton */}
+            {!imgLoaded && (
+              <div className="absolute inset-0 skeleton" />
+            )}
+          </div>
+        )}
+
+        {/* Scrollable body */}
+        <div
+          ref={bodyRef}
+          className={cn(
+            "flex-1 overflow-y-auto",
+            hasThumbnail ? "px-7 pb-5 pt-1" : "px-7 pb-5 pt-6",
+          )}
+        >
+          {/* Title area */}
+          <div className="mb-5">
             <h2
               className={cn(
-                "font-display text-lg font-medium leading-[1.3] text-[var(--text-primary)]",
+                "font-display text-[22px] font-medium leading-[1.28] tracking-[-0.01em] text-[var(--text-primary)]",
                 bookmark.isArticle && "italic",
               )}
             >
               {bookmark.title}
             </h2>
-            <p className="text-meta mt-1">
-              {bookmark.domain && `${bookmark.domain} · `}{bookmark.savedAt}
-            </p>
-          </div>
-          <button
-            onClick={handleClose}
-            className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[7px] text-[var(--text-muted)] hover:bg-[var(--bg-surface)] hover:text-[var(--text-primary)]"
-          >
-            <X size={14} />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="flex-1 overflow-y-auto p-5">
-          {/* Thumbnail */}
-          {bookmark.thumbnail_url && (
-            <div className="mb-4 h-[180px] w-full overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-              <img src={bookmark.thumbnail_url} alt="" className="h-full w-full object-cover" />
-            </div>
-          )}
-
-          {/* Summary — prefer enriched AI summary, fall back to description */}
-          {(() => {
-            const enrichedSummary = bookmark.enriched_data?.summary;
-            const displaySummary = enrichedSummary || bookmark.summary;
-            const isEnriching =
-              bookmark.enrichment_status === "pending" ||
-              bookmark.enrichment_status === "processing";
-            const isFailed = bookmark.enrichment_status === "failed";
-
-            return (
-              <div className="mb-4">
-                <p className="text-label mb-1.5 text-[var(--text-muted)]">Summary</p>
-                {displaySummary ? (
-                  <>
-                    <p className="whitespace-pre-line font-ui text-sm leading-relaxed text-[var(--text-secondary)]">
-                      {displaySummary}
-                    </p>
-                    {enrichedSummary && (
-                      <p className="mt-1 font-ui text-[10px] text-[var(--text-muted)]">
-                        AI-generated summary
-                      </p>
-                    )}
-                  </>
-                ) : isEnriching ? (
-                  <div className="flex items-center gap-2 py-2">
-                    <Loader2 size={14} className="animate-spin text-[var(--accent)]" />
-                    <span className="font-ui text-[13px] text-[var(--text-muted)]">
-                      Generating summary…
-                    </span>
-                  </div>
-                ) : isFailed ? (
-                  <div className="flex items-center gap-2 py-2">
-                    <AlertCircle size={14} className="text-[var(--status-error)]" />
-                    <span className="font-ui text-[13px] text-[var(--text-muted)]">
-                      Summary generation failed
-                    </span>
-                  </div>
-                ) : (
-                  <p className="font-ui text-sm text-[var(--text-muted)]">
-                    No summary available.
-                  </p>
-                )}
-              </div>
-            );
-          })()}
-
-          {/* Topics — from enriched data */}
-          {bookmark.enriched_data?.topics && bookmark.enriched_data.topics.length > 0 && (
-            <div className="mb-4">
-              <p className="text-label mb-2 text-[var(--text-muted)]">Topics</p>
-              <div className="flex flex-wrap gap-1.5">
-                {bookmark.enriched_data.topics.map((topic) => (
-                  <span
-                    key={topic}
-                    className="cursor-default rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2.5 py-[3px] font-ui text-[11px] text-[var(--text-secondary)]"
-                  >
-                    {topic}
+            <div className="mt-2 flex items-center gap-2">
+              {bookmark.domain && (
+                <span className="font-ui text-[12px] font-medium text-[var(--text-muted)]">
+                  {bookmark.domain}
+                </span>
+              )}
+              {bookmark.domain && bookmark.savedAt && (
+                <span className="text-[var(--border-strong)]">&middot;</span>
+              )}
+              {bookmark.savedAt && (
+                <span className="font-ui text-[12px] text-[var(--text-muted)]">
+                  {bookmark.savedAt}
+                </span>
+              )}
+              {bookmark.source_type && (
+                <>
+                  <span className="text-[var(--border-strong)]">&middot;</span>
+                  <span className="rounded-[5px] bg-[var(--accent-subtle)] px-1.5 py-[1px] font-ui text-[10px] font-semibold uppercase tracking-[0.04em] text-[var(--accent-text)]">
+                    {bookmark.source_type}
                   </span>
-                ))}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Summary section */}
+          <div className="mb-6">
+            {displaySummary ? (
+              <div className="relative rounded-xl bg-[var(--bg-surface)] px-5 py-4">
+                {enrichedSummary && (
+                  <div className="mb-2 flex items-center gap-1.5">
+                    <Sparkles size={11} className="text-[var(--accent)]" />
+                    <span className="font-ui text-[10px] font-semibold uppercase tracking-[0.06em] text-[var(--accent)]">
+                      AI Summary
+                    </span>
+                  </div>
+                )}
+                <p className="whitespace-pre-line font-ui text-[13.5px] leading-[1.65] text-[var(--text-secondary)]">
+                  {displaySummary}
+                </p>
               </div>
+            ) : isEnriching ? (
+              <div className="flex items-center gap-2.5 rounded-xl bg-[var(--bg-surface)] px-5 py-4">
+                <Loader2 size={15} className="animate-spin text-[var(--accent)]" />
+                <span className="font-ui text-[13px] text-[var(--text-muted)]">
+                  Generating summary&hellip;
+                </span>
+              </div>
+            ) : isFailed ? (
+              <div className="flex items-center gap-2.5 rounded-xl bg-[var(--bg-surface)] px-5 py-4">
+                <AlertCircle size={15} className="text-error" />
+                <span className="font-ui text-[13px] text-[var(--text-muted)]">
+                  Summary generation failed
+                </span>
+              </div>
+            ) : (
+              <p className="font-ui text-[13px] italic text-[var(--text-muted)]">
+                No summary available.
+              </p>
+            )}
+          </div>
+
+          {/* Topics + Entities inline row */}
+          {(hasTopics || hasEntities) && (
+            <div className="mb-6 flex flex-col gap-4">
+              {hasTopics && (
+                <div>
+                  <p className="text-label mb-2 text-[var(--text-muted)]">Topics</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {bookmark.enriched_data!.topics!.map((topic, i) => (
+                      <span
+                        key={topic}
+                        className="cursor-default rounded-full border border-[var(--border-subtle)] bg-[var(--bg-base)] px-3 py-[4px] font-ui text-[11.5px] text-[var(--text-secondary)] transition-colors duration-150 hover:border-[var(--accent)] hover:text-[var(--accent-text)]"
+                        style={{ animationDelay: `${i * 30}ms` }}
+                      >
+                        {topic}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {hasEntities && (
+                <div>
+                  <p className="text-label mb-2 text-[var(--text-muted)]">Entities</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {bookmark.enriched_data!.entities!.map((entity) => (
+                      <div
+                        key={`${entity.name}-${entity.type}`}
+                        className="flex items-center gap-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-base)] px-2.5 py-[4px] font-ui text-[11.5px] text-[var(--text-secondary)] transition-colors duration-150 hover:border-[var(--border-strong)]"
+                      >
+                        <span className="text-[10px] uppercase tracking-[0.04em] text-[var(--text-muted)]">
+                          {entity.type}
+                        </span>
+                        <span className="h-2.5 w-px bg-[var(--border-subtle)]" />
+                        {entity.name}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Entities — from enriched data */}
-          {bookmark.enriched_data?.entities && bookmark.enriched_data.entities.length > 0 && (
-            <div className="mb-4">
-              <p className="text-label mb-2 text-[var(--text-muted)]">Entities</p>
+          {/* Metadata chips */}
+          {hasMeta && metaEntries.length > 0 && (
+            <div className="mb-6">
+              <p className="text-label mb-2 text-[var(--text-muted)]">Details</p>
               <div className="flex flex-wrap gap-2">
-                {bookmark.enriched_data.entities.map((entity) => (
+                {metaEntries.map(([key, val]) => (
                   <div
-                    key={`${entity.name}-${entity.type}`}
-                    className="rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2.5 py-1 font-ui text-[11px] text-[var(--text-secondary)]"
+                    key={key}
+                    className="flex items-center gap-1.5 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-base)] px-2.5 py-[4px] font-ui text-[11.5px]"
                   >
-                    <span className="capitalize text-[var(--text-muted)]">{entity.type}: </span>
-                    {entity.name}
+                    <span className="text-[10px] uppercase tracking-[0.04em] text-[var(--text-muted)]">
+                      {key}
+                    </span>
+                    <span className="h-2.5 w-px bg-[var(--border-subtle)]" />
+                    <span className="text-[var(--text-secondary)]">
+                      {typeof val === "number" ? val.toLocaleString() : String(val)}
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Metadata — from enriched data */}
-          {bookmark.enriched_data?.metadata && (
-            <div className="mb-4">
-              <p className="text-label mb-2 text-[var(--text-muted)]">Details</p>
-              {renderMetadata()}
-            </div>
-          )}
+          {/* Divider */}
+          <div className="mb-5 h-px bg-[var(--border-subtle)]" />
 
           {/* Tags */}
-          <div className="mb-4">
+          <div className="mb-5">
             <p className="text-label mb-2 text-[var(--text-muted)]">Tags</p>
             <div className="flex flex-wrap gap-1.5">
               {bookmark.tags.map((tag) => (
                 <span
                   key={tag.id}
-                  className="cursor-default rounded-full bg-[var(--accent-subtle)] px-2.5 py-[3px] font-ui text-[11px] font-medium text-[var(--accent-text)]"
+                  className="flex cursor-default items-center gap-1 rounded-full bg-[var(--accent-subtle)] px-2.5 py-[3px] font-ui text-[11px] font-medium text-[var(--accent-text)]"
                 >
+                  <Hash size={9} strokeWidth={2.5} className="opacity-60" />
                   {tag.label}
                 </span>
               ))}
-              <button className="rounded-full border border-dashed border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 py-[3px] font-ui text-[11px] text-[var(--text-muted)] hover:border-[var(--accent)] hover:text-[var(--accent-text)]">
+              <button className="rounded-full border border-dashed border-[var(--border-strong)] bg-transparent px-2.5 py-[3px] font-ui text-[11px] text-[var(--text-muted)] transition-colors duration-150 hover:border-[var(--accent)] hover:text-[var(--accent-text)]">
                 + Add tag
               </button>
             </div>
           </div>
 
           {/* Space */}
-          <div className="mb-4">
-            <p className="text-label mb-2 text-[var(--text-muted)]">Space</p>
-            {spaceName && (
-              <div className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-[5px] font-ui text-[13px] text-[var(--text-primary)] hover:border-[var(--border-strong)]">
+          {spaceName && (
+            <div className="mb-5">
+              <p className="text-label mb-2 text-[var(--text-muted)]">Space</p>
+              <div className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-base)] px-3 py-[6px] font-ui text-[13px] text-[var(--text-primary)] transition-colors duration-150 hover:border-[var(--border-strong)]">
                 <span
-                  className="h-2 w-2 rounded-full"
+                  className="h-2.5 w-2.5 rounded-full ring-2 ring-[var(--bg-base)]"
                   style={{ background: spaceColor ?? "var(--text-muted)" }}
                 />
                 {spaceName}
-                <ChevronDown size={10} className="ml-0.5" />
+                <ChevronDown size={11} className="ml-0.5 text-[var(--text-muted)]" />
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Notes */}
-          <div className="mb-4">
+          <div className="mb-2">
             <p className="text-label mb-2 text-[var(--text-muted)]">Notes</p>
             <textarea
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setNotes(e.target.value)}
               placeholder="Add a note..."
-              className="w-full min-h-[100px] resize-y rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-2.5 font-ui text-[13px] leading-relaxed text-[var(--text-primary)] outline-none transition-[border-color] duration-[var(--transition-fast)] placeholder:text-[var(--text-muted)] focus:border-[var(--border-strong)]"
+              className="w-full min-h-[90px] resize-y rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-4 py-3 font-ui text-[13px] leading-relaxed text-[var(--text-primary)] outline-none transition-[border-color,box-shadow] duration-150 placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-subtle)]"
             />
           </div>
         </div>
 
         {/* Footer */}
         {bookmark.url && (
-          <div className="shrink-0 border-t border-[var(--border-subtle)] px-5 py-3">
+          <div className="shrink-0 border-t border-[var(--border-subtle)] bg-[var(--bg-surface)]/50 px-7 py-3.5">
             <a
               href={bookmark.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 font-ui text-[13px] font-medium text-[var(--accent)] hover:underline"
+              className="group inline-flex items-center gap-1.5 font-ui text-[13px] font-medium text-[var(--accent)] transition-colors duration-150 hover:text-[var(--accent-text)]"
             >
-              <ExternalLink size={12} />
+              <ExternalLink size={13} strokeWidth={2} />
               Open original source
+              <ArrowUpRight size={11} className="opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" />
             </a>
           </div>
         )}

@@ -63,7 +63,6 @@ describe("BookmarkDetail", () => {
 
   it("renders summary section when bookmark has summary", () => {
     render(<BookmarkDetail bookmark={createMockBookmark()} onClose={vi.fn()} />);
-    expect(screen.getByText("Summary")).toBeInTheDocument();
     expect(screen.getByText("A short summary of the bookmark")).toBeInTheDocument();
   });
 
@@ -71,7 +70,6 @@ describe("BookmarkDetail", () => {
     render(
       <BookmarkDetail bookmark={createMockBookmark({ summary: undefined })} onClose={vi.fn()} />,
     );
-    expect(screen.getByText("Summary")).toBeInTheDocument();
     expect(screen.getByText("No summary available.")).toBeInTheDocument();
   });
 
