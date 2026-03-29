@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Mail } from "lucide-react";
 
 import Logo from "../../components/Logo";
-import { supabase } from "../../lib/supabase";
+import { authForgotPassword } from "../../api/auth";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -16,18 +16,14 @@ export default function ForgotPassword() {
     setError(null);
     setLoading(true);
 
-    const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/login`,
-    });
-
-    setLoading(false);
-
-    if (authError) {
-      setError(authError.message);
-      return;
+    try {
+      await authForgotPassword(email);
+      setSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send reset link");
     }
 
-    setSent(true);
+    setLoading(false);
   };
 
   return (

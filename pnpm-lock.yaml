@@ -75,9 +75,6 @@ importers:
       '@brain-feed/types':
         specifier: workspace:*
         version: link:../../packages/types
-      '@supabase/supabase-js':
-        specifier: ^2.100.1
-        version: 2.100.1
       '@tailwindcss/vite':
         specifier: ^4.2.2
         version: 4.2.2(vite@5.4.21(@types/node@20.19.37)(lightningcss@1.32.0)(terser@5.46.1))

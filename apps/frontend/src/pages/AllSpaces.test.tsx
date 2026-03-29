@@ -124,8 +124,11 @@ describe("AllSpaces", () => {
   it("renders color bars on space cards", () => {
     setupMocks();
     const { container } = renderWithProviders(<AllSpaces />);
-    const colorBars = container.querySelectorAll("div[style*='width: 32px']");
-    expect(colorBars.length).toBeGreaterThanOrEqual(3);
+    // Color bars use className="mb-3 h-1 w-8 rounded-sm" with inline style={{ background: space.color }}
+    const colorBars = container.querySelectorAll("div[style*='background']");
+    // Filter to only the small color bar divs (inside card, before the h3)
+    const bars = Array.from(colorBars).filter(el => el.classList.contains("h-1"));
+    expect(bars.length).toBeGreaterThanOrEqual(3);
   });
 
   it("each space card links to /spaces/:id", () => {
@@ -154,7 +157,10 @@ describe("AllSpaces", () => {
   it("renders create new space placeholder card", () => {
     setupMocks();
     const { container } = renderWithProviders(<AllSpaces />);
-    const dashedBorderButtons = container.querySelectorAll("button[style*='dashed']");
+    // The create new space card uses className with "border-dashed"
+    const dashedBorderButtons = Array.from(container.querySelectorAll("button")).filter(
+      (btn) => btn.classList.contains("border-dashed"),
+    );
     expect(dashedBorderButtons.length).toBeGreaterThanOrEqual(1);
   });
 

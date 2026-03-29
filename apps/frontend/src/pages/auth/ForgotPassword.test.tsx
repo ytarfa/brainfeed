@@ -8,6 +8,10 @@ vi.mock("../../components/Logo", () => ({
   default: () => <div data-testid="logo">Logo</div>,
 }));
 
+vi.mock("../../api/auth", () => ({
+  authForgotPassword: vi.fn().mockResolvedValue(undefined),
+}));
+
 describe("ForgotPassword", () => {
   it("renders Logo", () => {
     renderWithProviders(<ForgotPassword />);

@@ -15,6 +15,11 @@ vi.mock("../../components/Logo", () => ({
   default: () => <div data-testid="logo">Logo</div>,
 }));
 
+vi.mock("../../api/auth", () => ({
+  authSignUp: vi.fn().mockResolvedValue({ user: { id: "u1", email: "test@example.com" } }),
+  authGetOAuthUrl: vi.fn().mockResolvedValue("https://oauth.example.com"),
+}));
+
 describe("Signup", () => {
   beforeEach(() => {
     mockNavigate.mockReset();
@@ -81,6 +86,6 @@ describe("Signup", () => {
     await user.type(screen.getByPlaceholderText("Min. 8 characters"), "password123");
     await user.click(screen.getByRole("button", { name: /create account/i }));
 
-    expect(mockNavigate).toHaveBeenCalledWith("/onboarding");
+    expect(mockNavigate).toHaveBeenCalledWith("/confirm-email");
   });
 });

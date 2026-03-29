@@ -105,7 +105,7 @@ describe("BookmarkDetail", () => {
 
   it("renders notes textarea with bookmark notes value", () => {
     render(<BookmarkDetail bookmark={createMockBookmark()} onClose={vi.fn()} />);
-    const textarea = screen.getByPlaceholderText("Add a note…");
+    const textarea = screen.getByPlaceholderText("Add a note...");
     expect(textarea).toBeInTheDocument();
     expect(textarea).toHaveValue("Some notes");
   });
@@ -172,8 +172,8 @@ describe("BookmarkDetail", () => {
       <BookmarkDetail bookmark={createMockBookmark()} onClose={onClose} />,
     );
 
-    // The overlay is the first div (with position: fixed, inset: 0)
-    const overlay = container.querySelector("div[style*='inset']") as HTMLElement;
+    // The overlay is the first child div (with className containing "fixed" and "inset-0")
+    const overlay = container.querySelector("div.fixed") as HTMLElement;
     expect(overlay).toBeTruthy();
     fireEvent.click(overlay);
 

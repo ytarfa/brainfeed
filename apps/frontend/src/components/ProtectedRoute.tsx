@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { session, loading } = useAuth();
+  const { user, session, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -19,12 +19,12 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  if (!session) {
+  if (!session || !user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // Redirect users who haven't confirmed their email
-  if (!session.user.email_confirmed_at) {
+  if (!user.email_confirmed_at) {
     return <Navigate to="/confirm-email" replace />;
   }
 

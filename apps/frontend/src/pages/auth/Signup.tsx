@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import Logo from "../../components/Logo";
-import { supabase } from "../../lib/supabase";
+import { authSignUp, authGetOAuthUrl } from "../../api/auth";
 
 const GoogleIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16">
@@ -26,33 +26,21 @@ export default function Signup() {
     setError(null);
     setLoading(true);
 
-    const { error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { display_name: name },
-      },
-    });
-
-    if (authError) {
-      setError(authError.message);
+    try {
+      await authSignUp(email, password, name || undefined);
+      navigate("/confirm-email");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign up failed");
       setLoading(false);
-      return;
     }
-
-    navigate("/confirm-email");
   };
 
   const handleGoogleSignUp = async () => {
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/onboarding`,
-      },
-    });
-
-    if (authError) {
-      setError(authError.message);
+    try {
+      const url = await authGetOAuthUrl("google", "/onboarding");
+      window.location.href = url;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "OAuth failed");
     }
   };
 

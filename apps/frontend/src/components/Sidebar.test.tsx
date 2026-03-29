@@ -5,6 +5,11 @@ import Sidebar from "./Sidebar";
 
 vi.mock("../api/hooks", () => ({
   useSpaces: vi.fn(),
+  useDigestSummary: vi.fn(() => ({ data: undefined, isLoading: false, isError: false })),
+}));
+
+vi.mock("../contexts/AuthContext", () => ({
+  useAuth: vi.fn(() => ({ signOut: vi.fn() })),
 }));
 
 import { useSpaces } from "../api/hooks";

@@ -191,9 +191,12 @@ describe("SpaceView", () => {
   it("renders space color dot", () => {
     setupMocks();
     const { container } = renderWithProviders(<SpaceView />);
-    const dot = container.querySelector("span[style*='border-radius: 50%']");
-    expect(dot).toBeInTheDocument();
-    expect(dot).toHaveStyle({ background: "#d4845a" });
+    // Color dot uses className="h-3 w-3 shrink-0 rounded-full" with inline style={{ background: ... }}
+    const dots = Array.from(container.querySelectorAll("span")).filter(
+      (el) => el.classList.contains("rounded-full") && el.style.background,
+    );
+    expect(dots.length).toBeGreaterThanOrEqual(1);
+    expect(dots[0]).toHaveStyle({ background: "#d4845a" });
   });
 
   it("renders space description", () => {

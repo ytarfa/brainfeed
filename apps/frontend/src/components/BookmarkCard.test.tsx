@@ -126,16 +126,16 @@ describe("BookmarkCard", () => {
     const card = screen.getByRole("button", { name: "Test Bookmark" });
     const moreBtn = screen.getByLabelText("More options");
 
-    // Before hover: opacity 0
-    expect(moreBtn).toHaveStyle({ opacity: 0 });
+    // Before hover: has opacity-0 class
+    expect(moreBtn.className).toContain("opacity-0");
 
-    // After mouseenter: opacity 1
+    // After mouseenter: has opacity-100 class
     fireEvent.mouseEnter(card);
-    expect(moreBtn).toHaveStyle({ opacity: 1 });
+    expect(moreBtn.className).toContain("opacity-100");
 
-    // After mouseleave: opacity 0 again
+    // After mouseleave: opacity-0 again
     fireEvent.mouseLeave(card);
-    expect(moreBtn).toHaveStyle({ opacity: 0 });
+    expect(moreBtn.className).toContain("opacity-0");
   });
 
   it("opens dropdown menu on more button click with 3 items", () => {

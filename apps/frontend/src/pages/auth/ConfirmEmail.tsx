@@ -4,7 +4,7 @@ import { Mail } from "lucide-react";
 
 import Logo from "../../components/Logo";
 import { useAuth } from "../../contexts/AuthContext";
-import { supabase } from "../../lib/supabase";
+import { authResendConfirmation } from "../../api/auth";
 
 export default function ConfirmEmail() {
   const { user, signOut } = useAuth();
@@ -18,15 +18,11 @@ export default function ConfirmEmail() {
     setError(null);
     setResent(false);
 
-    const { error: resendError } = await supabase.auth.resend({
-      type: "signup",
-      email: user.email,
-    });
-
-    if (resendError) {
-      setError(resendError.message);
-    } else {
+    try {
+      await authResendConfirmation(user.email);
       setResent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to resend");
     }
     setResending(false);
   };

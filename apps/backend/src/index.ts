@@ -12,6 +12,7 @@ import activityRouter from "./routes/activity";
 import syncSourcesRouter from "./routes/syncSources";
 import searchRouter from "./routes/search";
 import publicRouter from "./routes/public";
+import authRouter from "./routes/auth";
 import settingsRouter from "./routes/settings";
 import digestRouter from "./routes/digest";
 
@@ -36,6 +37,7 @@ app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
 // Public routes (no auth)
 app.use("/api/v1/public", publicRouter);
+app.use("/api/v1/auth", authRouter);
 
 // Authenticated routes
 app.use("/api/v1", authMiddleware);

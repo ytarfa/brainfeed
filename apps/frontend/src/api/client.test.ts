@@ -75,7 +75,7 @@ describe("apiGet", () => {
   });
 
   it("includes Authorization header when token exists", async () => {
-    localStorage.setItem("access_token", "test-jwt-token");
+    localStorage.setItem("bf-auth-tokens", JSON.stringify({ access_token: "test-jwt-token", refresh_token: "r", expires_at: 0 }));
     mockFetch(200, { data: [] });
 
     await apiGet("/api/v1/bookmarks");
@@ -193,7 +193,7 @@ describe("apiPostFormData", () => {
   });
 
   it("sends POST with FormData and no Content-Type header", async () => {
-    localStorage.setItem("access_token", "my-token");
+    localStorage.setItem("bf-auth-tokens", JSON.stringify({ access_token: "my-token", refresh_token: "r", expires_at: 0 }));
     mockFetch(201, { id: "b2", signed_url: "https://s3.example.com/file" });
 
     const formData = new FormData();

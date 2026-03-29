@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import Logo from "../../components/Logo";
-import { supabase } from "../../lib/supabase";
+import { authSignIn, authGetOAuthUrl } from "../../api/auth";
 
 const GoogleIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16">
@@ -25,30 +25,21 @@ export default function Login() {
     setError(null);
     setLoading(true);
 
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (authError) {
-      setError(authError.message);
+    try {
+      await authSignIn(email, password);
+      navigate("/library");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Sign in failed");
       setLoading(false);
-      return;
     }
-
-    navigate("/library");
   };
 
   const handleGoogleSignIn = async () => {
-    const { error: authError } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/library`,
-      },
-    });
-
-    if (authError) {
-      setError(authError.message);
+    try {
+      const url = await authGetOAuthUrl("google", "/library");
+      window.location.href = url;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "OAuth failed");
     }
   };
 

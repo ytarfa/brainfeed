@@ -51,7 +51,13 @@ describe("AISuggestionToast", () => {
     render(<AISuggestionToast {...defaultProps} />);
     expect(screen.getByText("Confirm")).toBeInTheDocument();
     expect(screen.getByText("Reassign")).toBeInTheDocument();
-    expect(screen.getByText("✕")).toBeInTheDocument();
+    // Dismiss button uses Lucide <X> icon (aria-hidden), so query all buttons
+    // and find the one that is neither Confirm nor Reassign
+    const buttons = screen.getAllByRole("button");
+    const dismissBtn = buttons.find(
+      (btn) => btn.textContent !== "Confirm" && btn.textContent !== "Reassign",
+    );
+    expect(dismissBtn).toBeInTheDocument();
   });
 
   it("calls onConfirm when Confirm button clicked", () => {
@@ -71,7 +77,12 @@ describe("AISuggestionToast", () => {
   it("calls onDismiss when dismiss (✕) button clicked after 280ms delay", () => {
     const onDismiss = vi.fn();
     render(<AISuggestionToast {...defaultProps} onDismiss={onDismiss} />);
-    fireEvent.click(screen.getByText("✕"));
+    // Dismiss button uses Lucide <X> icon — find by exclusion
+    const buttons = screen.getAllByRole("button");
+    const dismissBtn = buttons.find(
+      (btn) => btn.textContent !== "Confirm" && btn.textContent !== "Reassign",
+    )!;
+    fireEvent.click(dismissBtn);
 
     // Not called immediately
     expect(onDismiss).not.toHaveBeenCalled();

@@ -117,7 +117,7 @@ describe("GlobalSearch", () => {
       <GlobalSearch open={true} onClose={onClose} onSelect={onSelect} />,
     );
     vi.advanceTimersByTime(100);
-    expect(screen.getByPlaceholderText("Search everything…")).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Search everything...")).toBeInTheDocument();
   });
 
   it("renders Esc key hint", () => {
@@ -150,7 +150,7 @@ describe("GlobalSearch", () => {
     );
     vi.advanceTimersByTime(100);
 
-    const input = screen.getByPlaceholderText("Search everything…");
+    const input = screen.getByPlaceholderText("Search everything...");
     fireEvent.change(input, { target: { value: "react" } });
 
     expect(screen.getByText("React Hooks Guide")).toBeInTheDocument();
@@ -170,7 +170,7 @@ describe("GlobalSearch", () => {
     );
     vi.advanceTimersByTime(100);
 
-    const input = screen.getByPlaceholderText("Search everything…");
+    const input = screen.getByPlaceholderText("Search everything...");
     fireEvent.change(input, { target: { value: "nonexistent" } });
 
     expect(screen.getByText(/No results for/)).toBeInTheDocument();
@@ -188,7 +188,7 @@ describe("GlobalSearch", () => {
     );
     vi.advanceTimersByTime(100);
 
-    const input = screen.getByPlaceholderText("Search everything…");
+    const input = screen.getByPlaceholderText("Search everything...");
     fireEvent.change(input, { target: { value: "react" } });
 
     fireEvent.click(screen.getByText("React Hooks Guide"));
@@ -216,7 +216,7 @@ describe("GlobalSearch", () => {
     );
     vi.advanceTimersByTime(100);
 
-    const input = screen.getByPlaceholderText("Search everything…");
+    const input = screen.getByPlaceholderText("Search everything...");
     fireEvent.keyDown(input, { key: "Escape" });
 
     vi.advanceTimersByTime(200);

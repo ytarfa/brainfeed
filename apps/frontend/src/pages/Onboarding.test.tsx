@@ -27,10 +27,14 @@ describe("Onboarding", () => {
 
   it("step progress: shows step labels", () => {
     renderWithProviders(<Onboarding />);
-    expect(screen.getByText("Create Space")).toBeInTheDocument();
+    // "Create Space" appears in both the step label and the button
+    const createSpaceEls = screen.getAllByText(/Create Space/);
+    expect(createSpaceEls.length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText("Browser extension")).toBeInTheDocument();
     expect(screen.getByText("Sync source")).toBeInTheDocument();
-    expect(screen.getByText("Done")).toBeInTheDocument();
+    // "Done" appears as step label — use exact match on the step indicator span
+    const doneEls = screen.getAllByText("Done");
+    expect(doneEls.length).toBeGreaterThanOrEqual(1);
   });
 
   describe("Step 0 — Create Space", () => {
@@ -41,13 +45,13 @@ describe("Onboarding", () => {
 
     it("shows space name and description inputs", () => {
       renderWithProviders(<Onboarding />);
-      expect(screen.getByPlaceholderText("e.g. Dev tools, Recipes, Reading list…")).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("e.g. Dev tools, Recipes, Reading list...")).toBeInTheDocument();
       expect(screen.getByPlaceholderText("What will you save here?")).toBeInTheDocument();
     });
 
     it("'Create Space →' button is disabled when name is empty", () => {
       renderWithProviders(<Onboarding />);
-      const button = screen.getByRole("button", { name: /create space →/i });
+      const button = screen.getByRole("button", { name: /create space/i });
       expect(button).toBeDisabled();
     });
 
@@ -55,8 +59,8 @@ describe("Onboarding", () => {
       const user = userEvent.setup();
       renderWithProviders(<Onboarding />);
 
-      await user.type(screen.getByPlaceholderText("e.g. Dev tools, Recipes, Reading list…"), "My Space");
-      const button = screen.getByRole("button", { name: /create space →/i });
+      await user.type(screen.getByPlaceholderText("e.g. Dev tools, Recipes, Reading list..."), "My Space");
+      const button = screen.getByRole("button", { name: /create space/i });
       expect(button).toBeEnabled();
     });
 
@@ -64,8 +68,8 @@ describe("Onboarding", () => {
       const user = userEvent.setup();
       renderWithProviders(<Onboarding />);
 
-      await user.type(screen.getByPlaceholderText("e.g. Dev tools, Recipes, Reading list…"), "My Space");
-      await user.click(screen.getByRole("button", { name: /create space →/i }));
+      await user.type(screen.getByPlaceholderText("e.g. Dev tools, Recipes, Reading list..."), "My Space");
+      await user.click(screen.getByRole("button", { name: /create space/i }));
 
       expect(screen.getByRole("heading", { name: /install the browser extension/i })).toBeInTheDocument();
     });
@@ -75,8 +79,8 @@ describe("Onboarding", () => {
     async function goToStep1() {
       const user = userEvent.setup();
       renderWithProviders(<Onboarding />);
-      await user.type(screen.getByPlaceholderText("e.g. Dev tools, Recipes, Reading list…"), "My Space");
-      await user.click(screen.getByRole("button", { name: /create space →/i }));
+      await user.type(screen.getByPlaceholderText("e.g. Dev tools, Recipes, Reading list..."), "My Space");
+      await user.click(screen.getByRole("button", { name: /create space/i }));
       return user;
     }
 
@@ -87,13 +91,13 @@ describe("Onboarding", () => {
 
     it("'← Back' goes back to step 0", async () => {
       const user = await goToStep1();
-      await user.click(screen.getByRole("button", { name: /← back/i }));
+      await user.click(screen.getByRole("button", { name: /back/i }));
       expect(screen.getByRole("heading", { name: /create your first space/i })).toBeInTheDocument();
     });
 
     it("'Next →' advances to step 2", async () => {
       const user = await goToStep1();
-      await user.click(screen.getByRole("button", { name: /next →/i }));
+      await user.click(screen.getByRole("button", { name: /next/i }));
       expect(screen.getByRole("heading", { name: /connect a sync source/i })).toBeInTheDocument();
     });
 
@@ -108,9 +112,9 @@ describe("Onboarding", () => {
     async function goToStep2() {
       const user = userEvent.setup();
       renderWithProviders(<Onboarding />);
-      await user.type(screen.getByPlaceholderText("e.g. Dev tools, Recipes, Reading list…"), "My Space");
-      await user.click(screen.getByRole("button", { name: /create space →/i }));
-      await user.click(screen.getByRole("button", { name: /next →/i }));
+      await user.type(screen.getByPlaceholderText("e.g. Dev tools, Recipes, Reading list..."), "My Space");
+      await user.click(screen.getByRole("button", { name: /create space/i }));
+      await user.click(screen.getByRole("button", { name: /next/i }));
       return user;
     }
 
@@ -129,7 +133,7 @@ describe("Onboarding", () => {
 
     it("'Done →' advances to step 3", async () => {
       const user = await goToStep2();
-      await user.click(screen.getByRole("button", { name: /done →/i }));
+      await user.click(screen.getByRole("button", { name: /^done$/i }));
       expect(screen.getByRole("heading", { name: /you're all set/i })).toBeInTheDocument();
     });
   });
@@ -138,10 +142,10 @@ describe("Onboarding", () => {
     async function goToStep3() {
       const user = userEvent.setup();
       renderWithProviders(<Onboarding />);
-      await user.type(screen.getByPlaceholderText("e.g. Dev tools, Recipes, Reading list…"), "My Space");
-      await user.click(screen.getByRole("button", { name: /create space →/i }));
-      await user.click(screen.getByRole("button", { name: /next →/i }));
-      await user.click(screen.getByRole("button", { name: /done →/i }));
+      await user.type(screen.getByPlaceholderText("e.g. Dev tools, Recipes, Reading list..."), "My Space");
+      await user.click(screen.getByRole("button", { name: /create space/i }));
+      await user.click(screen.getByRole("button", { name: /next/i }));
+      await user.click(screen.getByRole("button", { name: /^done$/i }));
       return user;
     }
 
@@ -152,7 +156,7 @@ describe("Onboarding", () => {
 
     it("'Go to my library →' calls navigate('/library')", async () => {
       const user = await goToStep3();
-      await user.click(screen.getByRole("button", { name: /go to my library →/i }));
+      await user.click(screen.getByRole("button", { name: /go to my library/i }));
       expect(mockNavigate).toHaveBeenCalledWith("/library");
     });
   });

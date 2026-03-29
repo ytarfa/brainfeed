@@ -15,6 +15,11 @@ vi.mock("../../components/Logo", () => ({
   default: () => <div data-testid="logo">Logo</div>,
 }));
 
+vi.mock("../../api/auth", () => ({
+  authSignIn: vi.fn().mockResolvedValue({ user: { id: "u1", email: "test@example.com" }, session: { access_token: "t", refresh_token: "r", expires_at: 0 } }),
+  authGetOAuthUrl: vi.fn().mockResolvedValue("https://oauth.example.com"),
+}));
+
 describe("Login", () => {
   beforeEach(() => {
     mockNavigate.mockReset();

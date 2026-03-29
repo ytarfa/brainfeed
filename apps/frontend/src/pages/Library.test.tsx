@@ -7,6 +7,7 @@ vi.mock("../api/hooks", () => ({
   useBookmarks: vi.fn(),
   useSpaces: vi.fn(),
   toBookmark: vi.fn(),
+  useDigestSummary: vi.fn(() => ({ data: undefined, isLoading: false, isError: false })),
 }));
 
 vi.mock("react-router-dom", async () => {

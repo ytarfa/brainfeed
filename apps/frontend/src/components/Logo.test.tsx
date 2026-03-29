@@ -22,30 +22,30 @@ describe("Logo", () => {
   });
 
   it.each([
-    { size: "sm" as const, expectedMark: "18px", expectedWord: "14px" },
-    { size: "md" as const, expectedMark: "22px", expectedWord: "17px" },
-    { size: "lg" as const, expectedMark: "28px", expectedWord: "22px" },
+    { size: "sm" as const, expectedMark: "text-[18px]", expectedWord: "text-[14px]" },
+    { size: "md" as const, expectedMark: "text-[22px]", expectedWord: "text-[17px]" },
+    { size: "lg" as const, expectedMark: "text-[28px]", expectedWord: "text-[22px]" },
   ])("applies correct font sizes for size=$size", ({ size, expectedMark, expectedWord }) => {
     render(<Logo size={size} />);
-    expect(screen.getByText("b.")).toHaveStyle({ fontSize: expectedMark });
-    expect(screen.getByText("brainfeed")).toHaveStyle({ fontSize: expectedWord });
+    expect(screen.getByText("b.").className).toContain(expectedMark);
+    expect(screen.getByText("brainfeed").className).toContain(expectedWord);
   });
 
-  it("mark color is always #d4845a", () => {
+  it("mark color is always text-terra-DEFAULT", () => {
     const { rerender } = render(<Logo />);
-    expect(screen.getByText("b.")).toHaveStyle({ color: "#d4845a" });
+    expect(screen.getByText("b.").className).toContain("text-terra-DEFAULT");
 
     rerender(<Logo dark />);
-    expect(screen.getByText("b.")).toHaveStyle({ color: "#d4845a" });
+    expect(screen.getByText("b.").className).toContain("text-terra-DEFAULT");
   });
 
-  it("word color is #1e1c1a when dark=false (default)", () => {
+  it("word color is text-ink-DEFAULT when dark=false (default)", () => {
     render(<Logo />);
-    expect(screen.getByText("brainfeed")).toHaveStyle({ color: "#1e1c1a" });
+    expect(screen.getByText("brainfeed").className).toContain("text-ink-DEFAULT");
   });
 
-  it("word color is #faf8f4 when dark=true", () => {
+  it("word color is text-sand-parchment when dark=true", () => {
     render(<Logo dark />);
-    expect(screen.getByText("brainfeed")).toHaveStyle({ color: "#faf8f4" });
+    expect(screen.getByText("brainfeed").className).toContain("text-sand-parchment");
   });
 });

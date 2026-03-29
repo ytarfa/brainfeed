@@ -17,9 +17,9 @@ describe("TopBar", () => {
     vi.restoreAllMocks();
   });
 
-  it("renders search bar with 'Search everything…' text", () => {
+  it("renders search bar with 'Search everything...' text", () => {
     render(<TopBar {...defaultProps} />);
-    expect(screen.getByText("Search everything…")).toBeInTheDocument();
+    expect(screen.getByText("Search everything...")).toBeInTheDocument();
   });
 
   it("renders keyboard shortcut hint '⌘K'", () => {
@@ -30,16 +30,18 @@ describe("TopBar", () => {
   it("calls onSearchClick when search bar clicked", () => {
     const onSearchClick = vi.fn();
     render(<TopBar {...defaultProps} onSearchClick={onSearchClick} />);
-    fireEvent.click(screen.getByText("Search everything…"));
+    fireEvent.click(screen.getByText("Search everything..."));
     expect(onSearchClick).toHaveBeenCalledTimes(1);
   });
 
-  it("renders Save button with '+' and 'Save' text", () => {
+  it("renders Save button with Plus icon and 'Save' text", () => {
     render(<TopBar {...defaultProps} />);
     const saveBtn = screen.getByText("Save");
     expect(saveBtn).toBeInTheDocument();
-    // The + is a sibling span inside the same button
-    expect(saveBtn.closest("button")!.textContent).toContain("+");
+    // The Plus icon is a Lucide SVG inside the same button
+    const button = saveBtn.closest("button")!;
+    const svg = button.querySelector("svg.lucide-plus");
+    expect(svg).toBeInTheDocument();
   });
 
   it("calls onAddClick when Save button clicked", () => {

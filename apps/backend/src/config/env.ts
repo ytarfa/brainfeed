@@ -11,5 +11,6 @@ export const env = {
   SUPABASE_URL: requireEnv("SUPABASE_URL"),
   SUPABASE_SERVICE_ROLE_KEY: requireEnv("SUPABASE_SERVICE_ROLE_KEY"),
   SUPABASE_ANON_KEY: requireEnv("SUPABASE_ANON_KEY"),
+  FRONTEND_URL: process.env.FRONTEND_URL ?? "http://localhost:3000",
   PORT: parseInt(process.env.PORT ?? "3001", 10),
 };
