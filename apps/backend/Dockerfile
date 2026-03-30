@@ -10,10 +10,16 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/backend/package.json ./apps/backend/
 COPY packages/types/package.json ./packages/types/
+COPY packages/error-types/package.json ./packages/error-types/
+COPY packages/logger/package.json ./packages/logger/
 COPY packages/worker-core/package.json ./packages/worker-core/
 
-# Install backend + worker-core deps (worker-core must compile before backend)
-RUN pnpm install --frozen-lockfile --filter @brain-feed/backend --filter @brain-feed/worker-core
+# Install deps for backend and all workspace dependencies
+RUN pnpm install --frozen-lockfile \
+    --filter @brain-feed/backend \
+    --filter @brain-feed/error-types \
+    --filter @brain-feed/logger \
+    --filter @brain-feed/worker-core
 
 # Copy source and tsconfig
 COPY tsconfig.json ./
@@ -21,11 +27,17 @@ COPY apps/backend/tsconfig.json ./apps/backend/
 COPY apps/backend/src ./apps/backend/src
 COPY packages/types/src ./packages/types/src
 COPY packages/types/tsconfig.json ./packages/types/
+COPY packages/error-types/src ./packages/error-types/src
+COPY packages/error-types/tsconfig.json ./packages/error-types/
+COPY packages/logger/src ./packages/logger/src
+COPY packages/logger/tsconfig.json ./packages/logger/
 COPY packages/worker-core/src ./packages/worker-core/src
 COPY packages/worker-core/tsconfig.json ./packages/worker-core/
 
-# Build TypeScript — worker-core first (backend depends on it at runtime), then backend
-RUN pnpm --filter @brain-feed/worker-core run build && \
+# Build TypeScript — dependency order: error-types -> logger -> worker-core -> backend
+RUN pnpm --filter @brain-feed/error-types run build && \
+    pnpm --filter @brain-feed/logger run build && \
+    pnpm --filter @brain-feed/worker-core run build && \
     pnpm --filter @brain-feed/backend run build
 
 # ---- Production Stage ----
@@ -41,13 +53,22 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/backend/package.json ./apps/backend/
 COPY packages/types/package.json ./packages/types/
+COPY packages/error-types/package.json ./packages/error-types/
+COPY packages/logger/package.json ./packages/logger/
 COPY packages/worker-core/package.json ./packages/worker-core/
 
-# Install production dependencies for backend + worker-core
-RUN pnpm install --frozen-lockfile --filter @brain-feed/backend --filter @brain-feed/worker-core --prod
+# Install production dependencies
+RUN pnpm install --frozen-lockfile \
+    --filter @brain-feed/backend \
+    --filter @brain-feed/error-types \
+    --filter @brain-feed/logger \
+    --filter @brain-feed/worker-core \
+    --prod
 
 # Copy compiled output from builder
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
+COPY --from=builder /app/packages/error-types/dist ./packages/error-types/dist
+COPY --from=builder /app/packages/logger/dist ./packages/logger/dist
 COPY --from=builder /app/packages/worker-core/dist ./packages/worker-core/dist
 
 EXPOSE 3001

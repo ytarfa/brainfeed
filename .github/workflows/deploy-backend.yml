@@ -6,6 +6,9 @@ on:
     paths:
       - "apps/backend/**"
       - "packages/types/**"
+      - "packages/error-types/**"
+      - "packages/logger/**"
+      - "packages/worker-core/**"
       - "railway.toml"
       - "pnpm-lock.yaml"
       - "package.json"
