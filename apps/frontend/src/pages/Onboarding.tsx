@@ -24,11 +24,11 @@ export default function Onboarding() {
     <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center p-6">
       {/* Decorative blobs */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[10%] right-[5%] w-[300px] h-[300px] rounded-full bg-[radial-gradient(circle,rgba(212,132,90,0.08)_0%,transparent_70%)]" />
-        <div className="absolute bottom-[10%] left-[5%] w-[250px] h-[250px] rounded-full bg-[radial-gradient(circle,rgba(74,122,91,0.06)_0%,transparent_70%)]" />
+        <div className="absolute top-[10%] right-[5%] w-[300px] h-[300px] rounded-full bg-[radial-gradient(circle,rgba(42,138,98,0.08)_0%,transparent_70%)]" />
+        <div className="absolute bottom-[10%] left-[5%] w-[250px] h-[250px] rounded-full bg-[radial-gradient(circle,rgba(61,214,140,0.06)_0%,transparent_70%)]" />
       </div>
 
-      <div className="bg-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-2xl p-9 w-full max-w-[480px] shadow-[0_8px_40px_rgba(30,28,26,0.07)] animate-fade-in relative">
+      <div className="bg-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-2xl p-9 w-full max-w-[480px] shadow-[0_8px_40px_rgba(0,0,0,0.07)] animate-fade-in relative">
         {/* Logo */}
         <div className="text-center mb-8">
           <Logo variant="full" size="lg" />

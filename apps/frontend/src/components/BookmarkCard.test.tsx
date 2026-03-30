@@ -98,7 +98,7 @@ describe("BookmarkCard", () => {
         {...defaultProps}
         showSpace
         spaceName="Dev Tools"
-        spaceColor="#d4845a"
+        spaceColor="#2A8A62"
       />,
     );
     expect(screen.getByText("Dev Tools")).toBeInTheDocument();

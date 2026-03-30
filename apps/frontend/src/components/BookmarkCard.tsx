@@ -146,7 +146,7 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
           {/* Type badge floating on thumbnail */}
           <div className="absolute left-3 top-3">
             <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-[3px] font-ui text-2xs font-medium text-white/90 backdrop-blur-sm"
-              style={{ background: "rgba(30, 28, 26, 0.55)" }}
+              style={{ background: "rgba(0, 0, 0, 0.55)" }}
             >
               {typeIcons[bookmark.source_type ?? ""] || <Diamond size={10} />}
               {bookmark.source_type}
@@ -159,7 +159,7 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
           {/* Type badge floating on placeholder */}
           <div className="absolute left-3 top-3 z-[1]">
             <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-[3px] font-ui text-2xs font-medium text-white/90 backdrop-blur-sm"
-              style={{ background: "rgba(30, 28, 26, 0.55)" }}
+              style={{ background: "rgba(0, 0, 0, 0.55)" }}
             >
               {typeIcons[bookmark.source_type ?? ""] || <Diamond size={10} />}
               {bookmark.source_type}

@@ -19,9 +19,9 @@ const typeIcons: Record<string, string> = {
 
 const typeColors: Record<string, string> = {
   github: "#24292e", youtube: "#ff0000", twitter: "#1da1f2",
-  news: "#d4845a", amazon: "#ff9900", paper: "#4a7a5b",
-  generic: "#6a6660", note: "#8b5e3c", reddit: "#ff4500",
-  spotify: "#1db954", article: "#d4845a", academic: "#4a7a5b",
+  news: "#2A8A62", amazon: "#ff9900", paper: "#3DD68C",
+  generic: "#555555", note: "#1A5C40", reddit: "#ff4500",
+  spotify: "#1db954", article: "#2A8A62", academic: "#3DD68C",
   instagram: "#c13584",
 };
 

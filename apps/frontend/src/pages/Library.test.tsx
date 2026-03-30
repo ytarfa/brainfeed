@@ -64,7 +64,7 @@ const mockSpaces = [
     user_id: "user-1",
     share_token: null,
     ai_auto_categorize: false,
-    color: "#d4845a",
+    color: "#2A8A62",
     bookmark_spaces: [{ count: 5 }],
     space_members: [
       { user_id: "u1", role: "owner", profiles: { display_name: "Alice", avatar_url: null } },

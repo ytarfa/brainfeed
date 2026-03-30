@@ -5,16 +5,8 @@ import {
   Diamond,
 } from "lucide-react";
 
-/**
- * Source-type color palettes — each has a primary gradient pair
- * and an accent for the icon. Colors are intentionally muted
- * to harmonize with the warm sand/terra design system.
- */
-const sourceColorMap: Record<string, { from: string; to: string; accent: string }> = {
-  github:  { from: "#2d2a3e", to: "#4a3f6b", accent: "rgba(255,255,255,0.18)" },
-  youtube: { from: "#6b2a2a", to: "#8b3a3a", accent: "rgba(255,255,255,0.16)" },
-  generic: { from: "#4a4440", to: "#6a5f58", accent: "rgba(255,255,255,0.14)" },
-};
+/** Unified placeholder colors — muted neutral tones that harmonize with the design system. */
+const placeholderColors = { from: "#4a4440", to: "#6a5f58", accent: "rgba(255,255,255,0.14)" };
 
 const sourceIcons: Record<string, React.ReactNode> = {
   github:  <Code2 strokeWidth={1.5} />,
@@ -50,7 +42,7 @@ export default function ThumbnailPlaceholder({
   iconSize = 36,
 }: ThumbnailPlaceholderProps) {
   const key = sourceType ?? "generic";
-  const colors = sourceColorMap[key] ?? sourceColorMap.generic;
+  const colors = placeholderColors;
   const icon = sourceIcons[key] ?? sourceIcons.generic;
 
   return (
