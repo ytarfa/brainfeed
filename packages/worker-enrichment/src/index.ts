@@ -58,8 +58,8 @@ async function main(): Promise<void> {
     logger.error({ jobId: job?.id, bookmarkId: job?.data.bookmarkId, err }, "Job failed");
   });
 
-  // Start health endpoint
-  const port = parseInt(process.env.WORKER_PORT ?? String(DEFAULT_WORKER_PORT), 10);
+  // Start health endpoint — Railway sends health checks to PORT, so prefer that
+  const port = parseInt(process.env.PORT ?? process.env.WORKER_PORT ?? String(DEFAULT_WORKER_PORT), 10);
   const server = startHealthServer(port, logger);
 
   logger.info({ queue: QUEUE_NAME, concurrency: 5 }, "Worker listening on queue");
