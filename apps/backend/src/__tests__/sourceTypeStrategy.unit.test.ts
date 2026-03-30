@@ -10,13 +10,6 @@ describe("GenericSourceTypeStrategy", () => {
       ["github.com", "github"],
       ["youtube.com", "youtube"],
       ["youtu.be", "youtube"],
-      ["twitter.com", "twitter"],
-      ["x.com", "twitter"],
-      ["instagram.com", "instagram"],
-      ["reddit.com", "reddit"],
-      ["amazon.com", "amazon"],
-      ["arxiv.org", "academic"],
-      ["scholar.google.com", "academic"],
     ])("detects %s as %s", (hostname, expected) => {
       expect(strategy.detect(hostname)).toBe(expected);
     });
@@ -37,6 +30,18 @@ describe("GenericSourceTypeStrategy", () => {
 
     it("returns null for a similar but different domain", () => {
       expect(strategy.detect("github.io")).toBeNull();
+    });
+
+    it.each([
+      "twitter.com",
+      "x.com",
+      "instagram.com",
+      "reddit.com",
+      "amazon.com",
+      "arxiv.org",
+      "scholar.google.com",
+    ])("returns null for removed source %s", (hostname) => {
+      expect(strategy.detect(hostname)).toBeNull();
     });
   });
 });

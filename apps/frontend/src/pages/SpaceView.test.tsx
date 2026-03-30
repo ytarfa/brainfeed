@@ -6,6 +6,7 @@ import SpaceView from "./SpaceView";
 vi.mock("../api/hooks", () => ({
   useSpace: vi.fn(),
   useActivity: vi.fn(),
+  useDeleteBookmark: vi.fn(),
   toBookmark: vi.fn(),
 }));
 
@@ -30,7 +31,7 @@ vi.mock("../components/ActivityLog", () => ({
   ),
 }));
 
-import { useSpace, useActivity, toBookmark } from "../api/hooks";
+import { useSpace, useActivity, useDeleteBookmark, toBookmark } from "../api/hooks";
 import { useOutletContext, useParams } from "react-router-dom";
 
 const mockMembers = [
@@ -141,6 +142,15 @@ function setupMocks(overrides: {
     isLoading: false,
     isError: false,
   } as unknown as ReturnType<typeof useActivity>);
+
+  vi.mocked(useDeleteBookmark).mockReturnValue({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn(),
+    isPending: false,
+    isError: false,
+    isSuccess: false,
+    isIdle: true,
+  } as unknown as ReturnType<typeof useDeleteBookmark>);
 
   vi.mocked(toBookmark).mockImplementation((raw) => ({
     id: (raw as Record<string, unknown>).id,

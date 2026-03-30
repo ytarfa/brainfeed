@@ -16,23 +16,9 @@ import type { EnrichedData } from "./enriched-data.types";
 // Primitive / shared types
 // ---------------------------------------------------------------------------
 
-export type ContentType = "link" | "note" | "image" | "pdf" | "file";
+export type ContentType = "link";
 
-export type SourceType =
-  | "github"
-  | "twitter"
-  | "youtube"
-  | "news"
-  | "amazon"
-  | "paper"
-  | "generic"
-  | "note"
-  | "image"
-  | "pdf"
-  | "file"
-  | "reddit"
-  | "spotify"
-  | "rss";
+export type SourceType = "github" | "youtube" | "generic";
 
 export type DigestStatus = "active" | "saved" | "dismissed";
 
@@ -40,8 +26,7 @@ export type EnrichmentStatus =
   | "pending"
   | "processing"
   | "completed"
-  | "failed"
-  | "unsupported";
+  | "failed";
 
 // Re-export EnrichedData so existing `import { EnrichedData } from "./app.types"` keeps working.
 export type { EnrichedData } from "./enriched-data.types";
@@ -70,25 +55,6 @@ export interface Collaborator {
 }
 
 // ---------------------------------------------------------------------------
-// SyncSource — derived from sync_sources row
-// ---------------------------------------------------------------------------
-
-export interface SyncSource extends Omit<Tables<"sync_sources">, "platform" | "sync_frequency"> {
-  /** sync_sources.platform narrowed to known values */
-  platform: "youtube" | "spotify" | "reddit" | "rss";
-  /** UI alias for platform (e.g. "r/programming", "ML channels") */
-  label: string;
-  /** Whether this source is connected / authenticated */
-  connected: boolean;
-  /** Runtime sync state */
-  status: "active" | "failed" | "idle";
-  /** sync_sources.sync_frequency narrowed to known values */
-  sync_frequency: "hourly" | "daily" | "weekly";
-  /** Human-readable relative time string for the UI (e.g. "2 hours ago") */
-  lastSync?: string;
-}
-
-// ---------------------------------------------------------------------------
 // CategorizationRule — derived from categorization_rules row
 // ---------------------------------------------------------------------------
 
@@ -112,12 +78,8 @@ export interface Space extends Tables<"spaces"> {
   itemCount: number;
   /** Joined from space_members + profiles */
   collaborators: Collaborator[];
-  /** Joined from sync_sources */
-  syncSources: SyncSource[];
   /** Derived from is_public */
   isShared: boolean;
-  /** Runtime state: true while a sync is in progress */
-  isSyncing: boolean;
   /** Joined from categorization_rules */
   rules: CategorizationRule[];
   /** Alias for ai_auto_categorize */
@@ -149,8 +111,6 @@ export interface Bookmark extends Omit<Tables<"bookmarks">, "content_type" | "so
   summary?: string;
   /** Human-readable relative time string for the UI (e.g. "3 min ago") */
   savedAt: string;
-  /** Whether this bookmark is considered a long-form article */
-  isArticle?: boolean;
   /** Structured enrichment pipeline output (null until enrichment completes) */
   enriched_data: EnrichedData | null;
 }

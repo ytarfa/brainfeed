@@ -17,7 +17,6 @@ export type {
   EnrichmentStatus,
   Tag,
   Collaborator,
-  SyncSource,
   CategorizationRule,
   Space,
   Bookmark,

@@ -155,7 +155,6 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
             <h2
               className={cn(
                 "font-display text-[22px] font-medium leading-[1.28] tracking-[-0.01em] text-[var(--text-primary)]",
-                bookmark.isArticle && "italic",
               )}
             >
               {bookmark.title}

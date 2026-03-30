@@ -1,6 +1,6 @@
 import type { Job } from "bullmq";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@brain-feed/types";
+import type { Database, SourceType } from "@brain-feed/types";
 import {
   updateEnrichmentStatus,
   writeEnrichedData,
@@ -16,16 +16,10 @@ import { runPipeline } from "./pipeline";
 export interface EnrichmentJobData {
   bookmarkId: string;
   userId: string;
-  contentType: string;
-  sourceType: string | null;
-  url: string | null;
+  contentType: "link";
+  sourceType: SourceType | null;
+  url: string;
 }
-
-// ---------------------------------------------------------------------------
-// Content types that the pipeline cannot currently process
-// ---------------------------------------------------------------------------
-
-const UNSUPPORTED_CONTENT_TYPES = new Set(["image", "pdf", "file"]);
 
 // ---------------------------------------------------------------------------
 // Processor factory — creates the BullMQ processor function
@@ -37,13 +31,7 @@ export function createProcessor(
   return async function processEnrichmentJob(
     job: Job<EnrichmentJobData>,
   ): Promise<void> {
-    const { bookmarkId, contentType } = job.data;
-
-    // Skip unsupported content types
-    if (UNSUPPORTED_CONTENT_TYPES.has(contentType)) {
-      await updateEnrichmentStatus(supabase, bookmarkId, "unsupported");
-      return;
-    }
+    const { bookmarkId } = job.data;
 
     // Mark as processing
     await updateEnrichmentStatus(supabase, bookmarkId, "processing");

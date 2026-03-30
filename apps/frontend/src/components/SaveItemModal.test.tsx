@@ -44,7 +44,7 @@ describe("SaveItemModal", () => {
     );
     vi.advanceTimersByTime(200);
     expect(
-      screen.getByPlaceholderText("https://example.com or paste any text..."),
+      screen.getByPlaceholderText("https://example.com"),
     ).toBeInTheDocument();
   });
 
@@ -71,7 +71,7 @@ describe("SaveItemModal", () => {
     );
     vi.advanceTimersByTime(200);
 
-    const input = screen.getByPlaceholderText("https://example.com or paste any text...");
+    const input = screen.getByPlaceholderText("https://example.com");
     fireEvent.change(input, { target: { value: "https://example.com" } });
     expect(screen.getByText("Save")).not.toBeDisabled();
   });
@@ -82,7 +82,7 @@ describe("SaveItemModal", () => {
     );
     vi.advanceTimersByTime(200);
 
-    const input = screen.getByPlaceholderText("https://example.com or paste any text...");
+    const input = screen.getByPlaceholderText("https://example.com");
     fireEvent.change(input, { target: { value: "https://example.com" } });
     fireEvent.click(screen.getByText("Save"));
 
@@ -98,7 +98,7 @@ describe("SaveItemModal", () => {
     );
     vi.advanceTimersByTime(200);
 
-    const input = screen.getByPlaceholderText("https://example.com or paste any text...");
+    const input = screen.getByPlaceholderText("https://example.com");
     fireEvent.change(input, { target: { value: "https://example.com" } });
     fireEvent.click(screen.getByText("Save"));
 
@@ -115,7 +115,7 @@ describe("SaveItemModal", () => {
     );
     vi.advanceTimersByTime(200);
 
-    const input = screen.getByPlaceholderText("https://example.com or paste any text...");
+    const input = screen.getByPlaceholderText("https://example.com");
     fireEvent.change(input, { target: { value: "https://example.com" } });
     fireEvent.click(screen.getByText("Save"));
 

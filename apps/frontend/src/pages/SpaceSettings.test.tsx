@@ -14,7 +14,7 @@ const mockCreateRuleMutate = vi.fn();
 const mockDeleteRuleMutate = vi.fn();
 const mockInviteMemberMutate = vi.fn();
 const mockRemoveMemberMutate = vi.fn();
-const mockDeleteSyncSourceMutate = vi.fn();
+
 
 vi.mock("../api/hooks", () => ({
   useSpace: vi.fn(),
@@ -28,8 +28,6 @@ vi.mock("../api/hooks", () => ({
   useMembers: vi.fn(),
   useInviteMember: vi.fn(() => ({ mutate: mockInviteMemberMutate })),
   useRemoveMember: vi.fn(() => ({ mutate: mockRemoveMemberMutate })),
-  useSyncSources: vi.fn(),
-  useDeleteSyncSource: vi.fn(() => ({ mutate: mockDeleteSyncSourceMutate })),
 }));
 
 const mockNavigate = vi.fn();
@@ -47,7 +45,6 @@ import {
   useSpace,
   useRules,
   useMembers,
-  useSyncSources,
 } from "../api/hooks";
 
 // --- Mock data ---
@@ -100,22 +97,6 @@ const mockMembers = [
   },
 ];
 
-const mockSyncSources = [
-  {
-    id: "ss1",
-    platform: "youtube",
-    external_id: "ext-1",
-    external_name: "My Channel",
-    space_id: "space-1",
-    sync_frequency: "daily",
-    is_active: true,
-    created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-01-01T00:00:00Z",
-    user_id: "u1",
-    spaces: { id: "space-1", name: "Test Space" },
-  },
-];
-
 // --- Helpers ---
 
 function setupDefaultMocks(spaceOverrides: Partial<typeof mockSpace> = {}) {
@@ -131,10 +112,6 @@ function setupDefaultMocks(spaceOverrides: Partial<typeof mockSpace> = {}) {
   vi.mocked(useMembers).mockReturnValue({
     data: { data: mockMembers },
   } as unknown as ReturnType<typeof useMembers>);
-
-  vi.mocked(useSyncSources).mockReturnValue({
-    data: { data: mockSyncSources },
-  } as unknown as ReturnType<typeof useSyncSources>);
 }
 
 function renderSettings() {
@@ -155,7 +132,6 @@ describe("SpaceSettings", () => {
     mockDeleteRuleMutate.mockReset();
     mockInviteMemberMutate.mockReset();
     mockRemoveMemberMutate.mockReset();
-    mockDeleteSyncSourceMutate.mockReset();
     mockNavigate.mockReset();
     setupDefaultMocks();
   });
@@ -202,12 +178,11 @@ describe("SpaceSettings", () => {
       expect(screen.getByText("Space Settings")).toBeInTheDocument();
     });
 
-    it("renders all 5 nav buttons", () => {
+    it("renders all 4 nav buttons", () => {
       renderSettings();
       expect(screen.getByText("General")).toBeInTheDocument();
       expect(screen.getByText("Categorization")).toBeInTheDocument();
       expect(screen.getByText("Collaborators")).toBeInTheDocument();
-      expect(screen.getByText("Sync sources")).toBeInTheDocument();
       expect(screen.getByText("Public sharing")).toBeInTheDocument();
     });
   });
@@ -386,46 +361,6 @@ describe("SpaceSettings", () => {
       // Owner is shown, but no Remove button exists
       expect(screen.getByText("Owner")).toBeInTheDocument();
       expect(screen.queryByText("Remove")).not.toBeInTheDocument();
-    });
-  });
-
-  // --- Sync section ---
-
-  describe("Sync section", () => {
-    async function switchToSync() {
-      const user = userEvent.setup();
-      renderSettings();
-      await user.click(screen.getByText("Sync sources"));
-      return user;
-    }
-
-    it("clicking Sync sources tab shows sync section heading", async () => {
-      await switchToSync();
-      expect(
-        screen.getByRole("heading", { name: "Sync sources" }),
-      ).toBeInTheDocument();
-    });
-
-    it("renders sync source with name and frequency", async () => {
-      await switchToSync();
-      expect(screen.getByText("My Channel")).toBeInTheDocument();
-      expect(screen.getByText("daily")).toBeInTheDocument();
-      expect(screen.getByText("active")).toBeInTheDocument();
-    });
-
-    it("Disconnect button calls deleteSyncSource.mutate", async () => {
-      const user = await switchToSync();
-      await user.click(screen.getByText("Disconnect"));
-      expect(mockDeleteSyncSourceMutate).toHaveBeenCalledWith("ss1");
-    });
-
-    it("renders Connect a source section with platform buttons", async () => {
-      await switchToSync();
-      expect(screen.getByText("Connect a source")).toBeInTheDocument();
-      expect(screen.getByText("YouTube")).toBeInTheDocument();
-      expect(screen.getByText("Spotify")).toBeInTheDocument();
-      expect(screen.getByText("Reddit")).toBeInTheDocument();
-      expect(screen.getByText("RSS feed")).toBeInTheDocument();
     });
   });
 

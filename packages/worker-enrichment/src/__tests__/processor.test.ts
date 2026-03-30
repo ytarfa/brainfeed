@@ -63,28 +63,6 @@ describe("createProcessor", () => {
     vi.clearAllMocks();
   });
 
-  it("sets unsupported status for image content type", async () => {
-    const processor = createProcessor(fakeSupabase);
-    await processor(makeJob({ contentType: "image" }));
-
-    expect(mockUpdateEnrichmentStatus).toHaveBeenCalledWith(fakeSupabase, "bk-1", "unsupported");
-    expect(mockRunPipeline).not.toHaveBeenCalled();
-  });
-
-  it("sets unsupported status for pdf content type", async () => {
-    const processor = createProcessor(fakeSupabase);
-    await processor(makeJob({ contentType: "pdf" }));
-
-    expect(mockUpdateEnrichmentStatus).toHaveBeenCalledWith(fakeSupabase, "bk-1", "unsupported");
-  });
-
-  it("sets unsupported status for file content type", async () => {
-    const processor = createProcessor(fakeSupabase);
-    await processor(makeJob({ contentType: "file" }));
-
-    expect(mockUpdateEnrichmentStatus).toHaveBeenCalledWith(fakeSupabase, "bk-1", "unsupported");
-  });
-
   it("processes a link bookmark through the pipeline", async () => {
     mockFetchBookmarkForProcessing.mockResolvedValue(fakeBookmark);
     const fakeResult = {
@@ -105,12 +83,25 @@ describe("createProcessor", () => {
     expect(mockWriteEnrichedData).toHaveBeenCalledWith(fakeSupabase, "bk-1", fakeResult);
   });
 
-  it("processes a note bookmark through the pipeline", async () => {
-    mockFetchBookmarkForProcessing.mockResolvedValue({ ...fakeBookmark, content_type: "note" });
+  it("processes a github bookmark through the pipeline", async () => {
+    const githubBookmark = { ...fakeBookmark, source_type: "github" as const, url: "https://github.com/user/repo" };
+    mockFetchBookmarkForProcessing.mockResolvedValue(githubBookmark);
     mockRunPipeline.mockResolvedValue({ summary: null, entities: [], topics: [], metadata: null, processedAt: "t" });
 
     const processor = createProcessor(fakeSupabase);
-    await processor(makeJob({ contentType: "note" }));
+    await processor(makeJob({ sourceType: "github", url: "https://github.com/user/repo" }));
+
+    expect(mockUpdateEnrichmentStatus).toHaveBeenCalledWith(fakeSupabase, "bk-1", "processing");
+    expect(mockRunPipeline).toHaveBeenCalled();
+  });
+
+  it("processes a youtube bookmark through the pipeline", async () => {
+    const ytBookmark = { ...fakeBookmark, source_type: "youtube" as const, url: "https://youtube.com/watch?v=abc" };
+    mockFetchBookmarkForProcessing.mockResolvedValue(ytBookmark);
+    mockRunPipeline.mockResolvedValue({ summary: null, entities: [], topics: [], metadata: null, processedAt: "t" });
+
+    const processor = createProcessor(fakeSupabase);
+    await processor(makeJob({ sourceType: "youtube", url: "https://youtube.com/watch?v=abc" }));
 
     expect(mockUpdateEnrichmentStatus).toHaveBeenCalledWith(fakeSupabase, "bk-1", "processing");
     expect(mockRunPipeline).toHaveBeenCalled();

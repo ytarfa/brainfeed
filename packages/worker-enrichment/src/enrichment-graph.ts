@@ -21,12 +21,6 @@ export type EnrichmentSubgraphStateType = typeof EnrichmentSubgraphState.State;
 export type EnrichmentRoute =
   | "github"
   | "youtube"
-  | "twitter"
-  | "reddit"
-  | "spotify"
-  | "paper"
-  | "news"
-  | "non_link"
   | "generic";
 
 // ---------------------------------------------------------------------------
@@ -36,10 +30,6 @@ export type EnrichmentRoute =
 const URL_PATTERNS: [RegExp, EnrichmentRoute][] = [
   [/github\.com/i, "github"],
   [/youtube\.com|youtu\.be/i, "youtube"],
-  [/twitter\.com|x\.com/i, "twitter"],
-  [/reddit\.com/i, "reddit"],
-  [/open\.spotify\.com/i, "spotify"],
-  [/arxiv\.org|scholar\.google/i, "paper"],
 ];
 
 /**
@@ -62,17 +52,7 @@ export function detectRouteFromUrl(url: string): EnrichmentRoute | null {
 const SOURCE_TYPE_TO_ROUTE: Record<string, EnrichmentRoute> = {
   github: "github",
   youtube: "youtube",
-  twitter: "twitter",
-  reddit: "reddit",
-  spotify: "spotify",
-  paper: "paper",
-  news: "news",
-  // Non-link content types
-  note: "non_link",
-  image: "non_link",
-  pdf: "non_link",
-  file: "non_link",
-  // Everything else (amazon, rss, generic) falls through to "generic"
+  generic: "generic",
 };
 
 /**
@@ -81,8 +61,7 @@ const SOURCE_TYPE_TO_ROUTE: Record<string, EnrichmentRoute> = {
  * Priority:
  *  1. `source_type` if present and mapped
  *  2. URL pattern matching
- *  3. `content_type` for non-link types (note, image, pdf, file)
- *  4. "generic" fallback
+ *  3. "generic" fallback
  */
 export function resolveRoute(bookmark: BookmarkForProcessing): EnrichmentRoute {
   // 1. Explicit source_type
@@ -101,12 +80,7 @@ export function resolveRoute(bookmark: BookmarkForProcessing): EnrichmentRoute {
     }
   }
 
-  // 3. Non-link content types
-  if (bookmark.content_type !== "link") {
-    return "non_link";
-  }
-
-  // 4. Fallback
+  // 3. Fallback
   return "generic";
 }
 
@@ -153,48 +127,6 @@ async function youtubeNode(
   return { result: emptyEnrichedData() };
 }
 
-async function twitterNode(
-  _state: EnrichmentSubgraphStateType,
-): Promise<Partial<EnrichmentSubgraphStateType>> {
-  // TODO: Fetch tweet/thread content, engagement data, etc.
-  return { result: emptyEnrichedData() };
-}
-
-async function redditNode(
-  _state: EnrichmentSubgraphStateType,
-): Promise<Partial<EnrichmentSubgraphStateType>> {
-  // TODO: Fetch post content, comments, etc.
-  return { result: emptyEnrichedData() };
-}
-
-async function spotifyNode(
-  _state: EnrichmentSubgraphStateType,
-): Promise<Partial<EnrichmentSubgraphStateType>> {
-  // TODO: Fetch episode/track metadata, etc.
-  return { result: emptyEnrichedData() };
-}
-
-async function paperNode(
-  _state: EnrichmentSubgraphStateType,
-): Promise<Partial<EnrichmentSubgraphStateType>> {
-  // TODO: Fetch abstract, citations, etc.
-  return { result: emptyEnrichedData() };
-}
-
-async function newsNode(
-  _state: EnrichmentSubgraphStateType,
-): Promise<Partial<EnrichmentSubgraphStateType>> {
-  // TODO: Fetch article content, publication metadata, etc.
-  return { result: emptyEnrichedData() };
-}
-
-async function nonLinkNode(
-  _state: EnrichmentSubgraphStateType,
-): Promise<Partial<EnrichmentSubgraphStateType>> {
-  // TODO: Process raw_content for notes, images, PDFs, files
-  return { result: emptyEnrichedData() };
-}
-
 async function genericNode(
   _state: EnrichmentSubgraphStateType,
 ): Promise<Partial<EnrichmentSubgraphStateType>> {
@@ -209,12 +141,6 @@ async function genericNode(
 const ROUTE_MAP = {
   github: "github",
   youtube: "youtube",
-  twitter: "twitter",
-  reddit: "reddit",
-  spotify: "spotify",
-  paper: "paper",
-  news: "news",
-  non_link: "non_link",
   generic: "generic",
 } as const;
 
@@ -222,23 +148,11 @@ export const enrichmentGraph = new StateGraph(EnrichmentSubgraphState)
   // Source-specific nodes
   .addNode("github", githubNode)
   .addNode("youtube", youtubeNode)
-  .addNode("twitter", twitterNode)
-  .addNode("reddit", redditNode)
-  .addNode("spotify", spotifyNode)
-  .addNode("paper", paperNode)
-  .addNode("news", newsNode)
-  .addNode("non_link", nonLinkNode)
   .addNode("generic", genericNode)
   // Route from __start__ to the correct node
   .addConditionalEdges("__start__", routeNode, ROUTE_MAP)
   // All enrichment nodes flow to __end__
   .addEdge("github", "__end__")
   .addEdge("youtube", "__end__")
-  .addEdge("twitter", "__end__")
-  .addEdge("reddit", "__end__")
-  .addEdge("spotify", "__end__")
-  .addEdge("paper", "__end__")
-  .addEdge("news", "__end__")
-  .addEdge("non_link", "__end__")
   .addEdge("generic", "__end__")
   .compile();

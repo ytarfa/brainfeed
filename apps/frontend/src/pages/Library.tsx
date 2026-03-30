@@ -6,7 +6,6 @@ import { cn } from "../lib/utils";
 import BookmarkCard from "../components/BookmarkCard";
 import { useBookmarks, useSpaces, useDeleteBookmark, toBookmark, useDigestSummary } from "../api/hooks";
 
-type ContentFilter = "all" | "link" | "note" | "image" | "pdf" | "file";
 type SortOption = "saved" | "title" | "source";
 
 interface LayoutContext {
@@ -21,24 +20,13 @@ const sortMap: Record<SortOption, string> = {
   source: "source_type",
 };
 
-const filters: { label: string; value: ContentFilter }[] = [
-  { label: "All", value: "all" },
-  { label: "Links", value: "link" },
-  { label: "Notes", value: "note" },
-  { label: "Images", value: "image" },
-  { label: "PDFs", value: "pdf" },
-  { label: "Files", value: "file" },
-];
-
 export default function Library() {
   const { view, onCardClick, onAddClick } = useOutletContext<LayoutContext>();
-  const [filter, setFilter] = useState<ContentFilter>("all");
   const [sort, setSort] = useState<SortOption>("saved");
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const navigate = useNavigate();
 
   const { data: bookmarksData, isLoading } = useBookmarks({
-    type: filter === "all" ? undefined : filter,
     sort: sortMap[sort],
     order: "desc",
   });
@@ -113,25 +101,8 @@ export default function Library() {
         <p className="text-[13px] text-[var(--text-muted)]">{total} items across all Spaces</p>
       </div>
 
-      {/* Filter + Sort bar */}
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap gap-1">
-          {filters.map((f) => (
-            <button
-              key={f.value}
-              onClick={() => setFilter(f.value)}
-              className={cn(
-                "h-7 rounded-full px-3 font-ui text-xs font-medium transition-all duration-[var(--transition-fast)]",
-                filter === f.value
-                  ? "border border-terra-100 bg-[var(--accent-subtle)] text-[var(--accent-text)]"
-                  : "border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-secondary)]",
-              )}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-
+      {/* Sort bar */}
+      <div className="mb-5 flex flex-wrap items-center justify-end gap-3">
         <div className="flex items-center gap-1.5">
           <span className="text-meta shrink-0">Sort by</span>
           <select

@@ -3,11 +3,14 @@ import { screen, fireEvent } from "@testing-library/react";
 import { renderWithProviders } from "../test/test-utils";
 import Library from "./Library";
 
+const mockDeleteMutate = vi.fn();
+
 vi.mock("../api/hooks", () => ({
   useBookmarks: vi.fn(),
   useSpaces: vi.fn(),
   toBookmark: vi.fn(),
   useDigestSummary: vi.fn(() => ({ data: undefined, isLoading: false, isError: false })),
+  useDeleteBookmark: vi.fn(() => ({ mutate: mockDeleteMutate })),
 }));
 
 vi.mock("react-router-dom", async () => {
@@ -160,15 +163,14 @@ describe("Library", () => {
     expect(screen.getByText("2 items across all Spaces")).toBeInTheDocument();
   });
 
-  it("renders filter buttons (All, Links, Notes, Images, PDFs, Files)", () => {
+  it("does not render filter buttons (filter tabs removed)", () => {
     setupMocks();
     renderWithProviders(<Library />);
-    expect(screen.getByText("All")).toBeInTheDocument();
-    expect(screen.getByText("Links")).toBeInTheDocument();
-    expect(screen.getByText("Notes")).toBeInTheDocument();
-    expect(screen.getByText("Images")).toBeInTheDocument();
-    expect(screen.getByText("PDFs")).toBeInTheDocument();
-    expect(screen.getByText("Files")).toBeInTheDocument();
+    expect(screen.queryByText("Links")).not.toBeInTheDocument();
+    expect(screen.queryByText("Notes")).not.toBeInTheDocument();
+    expect(screen.queryByText("Images")).not.toBeInTheDocument();
+    expect(screen.queryByText("PDFs")).not.toBeInTheDocument();
+    expect(screen.queryByText("Files")).not.toBeInTheDocument();
   });
 
   it("renders sort dropdown with options", () => {
@@ -202,19 +204,6 @@ describe("Library", () => {
     renderWithProviders(<Library />);
     expect(screen.getByText("React Patterns")).toBeInTheDocument();
     expect(screen.getByText("TypeScript Deep Dive")).toBeInTheDocument();
-  });
-
-  it("clicking a filter button calls useBookmarks with new type", () => {
-    setupMocks();
-    renderWithProviders(<Library />);
-    fireEvent.click(screen.getByText("Links"));
-
-    // After clicking "Links", useBookmarks should be called with type: "link"
-    const calls = vi.mocked(useBookmarks).mock.calls;
-    const lastCall = calls[calls.length - 1];
-    expect(lastCall[0]).toEqual(
-      expect.objectContaining({ type: "link" }),
-    );
   });
 
   it("clicking sort dropdown changes the sort parameter", () => {

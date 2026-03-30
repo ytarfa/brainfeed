@@ -1,15 +1,12 @@
 import { Router, Request, Response } from "express";
-import multer from "multer";
 import { z } from "zod";
 import { validateBody, validateQuery } from "../middleware/validate";
 import { bookmarkService } from "../services/bookmarkService";
 import { resolveThumbnail } from "../services/thumbnailService";
 import { getPaginationParams } from "../utils/pagination";
-import { serviceClient } from "../config/supabase";
 import { publishEnrichmentJob } from "../lib/enrichmentQueue";
 
 const router = Router();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 50 * 1024 * 1024 } });
 
 const listQuerySchema = z.object({
   type: z.string().optional(),
@@ -20,14 +17,13 @@ const listQuerySchema = z.object({
 });
 
 const createSchema = z.object({
-  url: z.string().url().optional(),
-  content_type: z.enum(["link", "note", "image", "pdf", "file"]),
+  url: z.string().url(),
+  content_type: z.literal("link"),
   title: z.string().optional(),
   description: z.string().optional(),
   notes: z.string().optional(),
   space_ids: z.array(z.string().uuid()).optional(),
   tags: z.array(z.string()).optional(),
-  raw_content: z.string().optional(),
 });
 
 const updateSchema = z.object({
@@ -73,13 +69,8 @@ router.get("/:id", async (req: Request, res: Response): Promise<void> => {
 });
 
 // POST /
-router.post("/", upload.single("file"), async (req: Request, res: Response): Promise<void> => {
-  // Parse body (multipart fields come as strings)
-  const parseResult = createSchema.safeParse({
-    ...req.body,
-    space_ids: req.body.space_ids ? JSON.parse(req.body.space_ids) : undefined,
-    tags: req.body.tags ? JSON.parse(req.body.tags) : undefined,
-  });
+router.post("/", async (req: Request, res: Response): Promise<void> => {
+  const parseResult = createSchema.safeParse(req.body);
   if (!parseResult.success) {
     res.status(400).json({ error: parseResult.error.issues.map((i) => `${i.path}: ${i.message}`).join(", ") });
     return;
@@ -87,45 +78,21 @@ router.post("/", upload.single("file"), async (req: Request, res: Response): Pro
 
   const body = parseResult.data;
   const source_type = bookmarkService.detectSourceType(body.url);
-  const enrichment_status = body.content_type === "note" ? "completed" : "pending";
 
-  let file_path: string | null = null;
-  let signed_url: string | null = null;
-
-  // Handle file upload
-  if (req.file) {
-    const storagePath = `user-uploads/${req.userId}/${crypto.randomUUID()}-${req.file.originalname}`;
-    const { error: uploadError } = await serviceClient.storage
-      .from("user-uploads")
-      .upload(storagePath, req.file.buffer, { contentType: req.file.mimetype });
-
-    if (uploadError) { res.status(500).json({ error: uploadError.message }); return; }
-
-    file_path = storagePath;
-    const { data: urlData } = await serviceClient.storage
-      .from("user-uploads")
-      .createSignedUrl(storagePath, 3600);
-    signed_url = urlData?.signedUrl ?? null;
-  }
-
-  // Resolve thumbnail inline for link bookmarks (best-effort, non-blocking on failure)
-  let thumbnail_url: string | null = null;
-  if (body.content_type === "link" && body.url) {
-    thumbnail_url = await resolveThumbnail(body.url, source_type);
-  }
+  // Resolve thumbnail inline (best-effort, non-blocking on failure)
+  const thumbnail_url = await resolveThumbnail(body.url, source_type);
 
   const insertData: Record<string, unknown> = {
     user_id: req.userId,
-    url: body.url ?? null,
-    content_type: body.content_type,
+    url: body.url,
+    content_type: "link",
     title: body.title ?? null,
     description: body.description ?? null,
     notes: body.notes ?? null,
     tags: body.tags ?? [],
-    raw_content: body.content_type === "note" ? body.raw_content : null,
     source_type,
-    enrichment_status,
-    file_path,
+    enrichment_status: "pending",
+    file_path: null,
     thumbnail_url,
   };
 
@@ -147,18 +114,16 @@ router.post("/", upload.single("file"), async (req: Request, res: Response): Pro
     await req.supabase.from("bookmark_spaces").insert(spaceRows);
   }
 
-  res.status(201).json({ ...bookmark, signed_url });
+  res.status(201).json(bookmark);
 
-  // Fire-and-forget: publish enrichment job for non-note bookmarks
-  if (enrichment_status === "pending") {
-    publishEnrichmentJob({
-      bookmarkId: bookmark.id,
-      userId: req.userId,
-      contentType: body.content_type,
-      sourceType: source_type,
-      url: body.url ?? null,
-    });
-  }
+  // Fire-and-forget: publish enrichment job
+  publishEnrichmentJob({
+    bookmarkId: bookmark.id,
+    userId: req.userId,
+    contentType: "link",
+    sourceType: source_type,
+    url: body.url,
+  });
 });
 
 // PATCH /:id

@@ -2,18 +2,7 @@ import React from "react";
 import {
   Code2,
   Play,
-  AtSign,
-  Newspaper,
-  ShoppingCart,
-  GraduationCap,
   Diamond,
-  PenLine,
-  ImageIcon,
-  FileText,
-  File,
-  MessageCircle,
-  Music,
-  Rss,
 } from "lucide-react";
 
 /**
@@ -24,35 +13,13 @@ import {
 const sourceColorMap: Record<string, { from: string; to: string; accent: string }> = {
   github:  { from: "#2d2a3e", to: "#4a3f6b", accent: "rgba(255,255,255,0.18)" },
   youtube: { from: "#6b2a2a", to: "#8b3a3a", accent: "rgba(255,255,255,0.16)" },
-  twitter: { from: "#2a4a6b", to: "#3a5f8b", accent: "rgba(255,255,255,0.16)" },
-  news:    { from: "#4a3a2a", to: "#6b5a3a", accent: "rgba(255,255,255,0.15)" },
-  amazon:  { from: "#3a4a2a", to: "#5a6b3a", accent: "rgba(255,255,255,0.15)" },
-  paper:   { from: "#3a2a4a", to: "#5a3a6b", accent: "rgba(255,255,255,0.16)" },
   generic: { from: "#4a4440", to: "#6a5f58", accent: "rgba(255,255,255,0.14)" },
-  note:    { from: "#4a4036", to: "#6b5a48", accent: "rgba(255,255,255,0.15)" },
-  image:   { from: "#2a4a4a", to: "#3a6b6b", accent: "rgba(255,255,255,0.16)" },
-  pdf:     { from: "#5a2a2a", to: "#7b3a3a", accent: "rgba(255,255,255,0.16)" },
-  file:    { from: "#3a3a4a", to: "#5a5a6b", accent: "rgba(255,255,255,0.14)" },
-  reddit:  { from: "#5a3a2a", to: "#7b4a3a", accent: "rgba(255,255,255,0.16)" },
-  spotify: { from: "#2a4a36", to: "#3a6b4a", accent: "rgba(255,255,255,0.16)" },
-  rss:     { from: "#5a4a2a", to: "#7b6a3a", accent: "rgba(255,255,255,0.15)" },
 };
 
 const sourceIcons: Record<string, React.ReactNode> = {
   github:  <Code2 strokeWidth={1.5} />,
   youtube: <Play strokeWidth={1.5} />,
-  twitter: <AtSign strokeWidth={1.5} />,
-  news:    <Newspaper strokeWidth={1.5} />,
-  amazon:  <ShoppingCart strokeWidth={1.5} />,
-  paper:   <GraduationCap strokeWidth={1.5} />,
   generic: <Diamond strokeWidth={1.5} />,
-  note:    <PenLine strokeWidth={1.5} />,
-  image:   <ImageIcon strokeWidth={1.5} />,
-  pdf:     <FileText strokeWidth={1.5} />,
-  file:    <File strokeWidth={1.5} />,
-  reddit:  <MessageCircle strokeWidth={1.5} />,
-  spotify: <Music strokeWidth={1.5} />,
-  rss:     <Rss strokeWidth={1.5} />,
 };
 
 interface ThumbnailPlaceholderProps {
