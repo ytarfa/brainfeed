@@ -6,10 +6,13 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
+import { errorReporter, ErrorBoundary } from "@brain-feed/frontend-error-reporter";
 
 import AppLayout from "./layouts/AppLayout";
 import AuthProvider from "./contexts/AuthContext";
+import ToastProvider, { useToast } from "./contexts/ToastContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ToastContainer from "./components/ToastContainer";
 
 // Auth pages
 import Login from "./pages/auth/Login";
@@ -37,6 +40,34 @@ const queryClient = new QueryClient({
   },
 });
 
+// ---------------------------------------------------------------------------
+// Inner shell: wires errorReporter to toast context (must be inside ToastProvider)
+// ---------------------------------------------------------------------------
+
+function AppShell({ children }: { children: React.ReactNode }) {
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    errorReporter.init({
+      onError: (error) => {
+        showToast(error.message || "An unexpected error occurred", "error");
+      },
+    });
+    return () => errorReporter.reset();
+  }, [showToast]);
+
+  return (
+    <ErrorBoundary>
+      {children}
+      <ToastContainer />
+    </ErrorBoundary>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Root component
+// ---------------------------------------------------------------------------
+
 export default function App() {
   const [dark, setDark] = useState(() => {
     const stored = localStorage.getItem("bf-theme");
@@ -52,39 +83,43 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            {/* Auth */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/confirm-email" element={<ConfirmEmail />} />
+        <ToastProvider>
+          <AppShell>
+            <AuthProvider>
+              <Routes>
+                {/* Auth */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/confirm-email" element={<ConfirmEmail />} />
 
-            {/* Onboarding */}
-            <Route path="/onboarding" element={<Onboarding />} />
+                {/* Onboarding */}
+                <Route path="/onboarding" element={<Onboarding />} />
 
-            {/* Public share view — no auth, no sidebar */}
-            <Route path="/p/:shareToken" element={<PublicSpace />} />
+                {/* Public share view — no auth, no sidebar */}
+                <Route path="/p/:shareToken" element={<PublicSpace />} />
 
-            {/* Authenticated app shell */}
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <AppLayout dark={dark} onToggleDark={() => setDark((v) => !v)} />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Navigate to="/library" replace />} />
-              <Route path="library" element={<Library />} />
-              <Route path="digest" element={<DigestPage />} />
-              <Route path="spaces" element={<AllSpaces />} />
-              <Route path="spaces/:id" element={<SpaceView />} />
-              <Route path="spaces/:id/settings" element={<SpaceSettings />} />
-              <Route path="settings" element={<UserSettings />} />
-            </Route>
-          </Routes>
-        </AuthProvider>
+                {/* Authenticated app shell */}
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <AppLayout dark={dark} onToggleDark={() => setDark((v) => !v)} />
+                    </ProtectedRoute>
+                  }
+                >
+                  <Route index element={<Navigate to="/library" replace />} />
+                  <Route path="library" element={<Library />} />
+                  <Route path="digest" element={<DigestPage />} />
+                  <Route path="spaces" element={<AllSpaces />} />
+                  <Route path="spaces/:id" element={<SpaceView />} />
+                  <Route path="spaces/:id/settings" element={<SpaceSettings />} />
+                  <Route path="settings" element={<UserSettings />} />
+                </Route>
+              </Routes>
+            </AuthProvider>
+          </AppShell>
+        </ToastProvider>
       </BrowserRouter>
     </QueryClientProvider>
   );

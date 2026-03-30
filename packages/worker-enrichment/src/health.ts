@@ -1,5 +1,6 @@
 import express from "express";
 import type { Server } from "http";
+import type { Logger } from "@brain-feed/logger";
 
 const QUEUE_NAME = "enrichment";
 
@@ -9,7 +10,7 @@ const QUEUE_NAME = "enrichment";
  * Responds to `GET /health` with `{ status: "ok", queue, timestamp }`.
  * Returns the `http.Server` instance so the caller can close it on shutdown.
  */
-export function startHealthServer(port: number): Server {
+export function startHealthServer(port: number, logger?: Logger): Server {
   const app = express();
 
   app.get("/health", (_req, res) => {
@@ -21,7 +22,9 @@ export function startHealthServer(port: number): Server {
   });
 
   const server = app.listen(port, () => {
-    console.log(`[enrichment] Health endpoint listening on port ${port}`);
+    if (logger) {
+      logger.info({ port }, "Health endpoint listening");
+    }
   });
 
   return server;

@@ -4,7 +4,6 @@ import {
   _resetQueue,
   _setQueue,
 } from "../lib/enrichmentQueue";
-import type { EnrichmentJobPayload } from "../lib/enrichmentQueue";
 
 // ---------------------------------------------------------------------------
 // Mock @brain-feed/worker-core so no real Redis connection is created
@@ -17,12 +16,28 @@ vi.mock("@brain-feed/worker-core", () => ({
   })),
 }));
 
+// Mock @brain-feed/logger so no real logger is created
+vi.mock("@brain-feed/logger", () => {
+  const mockLogger = {
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    fatal: vi.fn(),
+    child: vi.fn().mockReturnThis(),
+  };
+  return {
+    createLogger: vi.fn(() => mockLogger),
+    getRequestId: vi.fn(() => "test-request-id"),
+  };
+});
+
 describe("enrichmentQueue", () => {
-  const samplePayload: EnrichmentJobPayload = {
+  const samplePayload = {
     bookmarkId: "bk-123",
     userId: "usr-456",
-    contentType: "link",
-    sourceType: "github",
+    contentType: "link" as const,
+    sourceType: "github" as const,
     url: "https://github.com/example/repo",
   };
 
@@ -31,19 +46,23 @@ describe("enrichmentQueue", () => {
     vi.restoreAllMocks();
   });
 
-  it("publishes a job with the correct payload and options", async () => {
+  it("publishes a job with the correct payload including requestId", async () => {
     const addFn = vi.fn().mockResolvedValue({ id: "job-1" });
     _setQueue({ add: addFn });
 
     await publishEnrichmentJob(samplePayload);
 
     expect(addFn).toHaveBeenCalledOnce();
-    expect(addFn).toHaveBeenCalledWith("enrich", samplePayload, {
-      attempts: 3,
-      backoff: { type: "exponential", delay: 1000 },
-      removeOnComplete: 100,
-      removeOnFail: 500,
-    });
+    expect(addFn).toHaveBeenCalledWith(
+      "enrich",
+      { ...samplePayload, requestId: "test-request-id" },
+      {
+        attempts: 3,
+        backoff: { type: "exponential", delay: 1000 },
+        removeOnComplete: 100,
+        removeOnFail: 500,
+      },
+    );
   });
 
   it("does not throw when the queue add fails (fire-and-forget)", async () => {
@@ -55,36 +74,34 @@ describe("enrichmentQueue", () => {
     expect(addFn).toHaveBeenCalledOnce();
   });
 
-  it("logs an error when the queue add fails", async () => {
-    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+  it("logs an error via the logger when the queue add fails", async () => {
     const addFn = vi.fn().mockRejectedValue(new Error("Connection refused"));
     _setQueue({ add: addFn });
 
+    // Import the mocked logger to check it was called
+    const { createLogger } = await import("@brain-feed/logger");
+    const mockLogger = (createLogger as unknown as ReturnType<typeof vi.fn>)() as Record<string, ReturnType<typeof vi.fn>>;
+
     await publishEnrichmentJob(samplePayload);
 
-    expect(consoleSpy).toHaveBeenCalledOnce();
-    expect(consoleSpy).toHaveBeenCalledWith(
-      "[enrichmentQueue] Failed to publish job:",
-      expect.any(Error),
-    );
-    consoleSpy.mockRestore();
+    expect(mockLogger.error).toHaveBeenCalled();
   });
 
   it("publishes jobs with null sourceType", async () => {
     const addFn = vi.fn().mockResolvedValue({ id: "job-2" });
     _setQueue({ add: addFn });
 
-    const genericPayload: EnrichmentJobPayload = {
+    const genericPayload = {
       bookmarkId: "bk-789",
       userId: "usr-456",
-      contentType: "link",
+      contentType: "link" as const,
       sourceType: null,
       url: "https://example.com/page",
     };
 
     await publishEnrichmentJob(genericPayload);
 
-    expect(addFn).toHaveBeenCalledWith("enrich", genericPayload, expect.any(Object));
+    expect(addFn).toHaveBeenCalledWith("enrich", { ...genericPayload, requestId: "test-request-id" }, expect.any(Object));
   });
 
   it("lazy-initialises the queue via worker-core on first call when no queue is injected", async () => {

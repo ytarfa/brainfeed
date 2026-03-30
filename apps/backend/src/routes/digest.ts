@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
+import { asyncHandler } from "@brain-feed/logger";
 import { validateBody, validateQuery } from "../middleware/validate";
 
 const router = Router();
@@ -23,7 +24,7 @@ const dismissGroupSchema = z.object({
 router.get(
   "/",
   validateQuery(listQuerySchema),
-  async (req: Request, res: Response): Promise<void> => {
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const { source_type } = req.query as z.infer<typeof listQuerySchema>;
 
     let query = req.supabase
@@ -61,13 +62,13 @@ router.get(
     }
 
     res.json({ data: Object.values(groups) });
-  },
+  }),
 );
 
 // ---------------------------------------------------------------------------
 // GET /summary — count + group summary for banner and sidebar badge
 // ---------------------------------------------------------------------------
-router.get("/summary", async (req: Request, res: Response): Promise<void> => {
+router.get("/summary", asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { data, error } = await req.supabase
     .from("bookmarks")
     .select("source_name, source_type")
@@ -99,12 +100,12 @@ router.get("/summary", async (req: Request, res: Response): Promise<void> => {
     total: items.length,
     groups: Object.values(groupCounts),
   });
-});
+}));
 
 // ---------------------------------------------------------------------------
 // POST /:id/save — promote digest bookmark to regular bookmark
 // ---------------------------------------------------------------------------
-router.post("/:id/save", async (req: Request, res: Response): Promise<void> => {
+router.post("/:id/save", asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { data: bookmark, error } = await req.supabase
     .from("bookmarks")
     .update({ digest_status: "saved", updated_at: new Date().toISOString() })
@@ -120,12 +121,12 @@ router.post("/:id/save", async (req: Request, res: Response): Promise<void> => {
   }
 
   res.status(200).json(bookmark);
-});
+}));
 
 // ---------------------------------------------------------------------------
 // POST /:id/dismiss — mark digest bookmark as dismissed
 // ---------------------------------------------------------------------------
-router.post("/:id/dismiss", async (req: Request, res: Response): Promise<void> => {
+router.post("/:id/dismiss", asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { error } = await req.supabase
     .from("bookmarks")
     .update({ digest_status: "dismissed", updated_at: new Date().toISOString() })
@@ -139,12 +140,12 @@ router.post("/:id/dismiss", async (req: Request, res: Response): Promise<void> =
   }
 
   res.status(204).send();
-});
+}));
 
 // ---------------------------------------------------------------------------
 // POST /dismiss-all — bulk dismiss all active digest bookmarks
 // ---------------------------------------------------------------------------
-router.post("/dismiss-all", async (req: Request, res: Response): Promise<void> => {
+router.post("/dismiss-all", asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { error } = await req.supabase
     .from("bookmarks")
     .update({ digest_status: "dismissed", updated_at: new Date().toISOString() })
@@ -157,7 +158,7 @@ router.post("/dismiss-all", async (req: Request, res: Response): Promise<void> =
   }
 
   res.status(204).send();
-});
+}));
 
 // ---------------------------------------------------------------------------
 // POST /dismiss-group — bulk dismiss by source_name (and optionally source_type)
@@ -165,7 +166,7 @@ router.post("/dismiss-all", async (req: Request, res: Response): Promise<void> =
 router.post(
   "/dismiss-group",
   validateBody(dismissGroupSchema),
-  async (req: Request, res: Response): Promise<void> => {
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const { source_name, source_type } = req.body as z.infer<typeof dismissGroupSchema>;
 
     let query = req.supabase
@@ -187,13 +188,13 @@ router.post(
     }
 
     res.status(204).send();
-  },
+  }),
 );
 
 // ---------------------------------------------------------------------------
 // DELETE /expired — purge expired or dismissed digest bookmarks
 // ---------------------------------------------------------------------------
-router.delete("/expired", async (req: Request, res: Response): Promise<void> => {
+router.delete("/expired", asyncHandler(async (req: Request, res: Response): Promise<void> => {
   // Delete dismissed digest bookmarks
   const { error: dismissedError } = await req.supabase
     .from("bookmarks")
@@ -220,6 +221,6 @@ router.delete("/expired", async (req: Request, res: Response): Promise<void> => 
   }
 
   res.status(204).send();
-});
+}));
 
 export default router;

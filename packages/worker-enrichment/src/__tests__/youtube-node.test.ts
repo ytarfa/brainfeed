@@ -636,17 +636,22 @@ describe("youtubeNode error handling", () => {
     ).rejects.toThrow("GOOGLE_API_KEY");
   });
 
-  it("propagates YouTube Data API errors", async () => {
+  it("gracefully degrades when YouTube Data API fails but transcript is available", async () => {
     mockGetVideo.mockRejectedValue(new Error("API quota exceeded"));
     mockLoaderLoad.mockResolvedValue([{ pageContent: "transcript" }]);
 
-    await expect(
-      enrichVideo(
-        "https://www.youtube.com/watch?v=abc",
-        "abc",
-        null,
-      ),
-    ).rejects.toThrow("API quota exceeded");
+    // Should NOT throw — getVideo errors are caught and enrichment continues
+    // with transcript-only data (no snippet/stats metadata).
+    const result = await enrichVideo(
+      "https://www.youtube.com/watch?v=abc",
+      "abc",
+      null,
+    );
+
+    expect(result.summary).toBe("A test summary.");
+    expect(result.metadata!.transcriptAvailable).toBe("true");
+    // Title falls back to "Unknown video" since snippet is unavailable
+    expect(result.metadata!.title).toBe("Unknown video");
   });
 
   it("propagates LLM enrichment errors", async () => {

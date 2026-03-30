@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@brain-feed/error-types": "workspace:*",
+    "@brain-feed/frontend-error-reporter": "workspace:*",
     "@brain-feed/types": "workspace:*",
     "@tailwindcss/vite": "^4.2.2",
     "@tanstack/react-query": "^5.95.2",

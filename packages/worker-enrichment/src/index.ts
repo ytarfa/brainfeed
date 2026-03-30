@@ -4,6 +4,7 @@ import {
   createWorker,
   createServiceClient,
 } from "@brain-feed/worker-core";
+import { createLogger } from "@brain-feed/logger";
 
 import { createProcessor } from "./processor";
 import type { EnrichmentJobData } from "./processor";
@@ -17,11 +18,17 @@ const QUEUE_NAME = "enrichment";
 const DEFAULT_WORKER_PORT = 3002;
 
 // ---------------------------------------------------------------------------
+// Logger
+// ---------------------------------------------------------------------------
+
+const logger = createLogger({ name: "enrichment-worker" });
+
+// ---------------------------------------------------------------------------
 // Main entry point
 // ---------------------------------------------------------------------------
 
 async function main(): Promise<void> {
-  console.log("[enrichment] Starting enrichment worker...");
+  logger.info("Starting enrichment worker...");
 
   // Load config from environment
   const config = loadConfig();
@@ -33,7 +40,7 @@ async function main(): Promise<void> {
   const supabase = createServiceClient(config.SUPABASE_URL, config.SUPABASE_SERVICE_ROLE_KEY);
 
   // Create the job processor
-  const processor = createProcessor(supabase);
+  const processor = createProcessor(supabase, logger);
 
   // Create and start the BullMQ worker
   const worker = createWorker<EnrichmentJobData>(
@@ -44,22 +51,22 @@ async function main(): Promise<void> {
   );
 
   worker.on("completed", (job) => {
-    console.log(`[enrichment] Job ${job.id} completed for bookmark ${job.data.bookmarkId}`);
+    logger.info({ jobId: job.id, bookmarkId: job.data.bookmarkId }, "Job completed");
   });
 
   worker.on("failed", (job, err) => {
-    console.error(`[enrichment] Job ${job?.id} failed:`, err.message);
+    logger.error({ jobId: job?.id, bookmarkId: job?.data.bookmarkId, err }, "Job failed");
   });
 
   // Start health endpoint
   const port = parseInt(process.env.WORKER_PORT ?? String(DEFAULT_WORKER_PORT), 10);
-  const server = startHealthServer(port);
+  const server = startHealthServer(port, logger);
 
-  console.log(`[enrichment] Worker listening on queue "${QUEUE_NAME}" with concurrency 5`);
+  logger.info({ queue: QUEUE_NAME, concurrency: 5 }, "Worker listening on queue");
 
   // Graceful shutdown
   const shutdown = async () => {
-    console.log("[enrichment] Shutting down...");
+    logger.info("Shutting down...");
     await worker.close();
     server.close();
     await redis.quit();
@@ -71,6 +78,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  console.error("[enrichment] Fatal error:", err);
+  logger.fatal({ err }, "Fatal error");
   process.exit(1);
 });

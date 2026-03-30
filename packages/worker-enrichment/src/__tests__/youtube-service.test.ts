@@ -234,7 +234,7 @@ describe("YouTubeService", () => {
         expect(err).toBeInstanceOf(GoogleApiError);
         const apiErr = err as GoogleApiError;
         expect(apiErr.status).toBe(403);
-        expect(apiErr.code).toBe("PERMISSION_DENIED");
+        expect(apiErr.googleCode).toBe("PERMISSION_DENIED");
       }
     });
   });

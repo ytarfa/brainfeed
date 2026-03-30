@@ -1,4 +1,6 @@
-import { getStoredTokens } from "./auth";
+import { errorReporter } from "@brain-feed/frontend-error-reporter";
+
+import { getStoredTokens, clearTokens } from "./auth";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3001";
 
@@ -19,10 +21,32 @@ async function handleResponse<T>(response: Response): Promise<T> {
   const body = await response.json();
 
   if (!response.ok) {
-    throw new ApiError(
+    const error = new ApiError(
       body.error ?? "An unexpected error occurred",
       response.status,
     );
+
+    // 401 — clear auth and redirect to login
+    if (response.status === 401) {
+      clearTokens();
+      // Only redirect if not already on an auth page
+      if (!window.location.pathname.startsWith("/login") &&
+          !window.location.pathname.startsWith("/signup") &&
+          !window.location.pathname.startsWith("/forgot-password") &&
+          !window.location.pathname.startsWith("/confirm-email")) {
+        window.location.href = "/login";
+      }
+    }
+
+    // 5xx — report to error reporter
+    if (response.status >= 500) {
+      errorReporter.report(error, {
+        url: response.url,
+        status: response.status,
+      });
+    }
+
+    throw error;
   }
 
   return body as T;

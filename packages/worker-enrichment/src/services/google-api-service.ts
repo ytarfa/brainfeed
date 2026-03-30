@@ -10,21 +10,46 @@
  *   const yt = new YouTubeService(process.env.GOOGLE_API_KEY!);
  */
 
+import { ExternalServiceError } from "@brain-feed/error-types";
+
 const DEFAULT_TIMEOUT_MS = 10_000;
 
 // ---------------------------------------------------------------------------
 // Error types
 // ---------------------------------------------------------------------------
 
-export class GoogleApiError extends Error {
+export class GoogleApiError extends ExternalServiceError {
+  /**
+   * HTTP status from the Google API response (0 for network errors).
+   * Named `status` for backward compatibility with existing code.
+   */
+  public readonly status: number;
+  public readonly details: unknown;
+
   constructor(
     message: string,
-    public readonly status: number,
-    public readonly code: string | null,
-    public readonly details: unknown,
+    status: number,
+    code: string | null,
+    details: unknown,
   ) {
-    super(message);
+    // Pass code through to AppError.code (null → "EXTERNAL_SERVICE_ERROR")
+    super(message, {
+      service: "google-api",
+      httpStatus: status,
+      googleCode: code,
+      details,
+    });
     this.name = "GoogleApiError";
+    this.status = status;
+    this.details = details;
+  }
+
+  /**
+   * The Google API-specific error code (e.g., "PERMISSION_DENIED", "NETWORK_ERROR").
+   * Returns null when no specific code was provided by the API.
+   */
+  get googleCode(): string | null {
+    return (this.context.googleCode as string | null) ?? null;
   }
 }
 

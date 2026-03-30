@@ -30,6 +30,17 @@ import type { EnrichmentJobData } from "../processor";
 
 const fakeSupabase = {} as Parameters<typeof createProcessor>[0];
 
+const mockLogger = {
+  child: vi.fn().mockReturnThis(),
+  info: vi.fn(),
+  error: vi.fn(),
+  warn: vi.fn(),
+  debug: vi.fn(),
+  fatal: vi.fn(),
+  trace: vi.fn(),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+} as any;
+
 function makeJob(data: Partial<EnrichmentJobData> = {}) {
   return {
     id: "job-123",
@@ -61,6 +72,7 @@ const fakeBookmark: BookmarkForProcessing = {
 describe("createProcessor", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockLogger.child.mockReturnValue(mockLogger);
   });
 
   it("processes a link bookmark through the pipeline", async () => {
@@ -74,13 +86,33 @@ describe("createProcessor", () => {
     };
     mockRunPipeline.mockResolvedValue(fakeResult);
 
-    const processor = createProcessor(fakeSupabase);
+    const processor = createProcessor(fakeSupabase, mockLogger);
     await processor(makeJob());
 
+    expect(mockLogger.child).toHaveBeenCalledWith({
+      jobId: "job-123",
+      requestId: undefined,
+      bookmarkId: "bk-1",
+    });
     expect(mockUpdateEnrichmentStatus).toHaveBeenCalledWith(fakeSupabase, "bk-1", "processing");
     expect(mockFetchBookmarkForProcessing).toHaveBeenCalledWith(fakeSupabase, "bk-1");
     expect(mockRunPipeline).toHaveBeenCalledWith(fakeBookmark);
     expect(mockWriteEnrichedData).toHaveBeenCalledWith(fakeSupabase, "bk-1", fakeResult);
+    expect(mockLogger.info).toHaveBeenCalledWith("Enrichment completed successfully");
+  });
+
+  it("creates child logger with requestId when present in job data", async () => {
+    mockFetchBookmarkForProcessing.mockResolvedValue(fakeBookmark);
+    mockRunPipeline.mockResolvedValue({ summary: null, entities: [], topics: [], metadata: null, processedAt: "t" });
+
+    const processor = createProcessor(fakeSupabase, mockLogger);
+    await processor(makeJob({ requestId: "req-abc" }));
+
+    expect(mockLogger.child).toHaveBeenCalledWith({
+      jobId: "job-123",
+      requestId: "req-abc",
+      bookmarkId: "bk-1",
+    });
   });
 
   it("processes a github bookmark through the pipeline", async () => {
@@ -88,7 +120,7 @@ describe("createProcessor", () => {
     mockFetchBookmarkForProcessing.mockResolvedValue(githubBookmark);
     mockRunPipeline.mockResolvedValue({ summary: null, entities: [], topics: [], metadata: null, processedAt: "t" });
 
-    const processor = createProcessor(fakeSupabase);
+    const processor = createProcessor(fakeSupabase, mockLogger);
     await processor(makeJob({ sourceType: "github", url: "https://github.com/user/repo" }));
 
     expect(mockUpdateEnrichmentStatus).toHaveBeenCalledWith(fakeSupabase, "bk-1", "processing");
@@ -100,7 +132,7 @@ describe("createProcessor", () => {
     mockFetchBookmarkForProcessing.mockResolvedValue(ytBookmark);
     mockRunPipeline.mockResolvedValue({ summary: null, entities: [], topics: [], metadata: null, processedAt: "t" });
 
-    const processor = createProcessor(fakeSupabase);
+    const processor = createProcessor(fakeSupabase, mockLogger);
     await processor(makeJob({ sourceType: "youtube", url: "https://youtube.com/watch?v=abc" }));
 
     expect(mockUpdateEnrichmentStatus).toHaveBeenCalledWith(fakeSupabase, "bk-1", "processing");
@@ -110,21 +142,23 @@ describe("createProcessor", () => {
   it("sets failed status when bookmark not found", async () => {
     mockFetchBookmarkForProcessing.mockResolvedValue(null);
 
-    const processor = createProcessor(fakeSupabase);
+    const processor = createProcessor(fakeSupabase, mockLogger);
     await processor(makeJob());
 
     expect(mockUpdateEnrichmentStatus).toHaveBeenCalledWith(fakeSupabase, "bk-1", "processing");
     expect(mockUpdateEnrichmentStatus).toHaveBeenCalledWith(fakeSupabase, "bk-1", "failed");
     expect(mockRunPipeline).not.toHaveBeenCalled();
+    expect(mockLogger.error).toHaveBeenCalledWith("Bookmark not found, skipping");
   });
 
   it("sets failed status and re-throws on pipeline error", async () => {
     mockFetchBookmarkForProcessing.mockResolvedValue(fakeBookmark);
     mockRunPipeline.mockRejectedValue(new Error("Pipeline boom"));
 
-    const processor = createProcessor(fakeSupabase);
+    const processor = createProcessor(fakeSupabase, mockLogger);
 
     await expect(processor(makeJob())).rejects.toThrow("Pipeline boom");
     expect(mockUpdateEnrichmentStatus).toHaveBeenCalledWith(fakeSupabase, "bk-1", "failed");
+    expect(mockLogger.error).toHaveBeenCalledWith({ err: expect.any(Error) }, "Failed to process bookmark");
   });
 });

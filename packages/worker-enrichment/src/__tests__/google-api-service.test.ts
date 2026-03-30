@@ -193,8 +193,12 @@ describe("GoogleApiService", () => {
         const apiErr = err as GoogleApiError;
         expect(apiErr.status).toBe(403);
         expect(apiErr.message).toBe("API key not valid");
-        expect(apiErr.code).toBe("PERMISSION_DENIED");
+        expect(apiErr.googleCode).toBe("PERMISSION_DENIED");
         expect(apiErr.details).toEqual([{ reason: "forbidden" }]);
+        // AppError properties
+        expect(apiErr.statusCode).toBe(502);
+        expect(apiErr.code).toBe("EXTERNAL_SERVICE_ERROR");
+        expect(apiErr.isOperational).toBe(true);
       }
     });
 
@@ -230,7 +234,7 @@ describe("GoogleApiService", () => {
       } catch (err) {
         expect(err).toBeInstanceOf(GoogleApiError);
         const apiErr = err as GoogleApiError;
-        expect(apiErr.code).toBe("NETWORK_ERROR");
+        expect(apiErr.googleCode).toBe("NETWORK_ERROR");
         expect(apiErr.message).toContain("ECONNREFUSED");
       }
     });

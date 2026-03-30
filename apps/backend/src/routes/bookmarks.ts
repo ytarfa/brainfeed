@@ -1,5 +1,7 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
+import { NotFoundError } from "@brain-feed/error-types";
+import { asyncHandler } from "@brain-feed/logger";
 import { validateBody, validateQuery } from "../middleware/validate";
 import { bookmarkService } from "../services/bookmarkService";
 import { resolveThumbnail } from "../services/thumbnailService";
@@ -35,7 +37,7 @@ const updateSchema = z.object({
 });
 
 // GET /
-router.get("/", validateQuery(listQuerySchema), async (req: Request, res: Response): Promise<void> => {
+router.get("/", validateQuery(listQuerySchema), asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { type, sort, order, page, limit } = req.query as unknown as z.infer<typeof listQuerySchema>;
   const { offset } = getPaginationParams({ page, limit });
 
@@ -53,10 +55,10 @@ router.get("/", validateQuery(listQuerySchema), async (req: Request, res: Respon
   if (error) { res.status(500).json({ error: error.message }); return; }
 
   res.json({ data, total: count, page, limit });
-});
+}));
 
 // GET /:id
-router.get("/:id", async (req: Request, res: Response): Promise<void> => {
+router.get("/:id", asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { data, error } = await req.supabase
     .from("bookmarks")
     .select(`*, bookmark_spaces(space_id, spaces(id, name))`)
@@ -64,12 +66,12 @@ router.get("/:id", async (req: Request, res: Response): Promise<void> => {
     .eq("user_id", req.userId)
     .single();
 
-  if (error) { res.status(404).json({ error: "Bookmark not found" }); return; }
+  if (error) throw new NotFoundError("Bookmark not found");
   res.json(data);
-});
+}));
 
 // POST /
-router.post("/", async (req: Request, res: Response): Promise<void> => {
+router.post("/", asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const parseResult = createSchema.safeParse(req.body);
   if (!parseResult.success) {
     res.status(400).json({ error: parseResult.error.issues.map((i) => `${i.path}: ${i.message}`).join(", ") });
@@ -124,10 +126,10 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
     sourceType: source_type,
     url: body.url,
   });
-});
+}));
 
 // PATCH /:id
-router.patch("/:id", validateBody(updateSchema), async (req: Request, res: Response): Promise<void> => {
+router.patch("/:id", validateBody(updateSchema), asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { space_ids, ...fields } = req.body as z.infer<typeof updateSchema>;
 
   const updateData: Record<string, unknown> = { ...fields, updated_at: new Date().toISOString() };
@@ -142,7 +144,7 @@ router.patch("/:id", validateBody(updateSchema), async (req: Request, res: Respo
     .select()
     .single();
 
-  if (error) { res.status(404).json({ error: "Bookmark not found or unauthorized" }); return; }
+  if (error) throw new NotFoundError("Bookmark not found or unauthorized");
 
   // Reconcile spaces if provided
   if (space_ids !== undefined) {
@@ -158,18 +160,18 @@ router.patch("/:id", validateBody(updateSchema), async (req: Request, res: Respo
   }
 
   res.json(bookmark);
-});
+}));
 
 // DELETE /:id
-router.delete("/:id", async (req: Request, res: Response): Promise<void> => {
+router.delete("/:id", asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { error } = await req.supabase
     .from("bookmarks")
     .delete()
     .eq("id", req.params.id)
     .eq("user_id", req.userId);
 
-  if (error) { res.status(404).json({ error: "Bookmark not found or unauthorized" }); return; }
+  if (error) throw new NotFoundError("Bookmark not found or unauthorized");
   res.status(204).send();
-});
+}));
 
 export default router;

@@ -6,6 +6,7 @@ import {
   writeEnrichedData,
   fetchBookmarkForProcessing,
 } from "@brain-feed/worker-core";
+import type { Logger } from "@brain-feed/logger";
 
 import { runPipeline } from "./pipeline";
 
@@ -19,6 +20,7 @@ export interface EnrichmentJobData {
   contentType: "link";
   sourceType: SourceType | null;
   url: string;
+  requestId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -27,11 +29,19 @@ export interface EnrichmentJobData {
 
 export function createProcessor(
   supabase: SupabaseClient<Database>,
+  logger: Logger,
 ) {
   return async function processEnrichmentJob(
     job: Job<EnrichmentJobData>,
   ): Promise<void> {
-    const { bookmarkId } = job.data;
+    const { bookmarkId, requestId } = job.data;
+
+    // Create a child logger with per-job context bindings
+    const jobLogger = logger.child({
+      jobId: job.id,
+      requestId,
+      bookmarkId,
+    });
 
     // Mark as processing
     await updateEnrichmentStatus(supabase, bookmarkId, "processing");
@@ -41,7 +51,7 @@ export function createProcessor(
       const bookmark = await fetchBookmarkForProcessing(supabase, bookmarkId);
 
       if (!bookmark) {
-        console.error(`[enrichment] Bookmark ${bookmarkId} not found, skipping`);
+        jobLogger.error("Bookmark not found, skipping");
         await updateEnrichmentStatus(supabase, bookmarkId, "failed");
         return;
       }
@@ -51,8 +61,10 @@ export function createProcessor(
 
       // Write enriched data (also sets status to "completed")
       await writeEnrichedData(supabase, bookmarkId, result);
+
+      jobLogger.info("Enrichment completed successfully");
     } catch (err) {
-      console.error(`[enrichment] Failed to process bookmark ${bookmarkId}:`, err);
+      jobLogger.error({ err }, "Failed to process bookmark");
       await updateEnrichmentStatus(supabase, bookmarkId, "failed");
       throw err; // Re-throw so BullMQ records the failure and can retry
     }

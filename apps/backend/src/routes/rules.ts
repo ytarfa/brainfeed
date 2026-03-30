@@ -1,5 +1,7 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
+import { NotFoundError } from "@brain-feed/error-types";
+import { asyncHandler } from "@brain-feed/logger";
 import { validateBody } from "../middleware/validate";
 
 const router = Router({ mergeParams: true });
@@ -40,7 +42,7 @@ async function assertSpaceAccess(req: Request, res: Response): Promise<boolean> 
 }
 
 // GET /
-router.get("/", async (req: Request, res: Response): Promise<void> => {
+router.get("/", asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { data, error } = await req.supabase
     .from("categorization_rules")
     .select("*")
@@ -49,10 +51,10 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
 
   if (error) { res.status(500).json({ error: error.message }); return; }
   res.json({ data });
-});
+}));
 
 // POST /
-router.post("/", validateBody(createSchema), async (req: Request, res: Response): Promise<void> => {
+router.post("/", validateBody(createSchema), asyncHandler(async (req: Request, res: Response): Promise<void> => {
   if (!(await assertSpaceAccess(req, res))) return;
 
   const { data, error } = await req.supabase
@@ -63,10 +65,10 @@ router.post("/", validateBody(createSchema), async (req: Request, res: Response)
 
   if (error) { res.status(500).json({ error: error.message }); return; }
   res.status(201).json(data);
-});
+}));
 
 // PATCH /:ruleId
-router.patch("/:ruleId", validateBody(updateSchema), async (req: Request, res: Response): Promise<void> => {
+router.patch("/:ruleId", validateBody(updateSchema), asyncHandler(async (req: Request, res: Response): Promise<void> => {
   if (!(await assertSpaceAccess(req, res))) return;
 
   const { data, error } = await req.supabase
@@ -77,12 +79,12 @@ router.patch("/:ruleId", validateBody(updateSchema), async (req: Request, res: R
     .select()
     .single();
 
-  if (error) { res.status(404).json({ error: "Rule not found" }); return; }
+  if (error) throw new NotFoundError("Rule not found");
   res.json(data);
-});
+}));
 
 // DELETE /:ruleId
-router.delete("/:ruleId", async (req: Request, res: Response): Promise<void> => {
+router.delete("/:ruleId", asyncHandler(async (req: Request, res: Response): Promise<void> => {
   if (!(await assertSpaceAccess(req, res))) return;
 
   const { error } = await req.supabase
@@ -91,8 +93,8 @@ router.delete("/:ruleId", async (req: Request, res: Response): Promise<void> => 
     .eq("id", req.params.ruleId)
     .eq("space_id", req.params.spaceId);
 
-  if (error) { res.status(404).json({ error: "Rule not found" }); return; }
+  if (error) throw new NotFoundError("Rule not found");
   res.status(204).send();
-});
+}));
 
 export default router;

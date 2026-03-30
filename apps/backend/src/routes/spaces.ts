@@ -1,5 +1,7 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
+import { NotFoundError } from "@brain-feed/error-types";
+import { asyncHandler } from "@brain-feed/logger";
 import { validateBody, validateQuery } from "../middleware/validate";
 import { getPaginationParams } from "../utils/pagination";
 
@@ -25,7 +27,7 @@ const listBookmarksQuerySchema = z.object({
 });
 
 // GET / — list all spaces the user owns or is a member of
-router.get("/", async (req: Request, res: Response): Promise<void> => {
+router.get("/", asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { data: owned, error: e1 } = await req.supabase
     .from("spaces")
     .select(`*, bookmark_spaces(count), space_members(user_id, role, profiles(display_name, avatar_url))`)
@@ -45,10 +47,10 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
   const memberSpaceList = (memberSpaces ?? []).map((r: Record<string, unknown>) => r.spaces).filter(Boolean);
   const allSpaces = [...(owned ?? []), ...memberSpaceList];
   res.json({ data: allSpaces });
-});
+}));
 
 // GET /:id
-router.get("/:id", validateQuery(listBookmarksQuerySchema), async (req: Request, res: Response): Promise<void> => {
+router.get("/:id", validateQuery(listBookmarksQuerySchema), asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { sort, order, type, page, limit } = req.query as unknown as z.infer<typeof listBookmarksQuerySchema>;
   const { offset } = getPaginationParams({ page, limit });
 
@@ -58,7 +60,7 @@ router.get("/:id", validateQuery(listBookmarksQuerySchema), async (req: Request,
     .eq("id", req.params.id)
     .single();
 
-  if (error) { res.status(404).json({ error: "Space not found" }); return; }
+  if (error) throw new NotFoundError("Space not found");
 
   let bookmarkQuery = req.supabase
     .from("bookmarks")
@@ -73,10 +75,10 @@ router.get("/:id", validateQuery(listBookmarksQuerySchema), async (req: Request,
   if (be) { res.status(500).json({ error: be.message }); return; }
 
   res.json({ ...space, bookmarks: { data: bookmarks, total: count, page, limit } });
-});
+}));
 
 // POST /
-router.post("/", validateBody(createSchema), async (req: Request, res: Response): Promise<void> => {
+router.post("/", validateBody(createSchema), asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { data, error } = await req.supabase
     .from("spaces")
     .insert({ ...req.body, owner_id: req.userId })
@@ -85,10 +87,10 @@ router.post("/", validateBody(createSchema), async (req: Request, res: Response)
 
   if (error) { res.status(500).json({ error: error.message }); return; }
   res.status(201).json(data);
-});
+}));
 
 // PATCH /:id
-router.patch("/:id", validateBody(updateSchema), async (req: Request, res: Response): Promise<void> => {
+router.patch("/:id", validateBody(updateSchema), asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { data, error } = await req.supabase
     .from("spaces")
     .update({ ...req.body, updated_at: new Date().toISOString() })
@@ -97,24 +99,24 @@ router.patch("/:id", validateBody(updateSchema), async (req: Request, res: Respo
     .select()
     .single();
 
-  if (error) { res.status(404).json({ error: "Space not found or unauthorized" }); return; }
+  if (error) throw new NotFoundError("Space not found or unauthorized");
   res.json(data);
-});
+}));
 
 // DELETE /:id
-router.delete("/:id", async (req: Request, res: Response): Promise<void> => {
+router.delete("/:id", asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { error } = await req.supabase
     .from("spaces")
     .delete()
     .eq("id", req.params.id)
     .eq("owner_id", req.userId);
 
-  if (error) { res.status(404).json({ error: "Space not found or unauthorized" }); return; }
+  if (error) throw new NotFoundError("Space not found or unauthorized");
   res.status(204).send();
-});
+}));
 
 // POST /:id/share
-router.post("/:id/share", async (req: Request, res: Response): Promise<void> => {
+router.post("/:id/share", asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const shareToken = crypto.randomUUID();
   const { data, error } = await req.supabase
     .from("spaces")
@@ -124,12 +126,12 @@ router.post("/:id/share", async (req: Request, res: Response): Promise<void> => 
     .select("id, share_token")
     .single();
 
-  if (error) { res.status(404).json({ error: "Space not found or unauthorized" }); return; }
+  if (error) throw new NotFoundError("Space not found or unauthorized");
   res.json(data);
-});
+}));
 
 // DELETE /:id/share
-router.delete("/:id/share", async (req: Request, res: Response): Promise<void> => {
+router.delete("/:id/share", asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { data, error } = await req.supabase
     .from("spaces")
     .update({ share_token: null, is_public: false, updated_at: new Date().toISOString() })
@@ -138,8 +140,8 @@ router.delete("/:id/share", async (req: Request, res: Response): Promise<void> =
     .select("id")
     .single();
 
-  if (error) { res.status(404).json({ error: "Space not found or unauthorized" }); return; }
+  if (error) throw new NotFoundError("Space not found or unauthorized");
   res.json(data);
-});
+}));
 
 export default router;

@@ -12,6 +12,8 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@brain-feed/error-types": "workspace:*",
+    "@brain-feed/logger": "workspace:*",
     "@brain-feed/types": "workspace:*",
     "@brain-feed/worker-core": "workspace:*",
     "@supabase/supabase-js": "^2.100.1",

@@ -1,5 +1,7 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
+import { NotFoundError } from "@brain-feed/error-types";
+import { asyncHandler } from "@brain-feed/logger";
 import { validateQuery } from "../middleware/validate";
 import { serviceClient } from "../config/supabase";
 import { getPaginationParams } from "../utils/pagination";
@@ -11,7 +13,7 @@ const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).optional().default(20),
 });
 
-router.get("/spaces/:shareToken", validateQuery(querySchema), async (req: Request, res: Response): Promise<void> => {
+router.get("/spaces/:shareToken", validateQuery(querySchema), asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { page, limit } = req.query as unknown as z.infer<typeof querySchema>;
   const { offset } = getPaginationParams({ page, limit });
 
@@ -22,7 +24,7 @@ router.get("/spaces/:shareToken", validateQuery(querySchema), async (req: Reques
     .eq("is_public", true)
     .single();
 
-  if (error || !space) { res.status(404).json({ error: "Space not found or not public" }); return; }
+  if (error || !space) throw new NotFoundError("Space not found or not public");
 
   const { data: bookmarks, count, error: be } = await serviceClient
     .from("bookmarks")
@@ -42,6 +44,6 @@ router.get("/spaces/:shareToken", validateQuery(querySchema), async (req: Reques
     space,
     bookmarks: { data: bookmarks, total: count, page, limit },
   });
-});
+}));
 
 export default router;

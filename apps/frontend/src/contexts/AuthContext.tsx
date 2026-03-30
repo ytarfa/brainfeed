@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import { errorReporter } from "@brain-feed/frontend-error-reporter";
 
 import type { AuthUser, AuthSession } from "../api/auth";
 import {
@@ -100,7 +101,7 @@ export default function AuthProvider({ children }: AuthProviderProps) {
               scheduleRefresh(result.session);
             }
           } catch (err) {
-            console.warn("[dev-auto-login] Auto-login failed:", err);
+            errorReporter.report(err, { source: "dev-auto-login" });
           }
         }
         if (!cancelled) setLoading(false);

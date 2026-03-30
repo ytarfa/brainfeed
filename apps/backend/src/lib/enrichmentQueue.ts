@@ -1,5 +1,7 @@
 import type { SourceType } from "@brain-feed/types";
 import { createRedisConnection, createQueue } from "@brain-feed/worker-core";
+import { getRequestId } from "@brain-feed/logger";
+import { logger } from "./logger";
 
 // ---------------------------------------------------------------------------
 // Job payload — mirrors EnrichmentJobData in worker-enrichment
@@ -11,6 +13,7 @@ export interface EnrichmentJobPayload {
   contentType: "link";
   sourceType: SourceType | null;
   url: string;
+  requestId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -52,19 +55,24 @@ function getEnrichmentQueue() {
  * picked up by a future retry sweep.  Errors are logged but never thrown.
  */
 export async function publishEnrichmentJob(
-  payload: EnrichmentJobPayload,
+  payload: Omit<EnrichmentJobPayload, "requestId">,
 ): Promise<void> {
   try {
     const q = getEnrichmentQueue();
-    await q.add("enrich", payload, {
+    const jobPayload: EnrichmentJobPayload = {
+      ...payload,
+      requestId: getRequestId(),
+    };
+    await q.add("enrich", jobPayload, {
       attempts: 3,
       backoff: { type: "exponential", delay: 1000 },
       removeOnComplete: 100,
       removeOnFail: 500,
     });
+    logger.debug({ bookmarkId: payload.bookmarkId }, "Enrichment job published");
   } catch (err) {
     // Swallow — bookmark was already persisted with status "pending"
-    console.error("[enrichmentQueue] Failed to publish job:", err);
+    logger.error({ err, bookmarkId: payload.bookmarkId }, "Failed to publish enrichment job");
   }
 }
 

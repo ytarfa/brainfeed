@@ -1,5 +1,7 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
+import { ForbiddenError, NotFoundError, ConflictError } from "@brain-feed/error-types";
+import { asyncHandler } from "@brain-feed/logger";
 import { validateBody } from "../middleware/validate";
 
 const router = Router({ mergeParams: true });
@@ -28,7 +30,7 @@ async function assertOwner(req: Request, res: Response): Promise<boolean> {
 }
 
 // GET /
-router.get("/", async (req: Request, res: Response): Promise<void> => {
+router.get("/", asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { data, error } = await req.supabase
     .from("space_members")
     .select(`id, role, invited_at, accepted_at, profiles(id, display_name, avatar_url)`)
@@ -36,25 +38,22 @@ router.get("/", async (req: Request, res: Response): Promise<void> => {
 
   if (error) { res.status(500).json({ error: error.message }); return; }
   res.json({ data });
-});
+}));
 
 // POST / — invite by email
-router.post("/", validateBody(inviteSchema), async (req: Request, res: Response): Promise<void> => {
+router.post("/", validateBody(inviteSchema), asyncHandler(async (req: Request, res: Response): Promise<void> => {
   if (!(await assertOwner(req, res))) return;
 
   const { email, role } = req.body as z.infer<typeof inviteSchema>;
 
   // Look up profile by email via auth (service client needed for this)
-  // We use the profiles table joined to auth.users email via RPC or admin API
-  // Simple approach: look up via auth admin
   const { serviceClient } = await import("../config/supabase");
   const { data: userList, error: lookupError } = await serviceClient.auth.admin.listUsers();
   if (lookupError) { res.status(500).json({ error: lookupError.message }); return; }
 
   const authUser = userList.users.find((u) => u.email === email);
   if (!authUser) {
-    res.status(404).json({ error: "No user found with that email address" });
-    return;
+    throw new NotFoundError("No user found with that email address");
   }
 
   const { data, error } = await req.supabase
@@ -65,18 +64,17 @@ router.post("/", validateBody(inviteSchema), async (req: Request, res: Response)
 
   if (error) {
     if (error.code === "23505") {
-      res.status(409).json({ error: "User is already a member of this space" });
-    } else {
-      res.status(500).json({ error: error.message });
+      throw new ConflictError("User is already a member of this space");
     }
+    res.status(500).json({ error: error.message });
     return;
   }
 
   res.status(201).json(data);
-});
+}));
 
 // PATCH /:memberId
-router.patch("/:memberId", validateBody(updateRoleSchema), async (req: Request, res: Response): Promise<void> => {
+router.patch("/:memberId", validateBody(updateRoleSchema), asyncHandler(async (req: Request, res: Response): Promise<void> => {
   if (!(await assertOwner(req, res))) return;
 
   const { data, error } = await req.supabase
@@ -87,12 +85,12 @@ router.patch("/:memberId", validateBody(updateRoleSchema), async (req: Request, 
     .select()
     .single();
 
-  if (error) { res.status(404).json({ error: "Member not found" }); return; }
+  if (error) throw new NotFoundError("Member not found");
   res.json(data);
-});
+}));
 
 // DELETE /:memberId
-router.delete("/:memberId", async (req: Request, res: Response): Promise<void> => {
+router.delete("/:memberId", asyncHandler(async (req: Request, res: Response): Promise<void> => {
   if (!(await assertOwner(req, res))) return;
 
   const { error } = await req.supabase
@@ -101,8 +99,8 @@ router.delete("/:memberId", async (req: Request, res: Response): Promise<void> =
     .eq("id", req.params.memberId)
     .eq("space_id", req.params.spaceId);
 
-  if (error) { res.status(404).json({ error: "Member not found" }); return; }
+  if (error) throw new NotFoundError("Member not found");
   res.status(204).send();
-});
+}));
 
 export default router;

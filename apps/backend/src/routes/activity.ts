@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
+import { asyncHandler } from "@brain-feed/logger";
 import { validateQuery } from "../middleware/validate";
 import { getPaginationParams } from "../utils/pagination";
 
@@ -10,7 +11,7 @@ const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).optional().default(20),
 });
 
-router.get("/", validateQuery(querySchema), async (req: Request, res: Response): Promise<void> => {
+router.get("/", validateQuery(querySchema), asyncHandler(async (req: Request, res: Response): Promise<void> => {
   const { page, limit } = req.query as unknown as z.infer<typeof querySchema>;
   const { offset } = getPaginationParams({ page, limit });
 
@@ -28,6 +29,6 @@ router.get("/", validateQuery(querySchema), async (req: Request, res: Response):
 
   if (error) { res.status(500).json({ error: error.message }); return; }
   res.json({ data, total: count, page, limit });
-});
+}));
 
 export default router;

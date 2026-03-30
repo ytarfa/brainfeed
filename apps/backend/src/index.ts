@@ -2,8 +2,13 @@ import "./config/env"; // validate env vars at startup
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
+import {
+  contextMiddleware,
+  requestLoggerMiddleware,
+  errorHandlerMiddleware,
+} from "@brain-feed/logger";
 import { authMiddleware } from "./middleware/auth";
-import { errorHandler } from "./middleware/errorHandler";
+import { logger } from "./lib/logger";
 import bookmarksRouter from "./routes/bookmarks";
 import spacesRouter from "./routes/spaces";
 import rulesRouter from "./routes/rules";
@@ -17,6 +22,10 @@ import digestRouter from "./routes/digest";
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
+
+// --- Correlation & logging middleware (must be first) ---
+app.use(contextMiddleware());
+app.use(requestLoggerMiddleware(logger));
 
 app.use(helmet());
 const allowedOrigins = [
@@ -59,8 +68,9 @@ app.use("/api/v1/search", searchRouter);
 app.use("/api/v1/settings", settingsRouter);
 app.use("/api/v1/digest", digestRouter);
 
-app.use(errorHandler);
+// --- Error handler (must be last) ---
+app.use(errorHandlerMiddleware(logger));
 
 app.listen(PORT, () => {
-  console.log(`Brainfeed backend running on http://localhost:${PORT}`);
+  logger.info({ port: PORT }, "Brainfeed backend started");
 });

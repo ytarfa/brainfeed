@@ -16,6 +16,8 @@
     "test:pipeline": "ts-node --transpile-only src/test-pipeline.ts"
   },
   "dependencies": {
+    "@brain-feed/error-types": "workspace:*",
+    "@brain-feed/logger": "workspace:*",
     "@brain-feed/types": "workspace:*",
     "@brain-feed/worker-core": "workspace:*",
     "@langchain/community": "^1.1.25",
