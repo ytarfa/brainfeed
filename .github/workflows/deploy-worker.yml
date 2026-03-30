@@ -1,15 +1,14 @@
-name: Deploy Backend (Railway)
+name: Deploy Worker Enrichment (Railway)
 
 on:
   push:
     branches: [staging]
     paths:
-      - "apps/backend/**"
+      - "packages/worker-enrichment/**"
       - "packages/types/**"
       - "packages/error-types/**"
       - "packages/logger/**"
       - "packages/worker-core/**"
-      - "apps/backend/railway.toml"
       - "pnpm-lock.yaml"
       - "package.json"
       - "tsconfig.json"
@@ -41,6 +40,6 @@ jobs:
         run: >
           railway up
           --project "${{ secrets.RAILWAY_PROJECT_ID }}"
-          --service "${{ secrets.RAILWAY_BACKEND_SERVICE_ID }}"
+          --service "${{ secrets.RAILWAY_WORKER_SERVICE_ID }}"
           --environment test
           --detach
