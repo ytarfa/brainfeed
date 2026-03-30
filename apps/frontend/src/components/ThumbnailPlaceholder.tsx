@@ -5,27 +5,8 @@ import {
   Diamond,
 } from "lucide-react";
 
-/**
- * Source-type color palettes — each has a primary gradient pair
- * and an accent for the icon. Colors are intentionally muted
- * to harmonize with the neutral black/emerald design system.
- */
-const sourceColorMap: Record<string, { from: string; to: string; accent: string }> = {
-  github:  { from: "#2d2a3e", to: "#4a3f6b", accent: "rgba(255,255,255,0.18)" },
-  youtube: { from: "#6b2a2a", to: "#8b3a3a", accent: "rgba(255,255,255,0.16)" },
-  twitter: { from: "#2a4a6b", to: "#3a5f8b", accent: "rgba(255,255,255,0.16)" },
-  news:    { from: "#2a3a30", to: "#3a5a44", accent: "rgba(255,255,255,0.15)" },
-  amazon:  { from: "#3a4a2a", to: "#5a6b3a", accent: "rgba(255,255,255,0.15)" },
-  paper:   { from: "#3a2a4a", to: "#5a3a6b", accent: "rgba(255,255,255,0.16)" },
-  generic: { from: "#4a4440", to: "#6a5f58", accent: "rgba(255,255,255,0.14)" },
-  note:    { from: "#1a3a2a", to: "#2a5a3a", accent: "rgba(255,255,255,0.15)" },
-  image:   { from: "#2a4a4a", to: "#3a6b6b", accent: "rgba(255,255,255,0.16)" },
-  pdf:     { from: "#5a2a2a", to: "#7b3a3a", accent: "rgba(255,255,255,0.16)" },
-  file:    { from: "#2a2a3a", to: "#3a3a4a", accent: "rgba(255,255,255,0.14)" },
-  reddit:  { from: "#5a3a2a", to: "#7b4a3a", accent: "rgba(255,255,255,0.16)" },
-  spotify: { from: "#2a4a36", to: "#3a6b4a", accent: "rgba(255,255,255,0.16)" },
-  rss:     { from: "#3a4a2a", to: "#5a6a3a", accent: "rgba(255,255,255,0.15)" },
-};
+/** Unified placeholder colors — muted neutral tones that harmonize with the design system. */
+const placeholderColors = { from: "#4a4440", to: "#6a5f58", accent: "rgba(255,255,255,0.14)" };
 
 const sourceIcons: Record<string, React.ReactNode> = {
   github:  <Code2 strokeWidth={1.5} />,
@@ -61,7 +42,7 @@ export default function ThumbnailPlaceholder({
   iconSize = 36,
 }: ThumbnailPlaceholderProps) {
   const key = sourceType ?? "generic";
-  const colors = sourceColorMap[key] ?? sourceColorMap.generic;
+  const colors = placeholderColors;
   const icon = sourceIcons[key] ?? sourceIcons.generic;
 
   return (
