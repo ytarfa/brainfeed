@@ -18,7 +18,7 @@ import type { EnrichedData } from "./enriched-data.types";
 
 export type ContentType = "link";
 
-export type SourceType = "github" | "youtube" | "generic";
+export type SourceType = "github" | "youtube" | "article" | "generic";
 
 export type DigestStatus = "active" | "saved" | "dismissed";
 
@@ -26,7 +26,8 @@ export type EnrichmentStatus =
   | "pending"
   | "processing"
   | "completed"
-  | "failed";
+  | "failed"
+  | "unsupported";
 
 // Re-export EnrichedData so existing `import { EnrichedData } from "./app.types"` keeps working.
 export type { EnrichedData } from "./enriched-data.types";

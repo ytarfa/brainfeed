@@ -2,6 +2,7 @@ import React from "react";
 import {
   Code2,
   Play,
+  FileText,
   Diamond,
 } from "lucide-react";
 
@@ -11,6 +12,7 @@ const placeholderColors = { from: "#4a4440", to: "#6a5f58", accent: "rgba(255,25
 const sourceIcons: Record<string, React.ReactNode> = {
   github:  <Code2 strokeWidth={1.5} />,
   youtube: <Play strokeWidth={1.5} />,
+  article: <FileText strokeWidth={1.5} />,
   generic: <Diamond strokeWidth={1.5} />,
 };
 

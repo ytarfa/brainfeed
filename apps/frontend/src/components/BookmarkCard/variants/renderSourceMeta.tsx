@@ -3,12 +3,14 @@ import type { Bookmark, SourceType } from "@brain-feed/types";
 
 import GitHubMeta from "./GitHubMeta";
 import YouTubeMeta from "./YouTubeMeta";
+import ArticleMeta from "./ArticleMeta";
 
 type VariantComponent = React.ComponentType<{ bookmark: Bookmark }>;
 
 const variantMap: Partial<Record<SourceType, VariantComponent>> = {
   github: GitHubMeta,
   youtube: YouTubeMeta,
+  article: ArticleMeta,
 };
 
 /**
