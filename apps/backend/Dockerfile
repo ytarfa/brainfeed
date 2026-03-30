@@ -43,8 +43,8 @@ COPY apps/backend/package.json ./apps/backend/
 COPY packages/types/package.json ./packages/types/
 COPY packages/worker-core/package.json ./packages/worker-core/
 
-# Install only production dependencies
-RUN pnpm install --frozen-lockfile --filter @brain-feed/backend --prod
+# Install production dependencies for backend + worker-core
+RUN pnpm install --frozen-lockfile --filter @brain-feed/backend --filter @brain-feed/worker-core --prod
 
 # Copy compiled output from builder
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
