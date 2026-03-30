@@ -12,8 +12,8 @@ COPY apps/backend/package.json ./apps/backend/
 COPY packages/types/package.json ./packages/types/
 COPY packages/worker-core/package.json ./packages/worker-core/
 
-# Install only backend deps (includes workspace deps @brain-feed/types & @brain-feed/worker-core)
-RUN pnpm install --frozen-lockfile --filter @brain-feed/backend
+# Install backend + worker-core deps (worker-core must compile before backend)
+RUN pnpm install --frozen-lockfile --filter @brain-feed/backend --filter @brain-feed/worker-core
 
 # Copy source and tsconfig
 COPY tsconfig.json ./
