@@ -39,16 +39,21 @@ export default function SaveItemModal({ open, onClose }: SaveItemModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!url.trim()) return;
-    setStep("saving");
-
     const trimmed = url.trim();
-    const isUrl = /^https?:\/\//i.test(trimmed);
+    if (!trimmed) return;
+
+    if (!/^https?:\/\//i.test(trimmed)) {
+      setErrorMessage("Please enter a valid URL starting with http:// or https://");
+      setStep("error");
+      return;
+    }
+
+    setStep("saving");
 
     createBookmark.mutate(
       {
-        content_type: isUrl ? "link" : "note",
-        ...(isUrl ? { url: trimmed } : { raw_content: trimmed }),
+        content_type: "link",
+        url: trimmed,
       },
       {
         onSuccess: () => setStep("done"),
@@ -99,14 +104,14 @@ export default function SaveItemModal({ open, onClose }: SaveItemModalProps) {
             <form onSubmit={handleSubmit}>
               <div className="mb-3.5">
                 <label className="text-label mb-1.5 block text-[var(--text-muted)]">
-                  URL or paste text
+                  URL
                 </label>
                 <input
                   ref={inputRef}
-                  type="text"
+                  type="url"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://example.com or paste any text..."
+                  placeholder="https://example.com"
                   className="h-10 w-full rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 font-ui text-sm text-[var(--text-primary)] outline-none transition-[border-color] duration-[var(--transition-fast)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent)]"
                 />
               </div>

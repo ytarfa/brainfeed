@@ -70,21 +70,21 @@ describe("enrichmentQueue", () => {
     consoleSpy.mockRestore();
   });
 
-  it("publishes jobs with null url and sourceType", async () => {
+  it("publishes jobs with null sourceType", async () => {
     const addFn = vi.fn().mockResolvedValue({ id: "job-2" });
     _setQueue({ add: addFn });
 
-    const notePayload: EnrichmentJobPayload = {
+    const genericPayload: EnrichmentJobPayload = {
       bookmarkId: "bk-789",
       userId: "usr-456",
-      contentType: "note",
+      contentType: "link",
       sourceType: null,
-      url: null,
+      url: "https://example.com/page",
     };
 
-    await publishEnrichmentJob(notePayload);
+    await publishEnrichmentJob(genericPayload);
 
-    expect(addFn).toHaveBeenCalledWith("enrich", notePayload, expect.any(Object));
+    expect(addFn).toHaveBeenCalledWith("enrich", genericPayload, expect.any(Object));
   });
 
   it("lazy-initialises the queue via worker-core on first call when no queue is injected", async () => {

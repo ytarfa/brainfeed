@@ -14,26 +14,16 @@ import {
   useMembers,
   useInviteMember,
   useRemoveMember,
-  useSyncSources,
-  useDeleteSyncSource,
 } from "../api/hooks";
-import type { RuleRow, MemberRow, SyncSourceWithSpace } from "../api/hooks";
+import type { RuleRow, MemberRow } from "../api/hooks";
 
-type Section = "general" | "rules" | "collaborators" | "sync" | "sharing";
+type Section = "general" | "rules" | "collaborators" | "sharing";
 
 const navItems: { label: string; value: Section }[] = [
   { label: "General", value: "general" },
   { label: "Categorization", value: "rules" },
   { label: "Collaborators", value: "collaborators" },
-  { label: "Sync sources", value: "sync" },
   { label: "Public sharing", value: "sharing" },
-];
-
-const sourceOptions = [
-  { type: "youtube", label: "YouTube", icon: "\u25B6", color: "#ff0000" },
-  { type: "spotify", label: "Spotify", icon: "\u266A", color: "#1db954" },
-  { type: "reddit", label: "Reddit", icon: "\u25CE", color: "#ff4500" },
-  { type: "rss", label: "RSS feed", icon: "\u229B", color: "#f79c42" },
 ];
 
 export default function SpaceSettings() {
@@ -42,7 +32,6 @@ export default function SpaceSettings() {
   const { data: space, isLoading: spaceLoading } = useSpace(id);
   const { data: rulesData } = useRules(id);
   const { data: membersData } = useMembers(id);
-  const { data: syncData } = useSyncSources();
 
   const updateSpace = useUpdateSpace();
   const deleteSpace = useDeleteSpace();
@@ -52,7 +41,6 @@ export default function SpaceSettings() {
   const deleteRule = useDeleteRule();
   const inviteMember = useInviteMember();
   const removeMember = useRemoveMember();
-  const deleteSyncSource = useDeleteSyncSource();
 
   const [section, setSection] = useState<Section>("general");
   const [spaceName, setSpaceName] = useState("");
@@ -65,7 +53,6 @@ export default function SpaceSettings() {
 
   const rules: RuleRow[] = rulesData?.data ?? [];
   const members: MemberRow[] = membersData?.data ?? [];
-  const syncSources: SyncSourceWithSpace[] = (syncData?.data ?? []).filter((s) => s.space_id === id);
 
   if (spaceLoading) {
     return <div className="p-10 text-[var(--text-muted)]">Loading...</div>;
@@ -80,9 +67,6 @@ export default function SpaceSettings() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
-  const syncStatusColor = (isActive: boolean) =>
-    isActive ? "var(--color-success)" : "var(--text-muted)";
 
   return (
     <div className="max-w-[800px] animate-fade-in p-6">
@@ -273,64 +257,6 @@ export default function SpaceSettings() {
                       </button>
                     )}
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {section === "sync" && (
-            <div>
-              <h3 className="mb-1 font-display text-base font-medium">Sync sources</h3>
-              <p className="mb-5 text-xs text-[var(--text-muted)]">
-                Automatically pull content from connected sources into this Space.
-              </p>
-
-              {syncSources.length > 0 && (
-                <div className="mb-5 flex flex-col gap-2">
-                  {syncSources.map((src) => (
-                    <div key={src.id} className="rounded-[10px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3.5 py-3">
-                      <div className="mb-2 flex items-center gap-2.5">
-                        <div
-                          className="h-2 w-2 shrink-0 rounded-full"
-                          style={{ background: syncStatusColor(src.is_active) }}
-                        />
-                        <span className="flex-1 text-[13px] font-medium text-[var(--text-primary)]">
-                          {src.external_name ?? src.platform}
-                        </span>
-                        <span
-                          className="font-ui text-2xs uppercase tracking-wide"
-                          style={{ color: syncStatusColor(src.is_active) }}
-                        >
-                          {src.is_active ? "active" : "inactive"}
-                        </span>
-                        <button
-                          onClick={() => deleteSyncSource.mutate(src.id)}
-                          className="text-[11px] text-error hover:underline"
-                        >
-                          Disconnect
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-meta">Frequency:</span>
-                          <span className="text-meta">{src.sync_frequency}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <p className="text-label mb-2.5 text-[var(--text-muted)]">Connect a source</p>
-              <div className="flex flex-wrap gap-2">
-                {sourceOptions.map((source) => (
-                  <button
-                    key={source.type}
-                    className="flex h-[34px] items-center gap-1.5 rounded-[7px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3.5 font-ui text-xs font-medium text-[var(--text-secondary)] transition-[border-color] duration-[var(--transition-fast)] hover:border-[var(--border-strong)]"
-                  >
-                    <span className="text-[11px]" style={{ color: source.color }}>{source.icon}</span>
-                    {source.label}
-                  </button>
                 ))}
               </div>
             </div>

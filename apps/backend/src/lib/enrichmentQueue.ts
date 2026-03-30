@@ -1,3 +1,4 @@
+import type { SourceType } from "@brain-feed/types";
 import { createRedisConnection, createQueue } from "@brain-feed/worker-core";
 
 // ---------------------------------------------------------------------------
@@ -7,9 +8,9 @@ import { createRedisConnection, createQueue } from "@brain-feed/worker-core";
 export interface EnrichmentJobPayload {
   bookmarkId: string;
   userId: string;
-  contentType: string;
-  sourceType: string | null;
-  url: string | null;
+  contentType: "link";
+  sourceType: SourceType | null;
+  url: string;
 }
 
 // ---------------------------------------------------------------------------

@@ -10,9 +10,10 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/backend/package.json ./apps/backend/
 COPY packages/types/package.json ./packages/types/
+COPY packages/worker-core/package.json ./packages/worker-core/
 
-# Install only backend deps (includes workspace dep @brain-feed/types)
-RUN pnpm install --frozen-lockfile --filter @brain-feed/backend
+# Install backend + worker-core deps (worker-core must compile before backend)
+RUN pnpm install --frozen-lockfile --filter @brain-feed/backend --filter @brain-feed/worker-core
 
 # Copy source and tsconfig
 COPY tsconfig.json ./
@@ -20,9 +21,12 @@ COPY apps/backend/tsconfig.json ./apps/backend/
 COPY apps/backend/src ./apps/backend/src
 COPY packages/types/src ./packages/types/src
 COPY packages/types/tsconfig.json ./packages/types/
+COPY packages/worker-core/src ./packages/worker-core/src
+COPY packages/worker-core/tsconfig.json ./packages/worker-core/
 
-# Build TypeScript
-RUN pnpm --filter @brain-feed/backend run build
+# Build TypeScript — worker-core first (backend depends on it at runtime), then backend
+RUN pnpm --filter @brain-feed/worker-core run build && \
+    pnpm --filter @brain-feed/backend run build
 
 # ---- Production Stage ----
 FROM node:20-alpine AS runner
@@ -37,12 +41,14 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/backend/package.json ./apps/backend/
 COPY packages/types/package.json ./packages/types/
+COPY packages/worker-core/package.json ./packages/worker-core/
 
-# Install only production dependencies
-RUN pnpm install --frozen-lockfile --filter @brain-feed/backend --prod
+# Install production dependencies for backend + worker-core
+RUN pnpm install --frozen-lockfile --filter @brain-feed/backend --filter @brain-feed/worker-core --prod
 
 # Copy compiled output from builder
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
+COPY --from=builder /app/packages/worker-core/dist ./packages/worker-core/dist
 
 EXPOSE 3001
 

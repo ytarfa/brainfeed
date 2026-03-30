@@ -2,17 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Code2,
   Play,
-  AtSign,
-  Newspaper,
-  ShoppingCart,
-  GraduationCap,
   Diamond,
-  PenLine,
-  ImageIcon,
-  FileText,
-  File,
-  MessageCircle,
-  Music,
   MoreVertical,
   ArrowRight,
   ExternalLink,
@@ -40,17 +30,7 @@ interface BookmarkCardProps {
 const typeIcons: Record<string, React.ReactNode> = {
   github: <Code2 size={10} />,
   youtube: <Play size={10} />,
-  twitter: <AtSign size={10} />,
-  news: <Newspaper size={10} />,
-  amazon: <ShoppingCart size={10} />,
-  paper: <GraduationCap size={10} />,
   generic: <Diamond size={10} />,
-  note: <PenLine size={10} />,
-  image: <ImageIcon size={10} />,
-  pdf: <FileText size={10} />,
-  file: <File size={10} />,
-  reddit: <MessageCircle size={10} />,
-  spotify: <Music size={10} />,
 };
 
 const menuItems = [
@@ -63,7 +43,6 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
   const [hovered, setHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  const isArticle = bookmark.isArticle || bookmark.source_type === "paper";
   const isGrid = view === "grid";
   const hasThumbnail = isGrid && !!bookmark.thumbnail_url;
 
@@ -231,7 +210,6 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
           className={cn(
             "font-display text-[15px] font-medium leading-[1.35] text-[var(--text-primary)]",
             isGrid ? "mb-1 line-clamp-2" : "mb-0.5 line-clamp-1",
-            isArticle && "italic",
           )}
         >
           {bookmark.title}

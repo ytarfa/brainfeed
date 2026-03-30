@@ -1,3 +1,4 @@
+import type { SourceType } from "@brain-feed/types";
 import type { SourceTypeStrategy } from "./sourceTypeStrategy";
 import { GenericSourceTypeStrategy } from "./sourceTypeStrategy";
 
@@ -10,10 +11,9 @@ export class BookmarkService {
 
   /**
    * Walk the strategy chain and return the first non-null result.
-   * Falls back to "generic" if no strategy matches, or "manual" if no URL is provided.
+   * Falls back to "generic" if no strategy matches.
    */
-  detectSourceType(url?: string): string {
-    if (!url) return "manual";
+  detectSourceType(url: string): SourceType {
     try {
       const hostname = new URL(url).hostname.replace(/^www\./, "");
       for (const strategy of this.strategies) {

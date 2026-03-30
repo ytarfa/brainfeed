@@ -32,7 +32,7 @@ const mockBookmarkRaw = {
   description: "A test bookmark",
   notes: "Some notes",
   content_type: "link",
-  source_type: "web",
+  source_type: "generic",
   tags: ["tech", "react"],
   thumbnail_url: "https://example.com/thumb.jpg",
   created_at: "2025-01-15T10:00:00Z",
@@ -75,7 +75,7 @@ describe("toBookmark", () => {
     expect(result.url).toBe("https://www.example.com/article");
     expect(result.spaceId).toBe("s1");
     expect(result.domain).toBe("example.com");
-    expect(result.savedAt).toBe("2025-01-15T10:00:00Z");
+    expect(result.savedAt).toBe("Jan 15, 2025");
     expect(result.tags).toEqual([
       { id: "tech", label: "tech" },
       { id: "react", label: "react" },

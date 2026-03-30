@@ -32,12 +32,6 @@ describe("detectRouteFromUrl", () => {
     ["https://youtube.com/watch?v=abc", "youtube"],
     ["https://www.youtube.com/watch?v=abc", "youtube"],
     ["https://youtu.be/abc", "youtube"],
-    ["https://twitter.com/user/status/123", "twitter"],
-    ["https://x.com/user/status/123", "twitter"],
-    ["https://www.reddit.com/r/programming/comments/abc", "reddit"],
-    ["https://open.spotify.com/episode/abc", "spotify"],
-    ["https://arxiv.org/abs/2301.00001", "paper"],
-    ["https://scholar.google.com/scholar?q=test", "paper"],
   ];
 
   it.each(cases)("detects %s as %s", (url, expected) => {
@@ -47,6 +41,8 @@ describe("detectRouteFromUrl", () => {
   it("returns null for unrecognized URLs", () => {
     expect(detectRouteFromUrl("https://example.com/some-article")).toBeNull();
     expect(detectRouteFromUrl("https://amazon.com/dp/B123")).toBeNull();
+    expect(detectRouteFromUrl("https://twitter.com/user/status/123")).toBeNull();
+    expect(detectRouteFromUrl("https://reddit.com/r/programming")).toBeNull();
   });
 });
 
@@ -59,48 +55,25 @@ describe("resolveRoute", () => {
     const sourceTypeCases: [string, EnrichmentRoute][] = [
       ["github", "github"],
       ["youtube", "youtube"],
-      ["twitter", "twitter"],
-      ["reddit", "reddit"],
-      ["spotify", "spotify"],
-      ["paper", "paper"],
-      ["news", "news"],
-      ["note", "non_link"],
-      ["image", "non_link"],
-      ["pdf", "non_link"],
-      ["file", "non_link"],
+      ["generic", "generic"],
     ];
 
     it.each(sourceTypeCases)(
       "source_type=%s -> %s",
       (sourceType, expected) => {
-        const bookmark = makeBookmark({ source_type: sourceType });
+        const bookmark = makeBookmark({ source_type: sourceType as BookmarkForProcessing["source_type"] });
         expect(resolveRoute(bookmark)).toBe(expected);
       },
     );
   });
 
-  describe("unmapped source_types fall through to URL detection", () => {
-    it("amazon source_type with github URL routes to github", () => {
-      const bookmark = makeBookmark({
-        source_type: "amazon",
-        url: "https://github.com/user/repo",
-      });
-      expect(resolveRoute(bookmark)).toBe("github");
-    });
-
-    it("generic source_type with youtube URL routes to youtube", () => {
+  describe("generic source_type with platform URL falls through to URL detection", () => {
+    it("generic source_type with github URL routes to youtube via source_type map", () => {
       const bookmark = makeBookmark({
         source_type: "generic",
-        url: "https://youtube.com/watch?v=abc",
+        url: "https://github.com/user/repo",
       });
-      expect(resolveRoute(bookmark)).toBe("youtube");
-    });
-
-    it("rss source_type with plain URL routes to generic", () => {
-      const bookmark = makeBookmark({
-        source_type: "rss",
-        url: "https://example.com/feed",
-      });
+      // "generic" IS mapped in SOURCE_TYPE_TO_ROUTE -> "generic", so it won't fall through
       expect(resolveRoute(bookmark)).toBe("generic");
     });
   });
@@ -120,37 +93,11 @@ describe("resolveRoute", () => {
       expect(resolveRoute(bookmark)).toBe("youtube");
     });
 
-    it("detects twitter/x from URL", () => {
+    it("falls back to generic for non-matching URL", () => {
       const bookmark = makeBookmark({
         url: "https://x.com/elonmusk/status/12345",
       });
-      expect(resolveRoute(bookmark)).toBe("twitter");
-    });
-  });
-
-  describe("falls back to content_type for non-link types", () => {
-    it("routes note content_type to non_link", () => {
-      const bookmark = makeBookmark({
-        content_type: "note",
-        url: null,
-      });
-      expect(resolveRoute(bookmark)).toBe("non_link");
-    });
-
-    it("routes pdf content_type to non_link", () => {
-      const bookmark = makeBookmark({
-        content_type: "pdf",
-        url: null,
-      });
-      expect(resolveRoute(bookmark)).toBe("non_link");
-    });
-
-    it("routes image content_type to non_link", () => {
-      const bookmark = makeBookmark({
-        content_type: "image",
-        url: null,
-      });
-      expect(resolveRoute(bookmark)).toBe("non_link");
+      expect(resolveRoute(bookmark)).toBe("generic");
     });
   });
 
@@ -162,32 +109,23 @@ describe("resolveRoute", () => {
       });
       expect(resolveRoute(bookmark)).toBe("generic");
     });
-
-    it("returns generic for a link with null URL and null source_type", () => {
-      const bookmark = makeBookmark({
-        url: null,
-        source_type: null,
-        content_type: "link",
-      });
-      expect(resolveRoute(bookmark)).toBe("generic");
-    });
   });
 
   describe("source_type takes priority over URL", () => {
-    it("source_type=news overrides a github URL", () => {
+    it("source_type=github overrides a youtube URL", () => {
       const bookmark = makeBookmark({
-        source_type: "news",
-        url: "https://github.com/user/repo",
-      });
-      expect(resolveRoute(bookmark)).toBe("news");
-    });
-
-    it("source_type=paper overrides a youtube URL", () => {
-      const bookmark = makeBookmark({
-        source_type: "paper",
+        source_type: "github",
         url: "https://youtube.com/watch?v=abc",
       });
-      expect(resolveRoute(bookmark)).toBe("paper");
+      expect(resolveRoute(bookmark)).toBe("github");
+    });
+
+    it("source_type=youtube overrides a github URL", () => {
+      const bookmark = makeBookmark({
+        source_type: "youtube",
+        url: "https://github.com/user/repo",
+      });
+      expect(resolveRoute(bookmark)).toBe("youtube");
     });
   });
 });

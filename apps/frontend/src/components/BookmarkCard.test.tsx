@@ -24,7 +24,6 @@ function createMockBookmark(overrides: Partial<Bookmark> = {}): Bookmark {
     domain: "example.com",
     summary: "A short summary of the bookmark",
     savedAt: "3 min ago",
-    isArticle: false,
     ...overrides,
   } as Bookmark;
 }
@@ -163,7 +162,7 @@ describe("BookmarkCard", () => {
       const bookmark = createMockBookmark({
         source_type: "github",
         tags: [],
-        metadata: { stars: 62400, language: "TypeScript" },
+        enriched_data: { metadata: { stars: 62400, language: "TypeScript" } },
       });
       render(<BookmarkCard {...defaultProps} bookmark={bookmark} />);
       expect(screen.getByText("62k")).toBeInTheDocument();
@@ -173,7 +172,7 @@ describe("BookmarkCard", () => {
     it("renders GitHub star count in compact form for large numbers", () => {
       const bookmark = createMockBookmark({
         source_type: "github",
-        metadata: { stars: 1500, language: "Rust" },
+        enriched_data: { metadata: { stars: 1500, language: "Rust" } },
       });
       render(<BookmarkCard {...defaultProps} bookmark={bookmark} />);
       expect(screen.getByText("1.5k")).toBeInTheDocument();
@@ -183,73 +182,11 @@ describe("BookmarkCard", () => {
     it("renders YouTube channel and duration when metadata is present", () => {
       const bookmark = createMockBookmark({
         source_type: "youtube",
-        metadata: { channel: "Fireship", duration: "4:32:18" },
+        enriched_data: { metadata: { channel: "Fireship", duration: "4:32:18" } },
       });
       render(<BookmarkCard {...defaultProps} bookmark={bookmark} />);
       expect(screen.getByText("Fireship")).toBeInTheDocument();
       expect(screen.getByText("4:32:18")).toBeInTheDocument();
-    });
-
-    it("renders Paper authors and year when metadata is present", () => {
-      const bookmark = createMockBookmark({
-        source_type: "paper",
-        metadata: { authors: "Vaswani et al.", year: 2017 },
-      });
-      render(<BookmarkCard {...defaultProps} bookmark={bookmark} />);
-      expect(screen.getByText("Vaswani et al.")).toBeInTheDocument();
-      expect(screen.getByText("2017")).toBeInTheDocument();
-    });
-
-    it("renders Reddit subreddit from URL", () => {
-      const bookmark = createMockBookmark({
-        source_type: "reddit",
-        url: "https://reddit.com/r/programming/comments/abc123",
-      });
-      render(<BookmarkCard {...defaultProps} bookmark={bookmark} />);
-      expect(screen.getByText("r/programming")).toBeInTheDocument();
-    });
-
-    it("renders Twitter handle from URL", () => {
-      const bookmark = createMockBookmark({
-        source_type: "twitter",
-        url: "https://twitter.com/elonmusk/status/123456",
-      });
-      render(<BookmarkCard {...defaultProps} bookmark={bookmark} />);
-      expect(screen.getByText("@elonmusk")).toBeInTheDocument();
-    });
-
-    it("renders Twitter handle from x.com URL", () => {
-      const bookmark = createMockBookmark({
-        source_type: "twitter",
-        url: "https://x.com/OpenAI/status/789",
-      });
-      render(<BookmarkCard {...defaultProps} bookmark={bookmark} />);
-      expect(screen.getByText("@OpenAI")).toBeInTheDocument();
-    });
-
-    it("renders Spotify artist and album when metadata is present", () => {
-      const bookmark = createMockBookmark({
-        source_type: "spotify",
-        metadata: { artist: "Radiohead", album: "OK Computer" },
-      });
-      render(<BookmarkCard {...defaultProps} bookmark={bookmark} />);
-      expect(screen.getByText("Radiohead")).toBeInTheDocument();
-      expect(screen.getByText("OK Computer")).toBeInTheDocument();
-    });
-
-    it("does NOT render source meta for news source type", () => {
-      const bookmark = createMockBookmark({
-        source_type: "news",
-        metadata: null,
-      });
-      const { container } = render(<BookmarkCard {...defaultProps} bookmark={bookmark} />);
-      // No source meta div should be present (the wrapper div has mb-1.5)
-      const metas = container.querySelectorAll(".mb-1\\.5");
-      // The only mb-1.5 elements should be title margin, not a separate source meta wrapper
-      const sourceMetaWrappers = Array.from(metas).filter((el) =>
-        el.querySelector("[class*='text-[11px]']"),
-      );
-      expect(sourceMetaWrappers).toHaveLength(0);
     });
 
     it("does NOT render source meta for generic source type", () => {

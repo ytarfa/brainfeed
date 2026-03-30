@@ -7,15 +7,6 @@ describe("BookmarkService", () => {
   describe("detectSourceType with default strategies", () => {
     const service = new BookmarkService();
 
-    it("returns 'manual' when no URL is provided", () => {
-      expect(service.detectSourceType()).toBe("manual");
-      expect(service.detectSourceType(undefined)).toBe("manual");
-    });
-
-    it("returns 'manual' for empty string URL", () => {
-      expect(service.detectSourceType("")).toBe("manual");
-    });
-
     it("detects github.com URLs", () => {
       expect(service.detectSourceType("https://github.com/user/repo")).toBe("github");
     });
@@ -26,34 +17,6 @@ describe("BookmarkService", () => {
 
     it("detects youtu.be short URLs", () => {
       expect(service.detectSourceType("https://youtu.be/abc123")).toBe("youtube");
-    });
-
-    it("detects twitter.com URLs", () => {
-      expect(service.detectSourceType("https://twitter.com/user/status/123")).toBe("twitter");
-    });
-
-    it("detects x.com URLs", () => {
-      expect(service.detectSourceType("https://x.com/user/status/123")).toBe("twitter");
-    });
-
-    it("detects instagram.com URLs", () => {
-      expect(service.detectSourceType("https://instagram.com/p/abc")).toBe("instagram");
-    });
-
-    it("detects reddit.com URLs", () => {
-      expect(service.detectSourceType("https://reddit.com/r/test")).toBe("reddit");
-    });
-
-    it("detects amazon.com URLs", () => {
-      expect(service.detectSourceType("https://amazon.com/dp/B123")).toBe("amazon");
-    });
-
-    it("detects arxiv.org URLs", () => {
-      expect(service.detectSourceType("https://arxiv.org/abs/1234.5678")).toBe("academic");
-    });
-
-    it("detects scholar.google.com URLs", () => {
-      expect(service.detectSourceType("https://scholar.google.com/scholar?q=test")).toBe("academic");
     });
 
     it("strips www. prefix before matching", () => {
@@ -74,10 +37,10 @@ describe("BookmarkService", () => {
     it("uses a custom strategy that matches first", () => {
       const customStrategy: SourceTypeStrategy = {
         detect: (hostname: string) =>
-          hostname === "custom.io" ? "custom-source" : null,
+          hostname === "custom.io" ? "github" : null,
       };
       const service = new BookmarkService([customStrategy]);
-      expect(service.detectSourceType("https://custom.io/page")).toBe("custom-source");
+      expect(service.detectSourceType("https://custom.io/page")).toBe("github");
     });
 
     it("falls back to later strategies when first returns null", () => {
@@ -85,10 +48,10 @@ describe("BookmarkService", () => {
         detect: () => null,
       };
       const catchAllStrategy: SourceTypeStrategy = {
-        detect: () => "catch-all",
+        detect: () => "generic",
       };
       const service = new BookmarkService([noopStrategy, catchAllStrategy]);
-      expect(service.detectSourceType("https://anything.com")).toBe("catch-all");
+      expect(service.detectSourceType("https://anything.com")).toBe("generic");
     });
 
     it("returns 'generic' when no custom strategy matches", () => {
@@ -101,13 +64,13 @@ describe("BookmarkService", () => {
 
     it("stops at the first matching strategy", () => {
       const firstStrategy: SourceTypeStrategy = {
-        detect: () => "first",
+        detect: () => "youtube",
       };
       const secondStrategy: SourceTypeStrategy = {
-        detect: () => "second",
+        detect: () => "github",
       };
       const service = new BookmarkService([firstStrategy, secondStrategy]);
-      expect(service.detectSourceType("https://example.com")).toBe("first");
+      expect(service.detectSourceType("https://example.com")).toBe("youtube");
     });
 
     it("handles an empty strategy array by returning 'generic'", () => {

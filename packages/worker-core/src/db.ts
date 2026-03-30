@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import type { Database, EnrichedData, EnrichmentStatus } from "@brain-feed/types";
+import type { Database, EnrichedData, EnrichmentStatus, SourceType } from "@brain-feed/types";
 
 export function createServiceClient(
   supabaseUrl: string,
@@ -66,10 +66,10 @@ export async function writeEnrichedData(
 
 export interface BookmarkForProcessing {
   id: string;
-  url: string | null;
+  url: string;
   title: string | null;
-  content_type: string;
-  source_type: string | null;
+  content_type: "link";
+  source_type: SourceType | null;
   raw_content: string | null;
 }
 
@@ -90,5 +90,5 @@ export async function fetchBookmarkForProcessing(
     throw new Error(`Failed to fetch bookmark ${bookmarkId}: ${error.message}`);
   }
 
-  return data;
+  return data as BookmarkForProcessing;
 }
