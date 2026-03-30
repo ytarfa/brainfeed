@@ -70,8 +70,8 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
         onClick={handleClose}
         style={{
           background: visible
-            ? "rgba(30, 28, 26, 0.45)"
-            : "rgba(30, 28, 26, 0)",
+            ? "rgba(0, 0, 0, 0.45)"
+            : "rgba(0, 0, 0, 0)",
           backdropFilter: visible ? "blur(12px) saturate(0.8)" : "blur(0px)",
           WebkitBackdropFilter: visible ? "blur(12px) saturate(0.8)" : "blur(0px)",
         }}
@@ -88,7 +88,7 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
         )}
         style={{
           boxShadow: visible
-            ? "0 24px 80px rgba(30, 28, 26, 0.18), 0 8px 24px rgba(30, 28, 26, 0.08), 0 0 0 1px rgba(30, 28, 26, 0.03)"
+            ? "0 24px 80px rgba(0, 0, 0, 0.18), 0 8px 24px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.03)"
             : "0 0 0 rgba(0,0,0,0)",
         }}
       >

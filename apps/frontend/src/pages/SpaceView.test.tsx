@@ -81,7 +81,7 @@ const mockSpace = {
   user_id: "user-1",
   share_token: null,
   ai_auto_categorize: false,
-  color: "#d4845a",
+    color: "#2A8A62",
   space_members: mockMembers,
   bookmarks: {
     data: mockBookmarksInSpace,
@@ -196,7 +196,7 @@ describe("SpaceView", () => {
       (el) => el.classList.contains("rounded-full") && el.style.background,
     );
     expect(dots.length).toBeGreaterThanOrEqual(1);
-    expect(dots[0]).toHaveStyle({ background: "#d4845a" });
+    expect(dots[0]).toHaveStyle({ background: "#2A8A62" });
   });
 
   it("renders space description", () => {

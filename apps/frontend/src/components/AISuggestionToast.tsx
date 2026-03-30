@@ -29,7 +29,7 @@ export default function AISuggestionToast({
 
   return (
     <div
-      className="fixed bottom-6 right-6 bg-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-xl shadow-[0_8px_32px_rgba(30,28,26,0.14)] py-3.5 px-4 max-w-80 z-[500]"
+      className="fixed bottom-6 right-6 bg-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.14)] py-3.5 px-4 max-w-80 z-[500]"
       style={{
         transform: visible ? "translateY(0) scale(1)" : "translateY(12px) scale(0.97)",
         opacity: visible ? 1 : 0,

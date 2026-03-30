@@ -19,7 +19,7 @@ export default function GitHubMeta({ bookmark }: GitHubMetaProps) {
     <div className="mb-1.5 flex items-center gap-2.5 font-ui text-[11px] text-[var(--text-muted)]">
       {stars !== null && (
         <span className="inline-flex items-center gap-1">
-          <Star size={10} className="text-[var(--color-terra-DEFAULT)]" />
+          <Star size={10} className="text-[var(--accent)]" />
           {stars >= 1000 ? `${(stars / 1000).toFixed(stars >= 10000 ? 0 : 1)}k` : stars.toLocaleString()}
         </span>
       )}

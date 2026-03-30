@@ -68,7 +68,7 @@ export default function ActivityLog({ entries, onAccept, onUndo }: ActivityLogPr
                   <button
                     onClick={() => onAccept(entry.id)}
                     title="Accept"
-                    className="w-6 h-6 rounded-[5px] bg-[rgba(74,122,91,0.12)] text-[var(--color-success)] border-none cursor-pointer flex items-center justify-center hover:bg-[rgba(74,122,91,0.2)] transition-colors"
+                    className="w-6 h-6 rounded-[5px] bg-[rgba(61,214,140,0.12)] text-[var(--color-success)] border-none cursor-pointer flex items-center justify-center hover:bg-[rgba(61,214,140,0.2)] transition-colors"
                   >
                     <Check size={12} />
                   </button>

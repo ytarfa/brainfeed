@@ -35,7 +35,7 @@ export const mockSpaces: Space[] = [
     id: "s1",
     name: "Dev Tools",
     description: "Libraries, frameworks, and tools for software development",
-    color: "#d4845a",
+    color: "#2A8A62",
     itemCount: 47,
     collaborators: [mockCollaborators[0], mockCollaborators[1]],
     syncSources: [
@@ -111,7 +111,7 @@ export const mockSpaces: Space[] = [
     id: "s2",
     name: "Learning — ML",
     description: "Machine learning papers, courses, and resources",
-    color: "#4a7a5b",
+    color: "#3DD68C",
     itemCount: 23,
     collaborators: [mockCollaborators[0], mockCollaborators[2]],
     syncSources: [
@@ -148,7 +148,7 @@ export const mockSpaces: Space[] = [
     id: "s3",
     name: "Recipes",
     description: "Food and cooking inspiration",
-    color: "#8b5e3c",
+    color: "#1A5C40",
     itemCount: 18,
     collaborators: [mockCollaborators[0]],
     syncSources: [],
@@ -168,7 +168,7 @@ export const mockSpaces: Space[] = [
     id: "s4",
     name: "Reading List",
     description: "Articles and essays to read later",
-    color: "#6a6660",
+    color: "#555555",
     itemCount: 92,
     collaborators: [mockCollaborators[0]],
     syncSources: [

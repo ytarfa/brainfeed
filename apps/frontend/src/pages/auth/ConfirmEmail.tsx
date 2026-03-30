@@ -35,11 +35,11 @@ export default function ConfirmEmail() {
     <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center p-6">
       {/* Decorative background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-[20%] -right-[10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(212,132,90,0.07)_0%,transparent_70%)]" />
-        <div className="absolute -bottom-[10%] -left-[10%] w-[400px] h-[400px] rounded-full bg-[radial-gradient(circle,rgba(74,122,91,0.05)_0%,transparent_70%)]" />
+        <div className="absolute -top-[20%] -right-[10%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(42,138,98,0.07)_0%,transparent_70%)]" />
+        <div className="absolute -bottom-[10%] -left-[10%] w-[400px] h-[400px] rounded-full bg-[radial-gradient(circle,rgba(61,214,140,0.05)_0%,transparent_70%)]" />
       </div>
 
-      <div className="bg-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-2xl px-9 pt-9 pb-8 w-full max-w-[420px] shadow-[0_8px_40px_rgba(30,28,26,0.06)] animate-fade-in relative text-center">
+      <div className="bg-[var(--bg-raised)] border border-[var(--border-subtle)] rounded-2xl px-9 pt-9 pb-8 w-full max-w-[420px] shadow-[0_8px_40px_rgba(0,0,0,0.06)] animate-fade-in relative text-center">
         {/* Logo */}
         <div className="mb-7">
           <Logo variant="full" size="lg" />
@@ -68,14 +68,14 @@ export default function ConfirmEmail() {
 
         {/* Error message */}
         {error && (
-          <div className="bg-[rgba(220,38,38,0.08)] border border-[rgba(220,38,38,0.2)] rounded-lg px-3.5 py-2.5 mb-4 text-[13px] text-[var(--text-primary)] font-ui">
+          <div className="bg-[rgba(208,80,80,0.08)] border border-[rgba(208,80,80,0.2)] rounded-lg px-3.5 py-2.5 mb-4 text-[13px] text-[var(--text-primary)] font-ui">
             {error}
           </div>
         )}
 
         {/* Success message */}
         {resent && (
-          <div className="bg-[rgba(74,122,91,0.08)] border border-[rgba(74,122,91,0.2)] rounded-lg px-3.5 py-2.5 mb-4 text-[13px] text-[var(--text-primary)] font-ui">
+          <div className="bg-[rgba(61,214,140,0.08)] border border-[rgba(61,214,140,0.2)] rounded-lg px-3.5 py-2.5 mb-4 text-[13px] text-[var(--text-primary)] font-ui">
             Confirmation email resent successfully.
           </div>
         )}
