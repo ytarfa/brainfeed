@@ -10,6 +10,7 @@ on:
       - "packages/logger/**"
       - "packages/worker-core/**"
       - "apps/backend/railway.toml"
+      - ".github/workflows/deploy-backend.yml"
       - "pnpm-lock.yaml"
       - "package.json"
       - "tsconfig.json"
