@@ -21,9 +21,11 @@ export type {
   CategorizationRule,
   Space,
   Bookmark,
-  EnrichedData,
   ActivityEntry,
   Profile,
   DigestCandidate,
   DigestCandidateStatus,
 } from "./app.types";
+
+// Enriched-data types (enrichment pipeline output)
+export type { EnrichedData } from "./enriched-data.types";

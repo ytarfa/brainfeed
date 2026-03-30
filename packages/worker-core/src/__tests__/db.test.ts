@@ -74,22 +74,39 @@ describe("updateEnrichmentStatus", () => {
 });
 
 describe("writeEnrichedData", () => {
-  function createMockClient(error: unknown = null) {
-    const updateFn = vi.fn().mockReturnValue({
-      eq: vi.fn().mockResolvedValue({ error }),
+  function createMockClient(
+    existingTags: string[] = [],
+    selectError: unknown = null,
+    updateError: unknown = null,
+  ) {
+    const singleFn = vi.fn().mockResolvedValue({
+      data: selectError ? null : { tags: existingTags },
+      error: selectError,
     });
+    const selectEqFn = vi.fn().mockReturnValue({ single: singleFn });
+    const selectFn = vi.fn().mockReturnValue({ eq: selectEqFn });
+
+    const updateEqFn = vi.fn().mockResolvedValue({ error: updateError });
+    const updateFn = vi.fn().mockReturnValue({ eq: updateEqFn });
+
+    // from() needs to return select or update depending on which method is called
+    const fromReturn = { select: selectFn, update: updateFn };
+    const fromFn = vi.fn().mockReturnValue(fromReturn);
+
     return {
-      from: vi.fn().mockReturnValue({ update: updateFn }),
+      from: fromFn,
+      select: selectFn,
       update: updateFn,
     };
   }
 
-  it("should write enriched data and set status to completed", async () => {
-    const mockClient = createMockClient();
+  it("should write enriched data, merge AI tags with existing tags, and set status to completed", async () => {
+    const mockClient = createMockClient(["user-tag", "existing-tag"]);
     const enrichedData: EnrichedData = {
       summary: "Test summary",
       entities: [{ name: "Test", type: "concept" }],
       topics: ["testing"],
+      tags: ["ai-tag", "Existing-Tag"],
       metadata: null,
       processedAt: "2026-03-29T12:00:00Z",
     };
@@ -97,21 +114,64 @@ describe("writeEnrichedData", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await writeEnrichedData(mockClient as any, "bookmark-1", enrichedData);
 
+    // Should have called from("bookmarks") twice: once for select, once for update
     expect(mockClient.from).toHaveBeenCalledWith("bookmarks");
+
+    // Verify the update includes merged and deduplicated tags
     expect(mockClient.update).toHaveBeenCalledWith(
       expect.objectContaining({
         enriched_data: enrichedData,
         enrichment_status: "completed",
+        tags: ["user-tag", "existing-tag", "ai-tag"],
       }),
     );
   });
 
-  it("should throw when the write fails", async () => {
-    const errorClient = createMockClient({ message: "DB error" });
+  it("should handle empty existing tags gracefully", async () => {
+    const mockClient = createMockClient([]);
+    const enrichedData: EnrichedData = {
+      summary: "Test summary",
+      entities: [],
+      topics: [],
+      tags: ["new-tag"],
+      metadata: null,
+      processedAt: "2026-03-29T12:00:00Z",
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await writeEnrichedData(mockClient as any, "bookmark-1", enrichedData);
+
+    expect(mockClient.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tags: ["new-tag"],
+      }),
+    );
+  });
+
+  it("should throw when fetching existing tags fails", async () => {
+    const errorClient = createMockClient([], { message: "Select error" });
     const enrichedData: EnrichedData = {
       summary: null,
       entities: [],
       topics: [],
+      tags: [],
+      metadata: null,
+      processedAt: "2026-03-29T12:00:00Z",
+    };
+
+    await expect(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      writeEnrichedData(errorClient as any, "bookmark-1", enrichedData),
+    ).rejects.toThrow("Failed to fetch existing tags for bookmark bookmark-1: Select error");
+  });
+
+  it("should throw when the write fails", async () => {
+    const errorClient = createMockClient([], null, { message: "DB error" });
+    const enrichedData: EnrichedData = {
+      summary: null,
+      entities: [],
+      topics: [],
+      tags: [],
       metadata: null,
       processedAt: "2026-03-29T12:00:00Z",
     };

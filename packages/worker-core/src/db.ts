@@ -33,11 +33,28 @@ export async function writeEnrichedData(
   bookmarkId: string,
   data: EnrichedData,
 ): Promise<void> {
+  // Fetch existing user tags so we can merge with AI-generated tags
+  const { data: existing, error: fetchError } = await client
+    .from("bookmarks")
+    .select("tags")
+    .eq("id", bookmarkId)
+    .single();
+
+  if (fetchError) {
+    throw new Error(`Failed to fetch existing tags for bookmark ${bookmarkId}: ${fetchError.message}`);
+  }
+
+  // Merge: existing user tags + new AI tags, deduplicated and lowercased
+  const existingTags: string[] = existing?.tags ?? [];
+  const aiTags: string[] = (data.tags ?? []).map((t) => t.toLowerCase());
+  const mergedTags = [...new Set([...existingTags, ...aiTags])];
+
   const { error } = await client
     .from("bookmarks")
     .update({
       enriched_data: data as unknown as Database["public"]["Tables"]["bookmarks"]["Update"]["enriched_data"],
       enrichment_status: "completed",
+      tags: mergedTags,
       updated_at: new Date().toISOString(),
     })
     .eq("id", bookmarkId);

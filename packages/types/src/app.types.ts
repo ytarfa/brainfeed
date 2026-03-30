@@ -10,6 +10,7 @@
  */
 
 import type { Tables } from "./database.types";
+import type { EnrichedData } from "./enriched-data.types";
 
 // ---------------------------------------------------------------------------
 // Primitive / shared types
@@ -42,19 +43,8 @@ export type EnrichmentStatus =
   | "failed"
   | "unsupported";
 
-/** Structured output of the enrichment pipeline, stored in bookmarks.enriched_data. */
-export interface EnrichedData {
-  /** AI-generated summary of the bookmark content. */
-  summary: string | null;
-  /** Named entities extracted from the content. */
-  entities: { name: string; type: string }[];
-  /** Topic labels assigned to the content. */
-  topics: string[];
-  /** Source-type-specific metadata (e.g. GitHub stars, video duration). */
-  metadata: Record<string, string | number> | null;
-  /** ISO 8601 timestamp of when enrichment was completed. */
-  processedAt: string;
-}
+// Re-export EnrichedData so existing `import { EnrichedData } from "./app.types"` keeps working.
+export type { EnrichedData } from "./enriched-data.types";
 
 /** A resolved tag object used in the UI (DB stores raw string arrays). */
 export interface Tag {
