@@ -128,6 +128,81 @@ export interface YouTubeChannelListResponse {
 
 export type VideoPart = "snippet" | "contentDetails" | "statistics" | "id";
 export type ChannelPart = "snippet" | "statistics" | "id" | "contentDetails";
+export type PlaylistPart = "snippet" | "contentDetails" | "id" | "status";
+export type PlaylistItemPart = "snippet" | "contentDetails" | "id" | "status";
+
+// ---------------------------------------------------------------------------
+// Playlist response types
+// ---------------------------------------------------------------------------
+
+export interface YouTubePlaylistSnippet {
+  publishedAt: string;
+  channelId: string;
+  title: string;
+  description: string;
+  thumbnails: YouTubeThumbnails;
+  channelTitle: string;
+}
+
+export interface YouTubePlaylistContentDetails {
+  itemCount: number;
+}
+
+export interface YouTubePlaylistResource {
+  kind: string;
+  etag: string;
+  id: string;
+  snippet?: YouTubePlaylistSnippet;
+  contentDetails?: YouTubePlaylistContentDetails;
+}
+
+export interface YouTubePlaylistListResponse {
+  kind: string;
+  etag: string;
+  pageInfo: YouTubePageInfo;
+  items: YouTubePlaylistResource[];
+}
+
+export interface YouTubePlaylistItemSnippet {
+  publishedAt: string;
+  channelId: string;
+  title: string;
+  description: string;
+  thumbnails: YouTubeThumbnails;
+  channelTitle: string;
+  playlistId: string;
+  position: number;
+  resourceId: {
+    kind: string;
+    videoId: string;
+  };
+}
+
+export interface YouTubePlaylistItemResource {
+  kind: string;
+  etag: string;
+  id: string;
+  snippet?: YouTubePlaylistItemSnippet;
+}
+
+export interface YouTubePlaylistItemListResponse {
+  kind: string;
+  etag: string;
+  pageInfo: YouTubePageInfo;
+  items: YouTubePlaylistItemResource[];
+  nextPageToken?: string;
+}
+
+// ---------------------------------------------------------------------------
+// URL classification result
+// ---------------------------------------------------------------------------
+
+export type YouTubeUrlType = "video" | "channel" | "playlist";
+
+export interface YouTubeUrlClassification {
+  type: YouTubeUrlType;
+  id: string;
+}
 
 // ---------------------------------------------------------------------------
 // Helper: parse ISO 8601 duration to human-readable string
@@ -249,6 +324,82 @@ export class YouTubeService extends GoogleApiService {
   }
 
   // -----------------------------------------------------------------------
+  // Channels — by handle
+  // -----------------------------------------------------------------------
+
+  /**
+   * Fetch a channel by its handle (e.g. "@mkbhd").
+   * Uses the `forHandle` parameter of the YouTube Data API channels endpoint.
+   * Returns `null` if no channel matches the handle.
+   */
+  async getChannelByHandle(
+    handle: string,
+    parts: ChannelPart[] = ["snippet", "statistics"],
+    options?: GoogleApiRequestOptions,
+  ): Promise<YouTubeChannelResource | null> {
+    // Strip leading "@" if present — the API accepts bare handles
+    const cleanHandle = handle.startsWith("@") ? handle.slice(1) : handle;
+
+    const response = await this.get<YouTubeChannelListResponse>("/channels", {
+      ...options,
+      params: {
+        ...options?.params,
+        part: parts.join(","),
+        forHandle: cleanHandle,
+      },
+    });
+
+    return response.items[0] ?? null;
+  }
+
+  // -----------------------------------------------------------------------
+  // Playlists
+  // -----------------------------------------------------------------------
+
+  /**
+   * Fetch a playlist by ID.
+   */
+  async getPlaylist(
+    id: string,
+    parts: PlaylistPart[] = ["snippet", "contentDetails"],
+    options?: GoogleApiRequestOptions,
+  ): Promise<YouTubePlaylistResource | null> {
+    const response = await this.get<YouTubePlaylistListResponse>("/playlists", {
+      ...options,
+      params: {
+        ...options?.params,
+        part: parts.join(","),
+        id,
+      },
+    });
+
+    return response.items[0] ?? null;
+  }
+
+  /**
+   * Fetch items from a playlist.
+   *
+   * @param playlistId  The playlist to fetch items from.
+   * @param maxResults  Maximum items to return (1-50, default 25).
+   */
+  async getPlaylistItems(
+    playlistId: string,
+    maxResults: number = 25,
+    parts: PlaylistItemPart[] = ["snippet"],
+    options?: GoogleApiRequestOptions,
+  ): Promise<YouTubePlaylistItemListResponse> {
+    return this.get<YouTubePlaylistItemListResponse>("/playlistItems", {
+      ...options,
+      params: {
+        ...options?.params,
+        part: parts.join(","),
+        playlistId,
+        maxResults,
+      },
+    });
+  }
+
+  // -----------------------------------------------------------------------
   // Helpers — extract video ID from various URL formats
   // -----------------------------------------------------------------------
 
@@ -287,6 +438,107 @@ export class YouTubeService extends GoogleApiService {
       );
       if (embedMatch) {
         return embedMatch[2];
+      }
+
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // Helpers — classify YouTube URL type
+  // -----------------------------------------------------------------------
+
+  /**
+   * Classify a YouTube URL as video, channel, or playlist and extract the
+   * relevant identifier.
+   *
+   * Priority for ambiguous URLs (e.g. watch?v=abc&list=xyz): video wins.
+   *
+   * Channel URL patterns:
+   *   - /channel/UC...          → channel ID
+   *   - /c/CustomName           → custom URL slug
+   *   - /user/Username          → legacy username
+   *   - /@handle                → handle (prefixed with @)
+   *
+   * Playlist URL patterns:
+   *   - /playlist?list=PL...    → playlist ID
+   *
+   * Returns `null` if the URL is not a recognized YouTube URL.
+   */
+  static classifyYouTubeUrl(url: string): YouTubeUrlClassification | null {
+    try {
+      const parsed = new URL(url);
+      const hostname = parsed.hostname.replace(/^www\./, "");
+
+      if (hostname !== "youtube.com" && hostname !== "youtu.be") {
+        return null;
+      }
+
+      // --- Video patterns (highest priority) ---
+
+      // youtu.be/VIDEO_ID
+      if (hostname === "youtu.be") {
+        const id = parsed.pathname.slice(1).split("/")[0];
+        return id ? { type: "video", id } : null;
+      }
+
+      // watch?v=VIDEO_ID (even if list= is present, treat as video)
+      if (parsed.searchParams.has("v")) {
+        const id = parsed.searchParams.get("v");
+        return id ? { type: "video", id } : null;
+      }
+
+      // /embed/VIDEO_ID, /shorts/VIDEO_ID, /v/VIDEO_ID
+      const videoPathMatch = parsed.pathname.match(
+        /^\/(embed|shorts|v)\/([^/?]+)/,
+      );
+      if (videoPathMatch) {
+        return { type: "video", id: videoPathMatch[2] };
+      }
+
+      // /live/VIDEO_ID
+      const liveMatch = parsed.pathname.match(/^\/live\/([^/?]+)/);
+      if (liveMatch) {
+        return { type: "video", id: liveMatch[1] };
+      }
+
+      // --- Playlist pattern ---
+
+      // /playlist?list=PLAYLIST_ID
+      if (
+        parsed.pathname === "/playlist" &&
+        parsed.searchParams.has("list")
+      ) {
+        const id = parsed.searchParams.get("list");
+        return id ? { type: "playlist", id } : null;
+      }
+
+      // --- Channel patterns ---
+
+      // /channel/UC...
+      const channelIdMatch = parsed.pathname.match(/^\/channel\/([^/?]+)/);
+      if (channelIdMatch) {
+        return { type: "channel", id: channelIdMatch[1] };
+      }
+
+      // /@handle
+      const handleMatch = parsed.pathname.match(/^\/@([^/?]+)/);
+      if (handleMatch) {
+        return { type: "channel", id: `@${handleMatch[1]}` };
+      }
+
+      // /c/CustomName
+      const customMatch = parsed.pathname.match(/^\/c\/([^/?]+)/);
+      if (customMatch) {
+        return { type: "channel", id: customMatch[1] };
+      }
+
+      // /user/Username
+      const userMatch = parsed.pathname.match(/^\/user\/([^/?]+)/);
+      if (userMatch) {
+        return { type: "channel", id: userMatch[1] };
       }
 
       return null;
