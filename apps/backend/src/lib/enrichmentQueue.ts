@@ -72,7 +72,7 @@ export async function publishEnrichmentJob(
     logger.debug({ bookmarkId: payload.bookmarkId }, "Enrichment job published");
   } catch (err) {
     // Swallow — bookmark was already persisted with status "pending"
-    logger.error({ err, bookmarkId: payload.bookmarkId }, "Failed to publish enrichment job");
+    logger.warn({ err, bookmarkId: payload.bookmarkId }, "Failed to publish enrichment job");
   }
 }
 
