@@ -1,9 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
 import {
   YouTubeThumbnailStrategy,
   GitHubThumbnailStrategy,
-  OgImageThumbnailStrategy,
   ThumbnailService,
   resolveThumbnail,
   thumbnailService,
@@ -171,137 +170,14 @@ describe("GitHubThumbnailStrategy", () => {
 });
 
 // ---------------------------------------------------------------------------
-// OgImageThumbnailStrategy
-// ---------------------------------------------------------------------------
-describe("OgImageThumbnailStrategy", () => {
-  function mockFetch(html: string, options?: { ok?: boolean; contentType?: string }): typeof fetch {
-    const { ok = true, contentType = "text/html; charset=utf-8" } = options ?? {};
-    return vi.fn().mockResolvedValue({
-      ok,
-      headers: new Headers({ "content-type": contentType }),
-      text: () => Promise.resolve(html),
-    }) as unknown as typeof fetch;
-  }
-
-  it("supports any source type (fallback)", () => {
-    const strategy = new OgImageThumbnailStrategy();
-    expect(strategy.supports("reddit")).toBe(true);
-    expect(strategy.supports("youtube")).toBe(true);
-    expect(strategy.supports("")).toBe(true);
-  });
-
-  it("extracts og:image from meta property", async () => {
-    const html = `<html><head><meta property="og:image" content="https://example.com/img.jpg"></head></html>`;
-    const strategy = new OgImageThumbnailStrategy({ fetchFn: mockFetch(html) });
-    const result = await strategy.resolve("https://example.com/page");
-    expect(result).toBe("https://example.com/img.jpg");
-  });
-
-  it("extracts og:image from meta name attribute", async () => {
-    const html = `<html><head><meta name="og:image" content="https://example.com/img2.jpg"></head></html>`;
-    const strategy = new OgImageThumbnailStrategy({ fetchFn: mockFetch(html) });
-    const result = await strategy.resolve("https://example.com/page");
-    expect(result).toBe("https://example.com/img2.jpg");
-  });
-
-  it("extracts twitter:image when og:image is absent", async () => {
-    const html = `<html><head><meta name="twitter:image" content="https://example.com/tw.jpg"></head></html>`;
-    const strategy = new OgImageThumbnailStrategy({ fetchFn: mockFetch(html) });
-    const result = await strategy.resolve("https://example.com/page");
-    expect(result).toBe("https://example.com/tw.jpg");
-  });
-
-  it("extracts twitter:image from property attribute", async () => {
-    const html = `<html><head><meta property="twitter:image" content="https://example.com/tw2.jpg"></head></html>`;
-    const strategy = new OgImageThumbnailStrategy({ fetchFn: mockFetch(html) });
-    const result = await strategy.resolve("https://example.com/page");
-    expect(result).toBe("https://example.com/tw2.jpg");
-  });
-
-  it("prefers og:image over twitter:image", async () => {
-    const html = `<html><head>
-      <meta property="og:image" content="https://example.com/og.jpg">
-      <meta name="twitter:image" content="https://example.com/tw.jpg">
-    </head></html>`;
-    const strategy = new OgImageThumbnailStrategy({ fetchFn: mockFetch(html) });
-    const result = await strategy.resolve("https://example.com/page");
-    expect(result).toBe("https://example.com/og.jpg");
-  });
-
-  it("resolves relative og:image URLs", async () => {
-    const html = `<html><head><meta property="og:image" content="/images/thumb.png"></head></html>`;
-    const strategy = new OgImageThumbnailStrategy({ fetchFn: mockFetch(html) });
-    const result = await strategy.resolve("https://example.com/page");
-    expect(result).toBe("https://example.com/images/thumb.png");
-  });
-
-  it("returns null when no meta tags are present", async () => {
-    const html = `<html><head><title>No OG</title></head><body></body></html>`;
-    const strategy = new OgImageThumbnailStrategy({ fetchFn: mockFetch(html) });
-    const result = await strategy.resolve("https://example.com/page");
-    expect(result).toBeNull();
-  });
-
-  it("returns null when response is not OK", async () => {
-    const strategy = new OgImageThumbnailStrategy({
-      fetchFn: mockFetch("", { ok: false }),
-    });
-    const result = await strategy.resolve("https://example.com/page");
-    expect(result).toBeNull();
-  });
-
-  it("returns null when content-type is not HTML", async () => {
-    const strategy = new OgImageThumbnailStrategy({
-      fetchFn: mockFetch("{}", { contentType: "application/json" }),
-    });
-    const result = await strategy.resolve("https://example.com/api");
-    expect(result).toBeNull();
-  });
-
-  it("returns null on network error", async () => {
-    const fetchFn = vi.fn().mockRejectedValue(new Error("fetch failed")) as unknown as typeof fetch;
-    const strategy = new OgImageThumbnailStrategy({ fetchFn });
-    const result = await strategy.resolve("https://example.com/page");
-    expect(result).toBeNull();
-  });
-
-  it("returns null on abort/timeout", async () => {
-    const fetchFn = vi.fn().mockRejectedValue(new DOMException("aborted", "AbortError")) as unknown as typeof fetch;
-    const strategy = new OgImageThumbnailStrategy({ fetchFn });
-    const result = await strategy.resolve("https://example.com/page");
-    expect(result).toBeNull();
-  });
-
-  it("passes the correct headers and signal", async () => {
-    const html = `<html><head></head></html>`;
-    const fetchFn = mockFetch(html);
-    const strategy = new OgImageThumbnailStrategy({ fetchFn });
-    await strategy.resolve("https://example.com/page");
-
-    expect(fetchFn).toHaveBeenCalledWith("https://example.com/page", expect.objectContaining({
-      headers: {
-        "User-Agent": "BrainFeedBot/1.0 (+https://brainfeed.app)",
-        "Accept": "text/html",
-      },
-      redirect: "follow",
-      signal: expect.any(AbortSignal),
-    }));
-  });
-});
-
-// ---------------------------------------------------------------------------
 // ThumbnailService (orchestrator)
 // ---------------------------------------------------------------------------
 describe("ThumbnailService", () => {
   describe("with default strategies", () => {
-    const service = new ThumbnailService(
-      [new YouTubeThumbnailStrategy(), new GitHubThumbnailStrategy()],
-      // Use a mock fallback to avoid real HTTP
-      {
-        supports: () => true,
-        resolve: vi.fn().mockResolvedValue(null),
-      } as ThumbnailStrategy,
-    );
+    const service = new ThumbnailService([
+      new YouTubeThumbnailStrategy(),
+      new GitHubThumbnailStrategy(),
+    ]);
 
     it("dispatches to YouTube strategy for youtube source type", async () => {
       const result = await service.resolveThumbnail(
@@ -319,7 +195,7 @@ describe("ThumbnailService", () => {
       expect(result).toBe("https://opengraph.githubassets.com/1/facebook/react");
     });
 
-    it("falls back to fallback for unknown source types", async () => {
+    it("returns null for unknown source types (callers use ogMetadata.image)", async () => {
       const result = await service.resolveThumbnail(
         "https://reddit.com/r/programming/post/123",
         "reddit",
@@ -327,7 +203,7 @@ describe("ThumbnailService", () => {
       expect(result).toBeNull();
     });
 
-    it("falls back when source type is null", async () => {
+    it("returns null when source type is null", async () => {
       const result = await service.resolveThumbnail(
         "https://example.com/page",
         null,
@@ -336,24 +212,18 @@ describe("ThumbnailService", () => {
     });
   });
 
-  describe("fallback on strategy failure", () => {
-    it("falls through to fallback when matched strategy returns null", async () => {
-      const fallback: ThumbnailStrategy = {
-        supports: () => true,
-        resolve: vi.fn().mockResolvedValue("https://fallback.com/img.jpg"),
-      };
-      const service = new ThumbnailService(
-        [new YouTubeThumbnailStrategy()],
-        fallback,
-      );
+  describe("strategy returns null", () => {
+    it("returns null when matched strategy returns null (no fallback)", async () => {
+      const service = new ThumbnailService([
+        new YouTubeThumbnailStrategy(),
+      ]);
 
-      // youtube.com/ without video ID — strategy returns null → fallback
+      // youtube.com/ without video ID — strategy returns null
       const result = await service.resolveThumbnail(
         "https://www.youtube.com/",
         "youtube",
       );
-      expect(result).toBe("https://fallback.com/img.jpg");
-      expect(fallback.resolve).toHaveBeenCalledWith("https://www.youtube.com/");
+      expect(result).toBeNull();
     });
   });
 
@@ -366,17 +236,6 @@ describe("ThumbnailService", () => {
       const service = new ThumbnailService([throwingStrategy]);
 
       const result = await service.resolveThumbnail("https://example.com", "anything");
-      expect(result).toBeNull();
-    });
-
-    it("returns null if the fallback throws", async () => {
-      const fallback: ThumbnailStrategy = {
-        supports: () => true,
-        resolve: vi.fn().mockRejectedValue(new Error("fallback error")),
-      };
-      const service = new ThumbnailService([], fallback);
-
-      const result = await service.resolveThumbnail("https://example.com", null);
       expect(result).toBeNull();
     });
   });

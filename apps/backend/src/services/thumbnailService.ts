@@ -1,6 +1,11 @@
-import * as cheerio from "cheerio";
-
-const OG_FETCH_TIMEOUT_MS = 5000;
+/**
+ * Thumbnail URL resolution for YouTube and GitHub bookmarks.
+ *
+ * For these platforms the thumbnail URL can be constructed directly
+ * from the bookmark URL without any HTTP fetch. All other source types
+ * rely on the og:image already extracted by OgFetcher during source-type
+ * detection — no additional resolution step is needed.
+ */
 
 /**
  * Strategy interface for resolving a thumbnail URL from a bookmark URL.
@@ -102,88 +107,25 @@ export class GitHubThumbnailStrategy implements ThumbnailStrategy {
 }
 
 /**
- * Fallback strategy that fetches the URL and extracts og:image / twitter:image
- * meta tags from the HTML response. Uses a 5-second timeout.
- */
-export class OgImageThumbnailStrategy implements ThumbnailStrategy {
-  private readonly timeoutMs: number;
-  private readonly fetchFn: typeof fetch;
-
-  constructor(options?: { timeoutMs?: number; fetchFn?: typeof fetch }) {
-    this.timeoutMs = options?.timeoutMs ?? OG_FETCH_TIMEOUT_MS;
-    this.fetchFn = options?.fetchFn ?? fetch;
-  }
-
-  supports(_sourceType: string): boolean {
-    return true;
-  }
-
-  async resolve(url: string): Promise<string | null> {
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), this.timeoutMs);
-
-      const response = await this.fetchFn(url, {
-        signal: controller.signal,
-        headers: {
-          "User-Agent": "BrainFeedBot/1.0 (+https://brainfeed.app)",
-          "Accept": "text/html",
-        },
-        redirect: "follow",
-      });
-
-      clearTimeout(timeout);
-
-      if (!response.ok) return null;
-
-      const contentType = response.headers.get("content-type") ?? "";
-      if (!contentType.includes("text/html")) return null;
-
-      const html = await response.text();
-      const $ = cheerio.load(html);
-
-      const ogImage = $("meta[property='og:image']").attr("content")
-        ?? $("meta[name='og:image']").attr("content")
-        ?? $("meta[name='twitter:image']").attr("content")
-        ?? $("meta[property='twitter:image']").attr("content");
-
-      if (!ogImage) return null;
-
-      try {
-        return new URL(ogImage, url).href;
-      } catch {
-        return ogImage;
-      }
-    } catch {
-      return null;
-    }
-  }
-}
-
-/**
  * Orchestrates thumbnail resolution by dispatching to registered strategies.
  * Strategies are tried in registration order; the first one that supports
- * the source type gets to resolve. Falls back to the OG image strategy.
+ * the source type gets to resolve.
  */
 export class ThumbnailService {
   private readonly strategies: ThumbnailStrategy[];
-  private readonly fallback: ThumbnailStrategy;
 
-  constructor(
-    strategies?: ThumbnailStrategy[],
-    fallback?: ThumbnailStrategy,
-  ) {
+  constructor(strategies?: ThumbnailStrategy[]) {
     this.strategies = strategies ?? [
       new YouTubeThumbnailStrategy(),
       new GitHubThumbnailStrategy(),
     ];
-    this.fallback = fallback ?? new OgImageThumbnailStrategy();
   }
 
   /**
    * Resolve a thumbnail URL for a bookmark.
-   * Dispatches by source type for known platforms (instant, no fetch),
-   * falls back to generic OG image resolution for everything else.
+   * Dispatches by source type for known platforms (instant, no fetch).
+   * Returns null for unrecognised source types — callers should fall back
+   * to ogMetadata.image when available.
    *
    * Best-effort: returns null on any failure without throwing.
    */
@@ -195,14 +137,12 @@ export class ThumbnailService {
       if (sourceType) {
         for (const strategy of this.strategies) {
           if (strategy.supports(sourceType)) {
-            const thumb = await strategy.resolve(url);
-            if (thumb) return thumb;
-            break;
+            return await strategy.resolve(url);
           }
         }
       }
 
-      return await this.fallback.resolve(url);
+      return null;
     } catch {
       return null;
     }

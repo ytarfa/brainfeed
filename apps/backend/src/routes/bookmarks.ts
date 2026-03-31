@@ -5,8 +5,6 @@ import { asyncHandler } from "@brain-feed/logger";
 import { validateBody, validateQuery } from "../middleware/validate";
 import { bookmarkService } from "../services/bookmarkService";
 import { resolveThumbnail } from "../services/thumbnailService";
-import { thumbnailGenerator } from "../services/thumbnailGenerator";
-import { uploadThumbnail } from "../services/storageUploader";
 import { getPaginationParams } from "../utils/pagination";
 import { publishEnrichmentJob } from "../lib/enrichmentQueue";
 
@@ -86,19 +84,9 @@ router.post("/", asyncHandler(async (req: Request, res: Response): Promise<void>
   const { sourceType: source_type, ogMetadata } = await bookmarkService.detectSourceType(body.url);
 
   // Resolve thumbnail:
-  // - For articles with OG data: generate composite image (uploaded after insert)
-  // - For github/youtube: URL construction (no fetch)
-  // - For generic with OG data: use already-fetched og:image
-  // - Fallback: OG fetch via thumbnailService
-  let thumbnail_url: string | null;
-  const shouldGenerateArticleThumbnail = source_type === "article" && ogMetadata;
-
-  if (shouldGenerateArticleThumbnail) {
-    // Use og:image initially; we'll replace with composite after insert (need bookmark ID)
-    thumbnail_url = ogMetadata.image;
-  } else {
-    thumbnail_url = ogMetadata?.image ?? await resolveThumbnail(body.url, source_type);
-  }
+  // - For github/youtube: URL construction via thumbnailService (no fetch)
+  // - For everything else: use og:image when available
+  const thumbnail_url = ogMetadata?.image ?? await resolveThumbnail(body.url, source_type);
 
   // Auto-fill title and description from OG metadata when not provided by user
   const title = body.title ?? ogMetadata?.title ?? null;
@@ -137,19 +125,6 @@ router.post("/", asyncHandler(async (req: Request, res: Response): Promise<void>
   }
 
   res.status(201).json(bookmark);
-
-  // Fire-and-forget: generate composite article thumbnail
-  if (shouldGenerateArticleThumbnail) {
-    thumbnailGenerator.generate(source_type, ogMetadata).then(async (imageBuffer) => {
-      if (!imageBuffer) return;
-      const publicUrl = await uploadThumbnail(imageBuffer, bookmark.id);
-      if (!publicUrl) return;
-      await req.supabase
-        .from("bookmarks")
-        .update({ thumbnail_url: publicUrl, updated_at: new Date().toISOString() })
-        .eq("id", bookmark.id);
-    }).catch(() => { /* best-effort, og:image is already stored */ });
-  }
 
   // Fire-and-forget: publish enrichment job
   publishEnrichmentJob({
