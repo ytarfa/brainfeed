@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import { cn } from "../lib/utils";
 
 import BookmarkCard from "../components/BookmarkCard";
-import { useBookmarks, useSpaces, useDeleteBookmark, toBookmark, useDigestSummary } from "../api/hooks";
+import { useBookmarks, useDeleteBookmark, toBookmark, useDigestSummary } from "../api/hooks";
 
 type SortOption = "saved" | "title" | "source";
 
@@ -30,7 +30,6 @@ export default function Library() {
     sort: sortMap[sort],
     order: "desc",
   });
-  const { data: spacesData } = useSpaces();
   const { data: digestSummary } = useDigestSummary();
   const deleteBookmark = useDeleteBookmark();
   const [exitingId, setExitingId] = useState<string | null>(null);
@@ -50,10 +49,7 @@ export default function Library() {
     () => (bookmarksData?.data ?? []).map(toBookmark),
     [bookmarksData],
   );
-  const spaces = spacesData?.data ?? [];
   const total = bookmarksData?.total ?? bookmarks.length;
-
-  const getSpace = (spaceId: string) => spaces.find((s) => s.id === spaceId);
 
   const digestCount = digestSummary?.total ?? 0;
   const digestGroups = digestSummary?.groups ?? [];
@@ -150,9 +146,7 @@ export default function Library() {
               : "flex flex-col gap-2.5",
           )}
         >
-          {bookmarks.map((bookmark, i) => {
-            const space = getSpace(bookmark.spaceId);
-            return (
+          {bookmarks.map((bookmark, i) => (
               <BookmarkCard
                 key={bookmark.id}
                 bookmark={bookmark}
@@ -161,13 +155,9 @@ export default function Library() {
                 onDelete={handleDelete}
                 isDeleting={deleteBookmark.isPending && deleteBookmark.variables === bookmark.id}
                 isExiting={exitingId === bookmark.id}
-                showSpace
-                spaceName={space?.name}
-                spaceColor={space?.color ?? undefined}
                 index={i}
               />
-            );
-          })}
+          ))}
         </div>
       )}
     </div>

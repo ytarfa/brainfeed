@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import type { Bookmark } from "@brain-feed/types";
-import renderSourceMeta from "./BookmarkCard/variants/renderSourceMeta";
 import ThumbnailPlaceholder from "./ThumbnailPlaceholder";
 
 interface BookmarkCardProps {
@@ -39,7 +38,7 @@ const menuItems = [
   { label: "Delete", icon: <Trash2 size={13} />, danger: true },
 ];
 
-export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDeleting = false, isExiting = false, showSpace = false, spaceName, spaceColor, index = 0, readonly = false }: BookmarkCardProps) {
+export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDeleting = false, isExiting = false, index = 0, readonly = false }: BookmarkCardProps) {
   const [hovered, setHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -47,7 +46,6 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
   const hasThumbnail = isGrid && !!bookmark.thumbnail_url;
 
   const disabled = isDeleting || isExiting;
-  const sourceMeta = renderSourceMeta(bookmark);
 
   // Capture card height for collapse animation
   useEffect(() => {
@@ -82,7 +80,7 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
       ref={cardRef}
       className={cn(
         "group/card relative cursor-pointer overflow-hidden rounded-xl border",
-        isGrid ? "block" : "flex items-start gap-4 p-[14px_18px]",
+        isGrid ? "block" : "flex items-center gap-4 p-[14px_18px]",
         // Default state
         !disabled && (hovered
           ? "border-[var(--border-strong)]"
@@ -143,98 +141,37 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
             className="absolute inset-0 pointer-events-none"
             style={{ background: "var(--thumbnail-overlay)" }}
           />
-          {/* Type badge floating on thumbnail */}
-          <div className="absolute left-3 top-3">
-            <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-[3px] font-ui text-2xs font-medium text-white/90 backdrop-blur-sm"
-              style={{ background: "rgba(0, 0, 0, 0.55)" }}
-            >
-              {typeIcons[bookmark.source_type ?? ""] || <Diamond size={10} />}
-              {bookmark.source_type}
-            </span>
-          </div>
         </div>
       ) : (
         <div className="relative h-[140px] w-full overflow-hidden">
           <ThumbnailPlaceholder sourceType={bookmark.source_type} height={140} />
-          {/* Type badge floating on placeholder */}
-          <div className="absolute left-3 top-3 z-[1]">
-            <span className="inline-flex items-center gap-1 rounded-md px-1.5 py-[3px] font-ui text-2xs font-medium text-white/90 backdrop-blur-sm"
-              style={{ background: "rgba(0, 0, 0, 0.55)" }}
-            >
-              {typeIcons[bookmark.source_type ?? ""] || <Diamond size={10} />}
-              {bookmark.source_type}
-            </span>
-          </div>
         </div>
       ))}
 
       {/* ── Card body ── */}
       <div className={cn(
-        isGrid ? "px-[16px] pt-[12px] pb-[14px]" : "min-w-0 flex-1",
+        isGrid ? "px-4 pt-3 pb-3" : "min-w-0 flex-1",
       )}>
-        {/* Type badge + space badge (list view only — grid has badges on placeholder/thumbnail) */}
-        {!isGrid && (
-          <div className="flex items-center gap-1.5 mb-2">
-            <span className="inline-flex items-center gap-1 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-1.5 py-[3px] font-ui text-2xs font-medium text-[var(--text-muted)]">
-              {typeIcons[bookmark.source_type ?? ""] || <Diamond size={10} />}
-              {bookmark.source_type}
-            </span>
-
-            {showSpace && spaceName && (
-              <span className="inline-flex items-center gap-1 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-1.5 py-[3px] font-ui text-2xs font-medium text-[var(--text-secondary)]">
-                <span
-                  className="h-[5px] w-[5px] shrink-0 rounded-full"
-                  style={{ background: spaceColor ?? "var(--text-muted)" }}
-                />
-                {spaceName}
-              </span>
-            )}
-          </div>
-        )}
-
-        {/* Space badge (grid view — show inline below thumbnail/placeholder) */}
-        {isGrid && showSpace && spaceName && (
-          <div className="mb-2.5 flex items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-1.5 py-[3px] font-ui text-2xs font-medium text-[var(--text-secondary)]">
-              <span
-                className="h-[5px] w-[5px] shrink-0 rounded-full"
-                style={{ background: spaceColor ?? "var(--text-muted)" }}
-              />
-              {spaceName}
-            </span>
-          </div>
-        )}
-
-        {/* Title */}
+        {/* Title — the hero element */}
         <h3
           className={cn(
-            "font-display text-[15px] font-medium leading-[1.35] text-[var(--text-primary)]",
-            isGrid ? "mb-1 line-clamp-2" : "mb-0.5 line-clamp-1",
+            "font-display font-medium leading-[1.35] text-[var(--text-primary)]",
+            isGrid ? "mb-2 text-[15px] line-clamp-2" : "mb-0.5 text-[14px] line-clamp-1",
           )}
         >
           {bookmark.title}
         </h3>
 
-        {/* Source-specific metadata line (factory pattern) */}
-        {sourceMeta}
-
-        {/* Summary — prefer enriched AI summary, fall back to description */}
-        {(bookmark.enriched_data?.summary || bookmark.summary) && (
-          <p className={cn(
-            "font-ui text-[13px] leading-[1.55] text-[var(--text-secondary)]",
-            isGrid ? "mb-2.5 line-clamp-3" : "mb-2 line-clamp-2",
-          )}>
-            {bookmark.enriched_data?.summary || bookmark.summary}
-          </p>
-        )}
-
         {/* Tags */}
         {bookmark.tags.length > 0 && (
-          <div className="mb-2.5 flex flex-wrap gap-1">
+          <div className={cn(
+            "flex flex-wrap gap-1",
+            isGrid ? "mb-2.5" : "mb-1.5",
+          )}>
             {bookmark.tags.map((tag) => (
               <span
                 key={tag.id}
-                className="rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2 py-[2px] font-ui text-2xs font-medium text-[var(--text-secondary)] transition-colors duration-150"
+                className="rounded-full border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2 py-[1px] font-ui text-2xs text-[var(--text-muted)] transition-colors duration-150"
               >
                 {tag.label}
               </span>
@@ -243,12 +180,12 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
         )}
 
         {/* Meta row — domain, saved time, more button */}
-        <div className="flex items-center justify-between gap-2 pt-0.5">
-          <div className="flex items-center gap-1.5 text-meta">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 font-ui text-2xs tracking-wide text-[var(--text-muted)]">
             {bookmark.domain && (
               <>
                 <span className="max-w-[140px] truncate">{bookmark.domain}</span>
-                <span className="text-[var(--border-strong)]">&middot;</span>
+                <span className="opacity-40">&middot;</span>
               </>
             )}
             <span>{bookmark.savedAt}</span>
