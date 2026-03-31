@@ -55,6 +55,7 @@ describe("resolveRoute", () => {
     const sourceTypeCases: [string, EnrichmentRoute][] = [
       ["github", "github"],
       ["youtube", "youtube"],
+      ["article", "article"],
       ["generic", "generic"],
     ];
 
@@ -93,18 +94,52 @@ describe("resolveRoute", () => {
       expect(resolveRoute(bookmark)).toBe("youtube");
     });
 
-    it("falls back to generic for non-matching URL", () => {
+    it("falls back to article for non-matching HTTP URL", () => {
       const bookmark = makeBookmark({
         url: "https://x.com/elonmusk/status/12345",
       });
-      expect(resolveRoute(bookmark)).toBe("generic");
+      expect(resolveRoute(bookmark)).toBe("article");
     });
   });
 
-  describe("ultimate fallback to generic", () => {
-    it("returns generic for a plain link with no source_type", () => {
+  describe("HTTP URLs default to article enrichment", () => {
+    it("routes plain HTTP URL to article", () => {
       const bookmark = makeBookmark({
         url: "https://example.com/some-article",
+        source_type: null,
+      });
+      expect(resolveRoute(bookmark)).toBe("article");
+    });
+
+    it("routes http:// URL to article", () => {
+      const bookmark = makeBookmark({
+        url: "http://blog.example.com/post",
+        source_type: null,
+      });
+      expect(resolveRoute(bookmark)).toBe("article");
+    });
+  });
+
+  describe("ultimate fallback to generic (non-HTTP)", () => {
+    it("returns generic for non-HTTP URL", () => {
+      const bookmark = makeBookmark({
+        url: "ftp://files.example.com/readme.txt",
+        source_type: null,
+      });
+      expect(resolveRoute(bookmark)).toBe("generic");
+    });
+
+    it("returns generic for invalid URL", () => {
+      const bookmark = makeBookmark({
+        url: "not-a-valid-url",
+        source_type: null,
+      });
+      expect(resolveRoute(bookmark)).toBe("generic");
+    });
+
+    it("returns generic when URL is empty string", () => {
+      const bookmark = makeBookmark({
+        url: "",
         source_type: null,
       });
       expect(resolveRoute(bookmark)).toBe("generic");

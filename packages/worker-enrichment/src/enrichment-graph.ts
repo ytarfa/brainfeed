@@ -3,6 +3,11 @@ import type { BookmarkForProcessing } from "@brain-feed/worker-core"
 import { YoutubeLoader } from "@langchain/community/document_loaders/web/youtube"
 import { Annotation, StateGraph } from "@langchain/langgraph"
 
+import {
+  ArticleService,
+  UnsupportedContentError,
+  truncateContent as truncateArticleContent,
+} from "./services/article-service"
 import { enrichContent } from "./services/llm"
 import {
   YouTubeService,
@@ -27,7 +32,7 @@ export type EnrichmentSubgraphStateType = typeof EnrichmentSubgraphState.State
 // conditional-edge keys.  Exported for testing.
 // ---------------------------------------------------------------------------
 
-export type EnrichmentRoute = "github" | "youtube" | "generic"
+export type EnrichmentRoute = "github" | "youtube" | "article" | "generic"
 
 // ---------------------------------------------------------------------------
 // URL-based source-type detection (fallback when source_type is null)
@@ -58,6 +63,7 @@ export function detectRouteFromUrl(url: string): EnrichmentRoute | null {
 const SOURCE_TYPE_TO_ROUTE: Record<string, EnrichmentRoute> = {
   github: "github",
   youtube: "youtube",
+  article: "article",
   generic: "generic",
 }
 
@@ -66,8 +72,9 @@ const SOURCE_TYPE_TO_ROUTE: Record<string, EnrichmentRoute> = {
  *
  * Priority:
  *  1. `source_type` if present and mapped
- *  2. URL pattern matching
- *  3. "generic" fallback
+ *  2. URL pattern matching (GitHub, YouTube)
+ *  3. HTTP/HTTPS URLs → "article" (most web pages are articles)
+ *  4. "generic" fallback (non-HTTP URLs, unknown schemes)
  */
 export function resolveRoute(bookmark: BookmarkForProcessing): EnrichmentRoute {
   // 1. Explicit source_type
@@ -78,15 +85,25 @@ export function resolveRoute(bookmark: BookmarkForProcessing): EnrichmentRoute {
     }
   }
 
-  // 2. URL pattern detection
+  // 2. URL pattern detection (GitHub, YouTube, etc.)
   if (bookmark.url) {
     const detected = detectRouteFromUrl(bookmark.url)
     if (detected) {
       return detected
     }
+
+    // 3. HTTP/HTTPS URLs default to article enrichment
+    try {
+      const parsed = new URL(bookmark.url)
+      if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+        return "article"
+      }
+    } catch {
+      // Invalid URL — fall through to generic
+    }
   }
 
-  // 3. Fallback
+  // 4. Fallback (non-HTTP URLs, missing URLs)
   return "generic"
 }
 
@@ -439,6 +456,90 @@ async function youtubeNode(
   return { result }
 }
 
+// ---------------------------------------------------------------------------
+// Article enrichment node
+// ---------------------------------------------------------------------------
+
+async function articleNode(
+  state: EnrichmentSubgraphStateType,
+): Promise<Partial<EnrichmentSubgraphStateType>> {
+  const { bookmark } = state
+
+  try {
+    const extracted = await ArticleService.extract(bookmark.url)
+
+    // Build metadata
+    const metadata: Record<string, string | number> = {}
+    if (extracted.title) metadata.title = extracted.title
+    if (extracted.byline) metadata.author = extracted.byline
+    if (extracted.siteName) metadata.siteName = extracted.siteName
+    if (extracted.publishedTime) metadata.publishedAt = extracted.publishedTime
+    if (extracted.lang) metadata.language = extracted.lang
+    if (extracted.ogImage) metadata.ogImage = extracted.ogImage
+    metadata.wordCount = extracted.wordCount
+    metadata.readingTimeMinutes = extracted.readingTimeMinutes
+
+    // If no content was extracted, return thin metadata-only enrichment
+    if (!extracted.content || !extracted.content.trim()) {
+      return {
+        result: {
+          summary: extracted.excerpt || null,
+          entities: [],
+          topics: [],
+          tags: [],
+          metadata,
+          processedAt: new Date().toISOString(),
+        },
+      }
+    }
+
+    // Full LLM enrichment
+    try {
+      const llmResult = await enrichContent(extracted.content, "article")
+
+      return {
+        result: {
+          summary: llmResult.summary || null,
+          entities: llmResult.entities,
+          topics: llmResult.topics,
+          tags: llmResult.tags,
+          metadata,
+          processedAt: new Date().toISOString(),
+        },
+      }
+    } catch {
+      // LLM failed — return metadata + Readability excerpt
+      return {
+        result: {
+          summary: extracted.excerpt || null,
+          entities: [],
+          topics: [],
+          tags: [],
+          metadata,
+          processedAt: new Date().toISOString(),
+        },
+      }
+    }
+  } catch (err) {
+    if (err instanceof UnsupportedContentError) {
+      // Non-HTML content — return unsupported marker
+      return {
+        result: {
+          summary: null,
+          entities: [],
+          topics: [],
+          tags: [],
+          metadata: { unsupported: "true" },
+          processedAt: new Date().toISOString(),
+        },
+      }
+    }
+
+    // Fetch errors and other failures — re-throw for processor to handle
+    throw err
+  }
+}
+
 async function genericNode(
   _state: EnrichmentSubgraphStateType,
 ): Promise<Partial<EnrichmentSubgraphStateType>> {
@@ -453,6 +554,7 @@ async function genericNode(
 const ROUTE_MAP = {
   github: "github",
   youtube: "youtube",
+  article: "article",
   generic: "generic",
 } as const
 
@@ -460,12 +562,14 @@ export const enrichmentGraph = new StateGraph(EnrichmentSubgraphState)
   // Source-specific nodes
   .addNode("github", githubNode)
   .addNode("youtube", youtubeNode)
+  .addNode("article", articleNode)
   .addNode("generic", genericNode)
   // Route from __start__ to the correct node
   .addConditionalEdges("__start__", routeNode, ROUTE_MAP)
   // All enrichment nodes flow to __end__
   .addEdge("github", "__end__")
   .addEdge("youtube", "__end__")
+  .addEdge("article", "__end__")
   .addEdge("generic", "__end__")
   .compile()
 
@@ -475,6 +579,7 @@ export const enrichmentGraph = new StateGraph(EnrichmentSubgraphState)
 
 export {
   TRANSCRIPT_MAX_CHARS as _TRANSCRIPT_MAX_CHARS,
+  articleNode as _articleNode,
   enrichChannel as _enrichChannel,
   enrichPlaylist as _enrichPlaylist,
   enrichVideo as _enrichVideo,
