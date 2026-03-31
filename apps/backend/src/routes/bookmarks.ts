@@ -3,8 +3,7 @@ import { z } from "zod";
 import { NotFoundError } from "@brain-feed/error-types";
 import { asyncHandler } from "@brain-feed/logger";
 import { validateBody, validateQuery } from "../middleware/validate";
-import { bookmarkService } from "../services/bookmarkService";
-import { resolveThumbnail } from "../services/thumbnailService";
+import { registry } from "../services/urlHandlers/registry";
 import { getPaginationParams } from "../utils/pagination";
 import { publishEnrichmentJob } from "../lib/enrichmentQueue";
 
@@ -80,17 +79,12 @@ router.post("/", asyncHandler(async (req: Request, res: Response): Promise<void>
 
   const body = parseResult.data;
 
-  // Detect source type (async — fetches OG data for non-github/youtube URLs)
-  const { sourceType: source_type, ogMetadata } = await bookmarkService.detectSourceType(body.url);
+  // Resolve URL: fetch OG metadata + detect source type + resolve thumbnail
+  const resolved = await registry.resolve(body.url);
 
-  // Resolve thumbnail:
-  // - For github/youtube: URL construction via thumbnailService (no fetch)
-  // - For everything else: use og:image when available
-  const thumbnail_url = ogMetadata?.image ?? await resolveThumbnail(body.url, source_type);
-
-  // Auto-fill title and description from OG metadata when not provided by user
-  const title = body.title ?? ogMetadata?.title ?? null;
-  const description = body.description ?? ogMetadata?.description ?? null;
+  // User-provided title/description take precedence over OG-derived values
+  const title = body.title ?? resolved.title;
+  const description = body.description ?? resolved.description;
 
   const insertData: Record<string, unknown> = {
     user_id: req.userId,
@@ -100,10 +94,10 @@ router.post("/", asyncHandler(async (req: Request, res: Response): Promise<void>
     description,
     notes: body.notes ?? null,
     tags: body.tags ?? [],
-    source_type,
+    source_type: resolved.sourceType,
     enrichment_status: "pending",
     file_path: null,
-    thumbnail_url,
+    thumbnail_url: resolved.thumbnailUrl,
   };
 
   const { data: bookmark, error } = await req.supabase
@@ -131,7 +125,7 @@ router.post("/", asyncHandler(async (req: Request, res: Response): Promise<void>
     bookmarkId: bookmark.id,
     userId: req.userId,
     contentType: "link",
-    sourceType: source_type,
+    sourceType: resolved.sourceType,
     url: body.url,
   });
 }));
