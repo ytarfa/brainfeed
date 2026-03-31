@@ -1,19 +1,27 @@
 import type { OgMetadata } from "../ogFetcher";
 import type { UrlHandler, ResolvedBookmark } from "./types";
 
+const YOUTUBE_HOSTS = new Set([
+  "youtube.com",
+  "www.youtube.com",
+  "m.youtube.com",
+  "youtu.be",
+  "music.youtube.com",
+]);
+
 /**
- * Handles YouTube **video** URLs only.
+ * Handles YouTube URLs.
  *
- * Detection: hostname match AND a valid video ID extractable from the URL.
- * Non-video pages (channels, playlists, home, etc.) are ignored.
+ * Detection: hostname match or OG siteName "YouTube".
  * Resolution: constructs thumbnail from video ID (no extra HTTP request).
  */
-export class YouTubeVideoHandler implements UrlHandler {
+export class YouTubeHandler implements UrlHandler {
   readonly sourceType = "youtube" as const;
 
-  matches(url: URL, _og: OgMetadata): boolean {
-    const videoId = this.extractVideoId(url);
-    return videoId !== null;
+  matches(url: URL, og: OgMetadata): boolean {
+    if (YOUTUBE_HOSTS.has(url.hostname.toLowerCase())) return true;
+    if (og.siteName === "YouTube") return true;
+    return false;
   }
 
   async resolve(url: URL, _og: OgMetadata): Promise<Partial<ResolvedBookmark>> {
@@ -23,27 +31,21 @@ export class YouTubeVideoHandler implements UrlHandler {
   }
 
   /**
-   * Extract a YouTube video ID from video-specific URL formats:
+   * Extract a YouTube video ID from various URL formats:
    * - youtube.com/watch?v=ID
    * - youtu.be/ID
    * - youtube.com/embed/ID
    * - youtube.com/shorts/ID
-   *
-   * Returns null for non-video YouTube URLs (channels, playlists, home, etc.).
    */
   extractVideoId(url: URL): string | null {
-    const hostname = url.hostname.replace("www.", "").toLowerCase();
+    const hostname = url.hostname.replace("www.", "");
 
     if (hostname === "youtu.be") {
       const id = url.pathname.slice(1).split("/")[0];
       return id || null;
     }
 
-    if (
-      hostname === "youtube.com" ||
-      hostname === "m.youtube.com" ||
-      hostname === "music.youtube.com"
-    ) {
+    if (hostname === "youtube.com" || hostname === "m.youtube.com") {
       const vParam = url.searchParams.get("v");
       if (vParam) return vParam;
 

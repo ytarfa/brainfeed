@@ -1,17 +1,17 @@
 import { describe, it, expect } from "vitest";
 
-import { YouTubeVideoHandler } from "../services/urlHandlers/youtubeHandler";
+import { YouTubeHandler } from "../services/urlHandlers/youtubeHandler";
 import { NULL_OG_METADATA } from "../services/urlHandlers/types";
 import type { OgMetadata } from "../services/ogFetcher";
 
-const handler = new YouTubeVideoHandler();
+const handler = new YouTubeHandler();
 
 /** Helper to build OgMetadata with overrides. */
 function og(overrides: Partial<OgMetadata> = {}): OgMetadata {
   return { ...NULL_OG_METADATA, ...overrides };
 }
 
-describe("YouTubeVideoHandler", () => {
+describe("YouTubeHandler", () => {
   describe("sourceType", () => {
     it("is 'youtube'", () => {
       expect(handler.sourceType).toBe("youtube");
@@ -19,63 +19,39 @@ describe("YouTubeVideoHandler", () => {
   });
 
   describe("matches()", () => {
-    it("matches youtube.com video URL", () => {
+    it("matches youtube.com", () => {
       expect(handler.matches(new URL("https://youtube.com/watch?v=abc"), og())).toBe(true);
     });
 
-    it("matches www.youtube.com video URL", () => {
+    it("matches www.youtube.com", () => {
       expect(handler.matches(new URL("https://www.youtube.com/watch?v=abc"), og())).toBe(true);
     });
 
-    it("matches youtu.be short video URL", () => {
+    it("matches youtu.be", () => {
       expect(handler.matches(new URL("https://youtu.be/abc"), og())).toBe(true);
     });
 
-    it("matches m.youtube.com video URL", () => {
+    it("matches m.youtube.com", () => {
       expect(handler.matches(new URL("https://m.youtube.com/watch?v=abc"), og())).toBe(true);
     });
 
-    it("matches music.youtube.com video URL", () => {
+    it("matches music.youtube.com", () => {
       expect(handler.matches(new URL("https://music.youtube.com/watch?v=abc"), og())).toBe(true);
     });
 
-    it("matches youtube.com/embed/ URL", () => {
-      expect(handler.matches(new URL("https://www.youtube.com/embed/abc"), og())).toBe(true);
-    });
-
-    it("matches youtube.com/shorts/ URL", () => {
-      expect(handler.matches(new URL("https://www.youtube.com/shorts/abc"), og())).toBe(true);
-    });
-
-    it("does not match YouTube channel URL", () => {
-      expect(handler.matches(new URL("https://www.youtube.com/channel/UC123"), og())).toBe(false);
-    });
-
-    it("does not match YouTube playlist URL", () => {
-      expect(handler.matches(new URL("https://www.youtube.com/playlist?list=PLxyz"), og())).toBe(false);
-    });
-
-    it("does not match YouTube homepage", () => {
-      expect(handler.matches(new URL("https://www.youtube.com/"), og())).toBe(false);
-    });
-
-    it("does not match based on OG siteName alone", () => {
+    it("matches when OG siteName is YouTube", () => {
       expect(handler.matches(
         new URL("https://example.com/some-video"),
         og({ siteName: "YouTube" }),
-      )).toBe(false);
+      )).toBe(true);
     });
 
-    it("does not match unrelated URL", () => {
+    it("does not match unrelated URL without YouTube siteName", () => {
       expect(handler.matches(new URL("https://example.com/page"), og())).toBe(false);
     });
 
     it("does not match github.com", () => {
       expect(handler.matches(new URL("https://github.com/user/repo"), og())).toBe(false);
-    });
-
-    it("does not match youtu.be with empty path", () => {
-      expect(handler.matches(new URL("https://youtu.be/"), og())).toBe(false);
     });
   });
 
