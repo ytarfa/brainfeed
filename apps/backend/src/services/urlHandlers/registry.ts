@@ -2,7 +2,7 @@ import type { OgMetadata } from "../ogFetcher";
 import { ogFetcher, OgFetcher } from "../ogFetcher";
 import type { UrlHandler, ResolvedBookmark } from "./types";
 import { NULL_OG_METADATA } from "./types";
-import { YouTubeHandler } from "./youtubeHandler";
+import { YouTubeVideoHandler } from "./youtubeHandler";
 import { GitHubHandler } from "./githubHandler";
 import { ArticleHandler } from "./articleHandler";
 
@@ -19,7 +19,7 @@ export class UrlHandlerRegistry {
 
   constructor(options?: { handlers?: UrlHandler[]; ogFetcher?: OgFetcher }) {
     this.handlers = options?.handlers ?? [
-      new YouTubeHandler(),
+      new YouTubeVideoHandler(),
       new GitHubHandler(),
       new ArticleHandler(),
     ];
