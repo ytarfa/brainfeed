@@ -8,6 +8,7 @@ import {
   UnsupportedContentError,
   truncateContent as truncateArticleContent,
 } from "./services/article-service"
+import { GitHubService } from "./services/github-service"
 import { enrichContent } from "./services/llm"
 import {
   YouTubeService,
@@ -134,11 +135,293 @@ function emptyEnrichedData(): EnrichedData {
   }
 }
 
+// ---------------------------------------------------------------------------
+// GitHub enrichment — configuration
+// ---------------------------------------------------------------------------
+
+/**
+ * Maximum README length (in characters) sent to the LLM.
+ * Configurable via README_MAX_CHARS env var. Defaults to 80 000.
+ */
+const README_MAX_CHARS = parseInt(
+  process.env.README_MAX_CHARS ?? "80000",
+  10,
+)
+
+// ---------------------------------------------------------------------------
+// GitHub enrichment — helper: truncate README at word boundary
+// ---------------------------------------------------------------------------
+
+function truncateReadme(text: string, maxChars: number): string {
+  if (text.length <= maxChars) {
+    return text
+  }
+  const truncated = text.slice(0, maxChars)
+  const lastSpace = truncated.lastIndexOf(" ")
+  const cutPoint = lastSpace > maxChars * 0.8 ? lastSpace : maxChars
+  return text.slice(0, cutPoint) + "\n[Content truncated]"
+}
+
+// ---------------------------------------------------------------------------
+// GitHub enrichment — helper: create GitHubService instance
+// ---------------------------------------------------------------------------
+
+function createGitHubService(): GitHubService {
+  const token = process.env.GITHUB_TOKEN
+  if (!token) {
+    throw new Error(
+      "githubNode: GITHUB_TOKEN environment variable is required.",
+    )
+  }
+  return new GitHubService(token)
+}
+
+// ---------------------------------------------------------------------------
+// GitHub enrichment — repo path
+// ---------------------------------------------------------------------------
+
+async function enrichRepo(
+  owner: string,
+  repo: string,
+): Promise<EnrichedData> {
+  const gh = createGitHubService()
+
+  // Fetch repo metadata and README in parallel (README failure is graceful)
+  const [repoData, readme] = await Promise.all([
+    gh.getRepo(owner, repo),
+    gh.getReadme(owner, repo).catch(() => null),
+  ])
+
+  const readmeAvailable = readme !== null
+  const truncatedReadme = readme
+    ? truncateReadme(readme, README_MAX_CHARS)
+    : null
+
+  // Build content for LLM
+  const contentParts: string[] = [
+    `Repository: ${repoData.full_name}`,
+  ]
+  if (repoData.description) {
+    contentParts.push(`Description: ${repoData.description}`)
+  }
+  if (repoData.language) {
+    contentParts.push(`Primary Language: ${repoData.language}`)
+  }
+  contentParts.push(
+    `Stars: ${repoData.stargazers_count}`,
+    `Forks: ${repoData.forks_count}`,
+  )
+  if (repoData.topics.length > 0) {
+    contentParts.push(`Topics: ${repoData.topics.join(", ")}`)
+  }
+  if (repoData.license?.spdx_id) {
+    contentParts.push(`License: ${repoData.license.spdx_id}`)
+  }
+  if (truncatedReadme) {
+    contentParts.push("", "README:", truncatedReadme)
+  }
+  const content = contentParts.join("\n")
+
+  // Call LLM for enrichment
+  const llmResult = await enrichContent(content, "GitHub repository")
+
+  // Build metadata
+  const metadata: Record<string, string | number> = {
+    githubType: "repo",
+    owner,
+    repo,
+    stars: repoData.stargazers_count,
+    forks: repoData.forks_count,
+    openIssues: repoData.open_issues_count,
+    createdAt: repoData.created_at,
+    pushedAt: repoData.pushed_at,
+    readmeAvailable: readmeAvailable ? "true" : "false",
+  }
+  if (repoData.language) metadata.language = repoData.language
+  if (repoData.license?.spdx_id) metadata.license = repoData.license.spdx_id
+  if (repoData.topics.length > 0) {
+    metadata.topics = repoData.topics.join(",")
+  }
+  if (repoData.homepage) metadata.homepage = repoData.homepage
+
+  return {
+    summary: llmResult.summary || null,
+    entities: llmResult.entities,
+    topics: llmResult.topics,
+    tags: llmResult.tags,
+    metadata,
+    processedAt: new Date().toISOString(),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GitHub enrichment — issue path
+// ---------------------------------------------------------------------------
+
+async function enrichIssue(
+  owner: string,
+  repo: string,
+  issueNumber: number,
+): Promise<EnrichedData> {
+  const gh = createGitHubService()
+  const issue = await gh.getIssue(owner, repo, issueNumber)
+
+  const labels = issue.labels.map((l) => l.name)
+  const author = issue.user?.login ?? "unknown"
+
+  // Build content for LLM
+  const contentParts: string[] = [
+    `Issue: ${issue.title}`,
+    `Repository: ${owner}/${repo}`,
+    `State: ${issue.state}`,
+    `Author: ${author}`,
+  ]
+  if (labels.length > 0) {
+    contentParts.push(`Labels: ${labels.join(", ")}`)
+  }
+  contentParts.push(`Created: ${issue.created_at}`)
+  if (issue.body) {
+    contentParts.push("", "Body:", issue.body)
+  }
+  const content = contentParts.join("\n")
+
+  // Call LLM for enrichment
+  const llmResult = await enrichContent(content, "GitHub issue")
+
+  // Build metadata
+  const metadata: Record<string, string | number> = {
+    githubType: "issue",
+    owner,
+    repo,
+    issueNumber,
+    state: issue.state,
+    author,
+    createdAt: issue.created_at,
+    commentsCount: issue.comments,
+  }
+  if (labels.length > 0) {
+    metadata.labels = labels.join(",")
+  }
+
+  return {
+    summary: llmResult.summary || null,
+    entities: llmResult.entities,
+    topics: llmResult.topics,
+    tags: llmResult.tags,
+    metadata,
+    processedAt: new Date().toISOString(),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GitHub enrichment — pull request path
+// ---------------------------------------------------------------------------
+
+async function enrichPR(
+  owner: string,
+  repo: string,
+  prNumber: number,
+): Promise<EnrichedData> {
+  const gh = createGitHubService()
+  const pr = await gh.getPull(owner, repo, prNumber)
+
+  const labels = pr.labels.map((l) => l.name)
+  const author = pr.user?.login ?? "unknown"
+
+  // Build content for LLM
+  const contentParts: string[] = [
+    `Pull Request: ${pr.title}`,
+    `Repository: ${owner}/${repo}`,
+    `State: ${pr.state}`,
+    `Merged: ${pr.merged ? "yes" : "no"}`,
+    `Author: ${author}`,
+  ]
+  if (labels.length > 0) {
+    contentParts.push(`Labels: ${labels.join(", ")}`)
+  }
+  contentParts.push(
+    `Changes: +${pr.additions} -${pr.deletions} in ${pr.changed_files} files`,
+  )
+  if (pr.body) {
+    contentParts.push("", "Body:", pr.body)
+  }
+  const content = contentParts.join("\n")
+
+  // Call LLM for enrichment
+  const llmResult = await enrichContent(content, "GitHub pull request")
+
+  // Build metadata
+  const metadata: Record<string, string | number> = {
+    githubType: "pr",
+    owner,
+    repo,
+    prNumber,
+    state: pr.state,
+    merged: pr.merged ? "true" : "false",
+    author,
+    additions: pr.additions,
+    deletions: pr.deletions,
+    changedFiles: pr.changed_files,
+    createdAt: pr.created_at,
+  }
+  if (labels.length > 0) {
+    metadata.labels = labels.join(",")
+  }
+
+  return {
+    summary: llmResult.summary || null,
+    entities: llmResult.entities,
+    topics: llmResult.topics,
+    tags: llmResult.tags,
+    metadata,
+    processedAt: new Date().toISOString(),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GitHub enrichment node
+// ---------------------------------------------------------------------------
+
 async function githubNode(
-  _state: EnrichmentSubgraphStateType,
+  state: EnrichmentSubgraphStateType,
 ): Promise<Partial<EnrichmentSubgraphStateType>> {
-  // TODO: Fetch repo metadata, README, etc.
-  return { result: emptyEnrichedData() }
+  const { bookmark } = state
+
+  // Classify the GitHub URL to determine which enrichment path to use
+  const classification = GitHubService.classifyGitHubUrl(bookmark.url)
+
+  if (!classification) {
+    // URL didn't match a classifiable pattern (bare github.com, user profile, etc.)
+    return { result: emptyEnrichedData() }
+  }
+
+  let result: EnrichedData
+  switch (classification.type) {
+    case "repo":
+      result = await enrichRepo(classification.owner, classification.repo)
+      break
+
+    case "issue":
+      result = await enrichIssue(
+        classification.owner,
+        classification.repo,
+        classification.number!,
+      )
+      break
+
+    case "pr":
+      result = await enrichPR(
+        classification.owner,
+        classification.repo,
+        classification.number!,
+      )
+      break
+
+    default:
+      result = emptyEnrichedData()
+  }
+
+  return { result }
 }
 
 // ---------------------------------------------------------------------------
@@ -578,10 +861,16 @@ export const enrichmentGraph = new StateGraph(EnrichmentSubgraphState)
 // ---------------------------------------------------------------------------
 
 export {
+  README_MAX_CHARS as _README_MAX_CHARS,
   TRANSCRIPT_MAX_CHARS as _TRANSCRIPT_MAX_CHARS,
   articleNode as _articleNode,
   enrichChannel as _enrichChannel,
+  enrichIssue as _enrichIssue,
+  enrichPR as _enrichPR,
   enrichPlaylist as _enrichPlaylist,
+  enrichRepo as _enrichRepo,
   enrichVideo as _enrichVideo,
+  githubNode as _githubNode,
+  truncateReadme as _truncateReadme,
   truncateTranscript as _truncateTranscript,
 }
