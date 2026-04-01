@@ -98,7 +98,7 @@ export default function PublicSpace() {
           <BookmarkCard
             key={b.id}
             bookmark={toDisplayBookmark(b)}
-            view="grid"
+
             onClick={() => setDetailId(b.id)}
             index={i}
             readonly

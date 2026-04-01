@@ -1,8 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Search,
-  LayoutGrid,
-  List,
   Moon,
   Sun,
   Menu,
@@ -14,8 +12,6 @@ import { cn } from "../lib/utils";
 interface TopBarProps {
   onAddClick: () => void;
   onSearchClick: () => void;
-  view: "grid" | "list";
-  onViewChange: (v: "grid" | "list") => void;
   onToggleDark: () => void;
   dark: boolean;
   onToggleSidebar: () => void;
@@ -25,8 +21,6 @@ interface TopBarProps {
 export default function TopBar({
   onAddClick,
   onSearchClick,
-  view,
-  onViewChange,
   onToggleDark,
   dark,
   onToggleSidebar,
@@ -62,30 +56,6 @@ export default function TopBar({
       </button>
 
       <div className="flex-1" />
-
-      {/* View toggle */}
-      <div className="flex overflow-hidden rounded-[7px] border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
-        {(["list", "grid"] as const).map((v) => (
-          <button
-            key={v}
-            onClick={() => onViewChange(v)}
-            className={cn(
-              "flex h-8 w-8 items-center justify-center transition-[background,color] duration-[120ms] ease-in-out",
-              v === "list" && "border-r border-[var(--border-subtle)]",
-              view === v
-                ? "bg-[var(--bg-raised)] text-[var(--text-primary)]"
-                : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]",
-            )}
-            title={v === "grid" ? "Grid view" : "List view"}
-          >
-            {v === "grid" ? (
-              <LayoutGrid size={14} strokeWidth={1.6} fill={view === "grid" ? "currentColor" : "none"} />
-            ) : (
-              <List size={14} strokeWidth={view === "list" ? 2 : 1.6} />
-            )}
-          </button>
-        ))}
-      </div>
 
       {/* Dark toggle */}
       <button

@@ -1,7 +1,6 @@
 import React, { useCallback, useRef, useState, useMemo } from "react";
 import { useParams, Link, useOutletContext } from "react-router-dom";
 import { Settings, Diamond } from "lucide-react";
-import { cn } from "../lib/utils";
 
 import BookmarkCard from "../components/BookmarkCard";
 import ActivityLog from "../components/ActivityLog";
@@ -9,14 +8,13 @@ import { useSpace, useActivity, useDeleteBookmark, toBookmark } from "../api/hoo
 import type { ActivityRow } from "../api/hooks";
 
 interface LayoutContext {
-  view: "grid" | "list";
   onCardClick: (id: string) => void;
   onAddClick: () => void;
 }
 
 export default function SpaceView() {
   const { id } = useParams<{ id: string }>();
-  const { view, onCardClick, onAddClick } = useOutletContext<LayoutContext>();
+  const { onCardClick, onAddClick } = useOutletContext<LayoutContext>();
 
   const { data: space, isLoading: spaceLoading } = useSpace(id);
   const { data: activityData } = useActivity(id);
@@ -141,17 +139,12 @@ export default function SpaceView() {
 
         {/* Cards */}
         <div
-          className={cn(
-            view === "grid"
-              ? "grid grid-cols-[repeat(auto-fill,minmax(272px,1fr))] gap-4"
-              : "flex flex-col gap-2.5",
-          )}
+          className="grid grid-cols-[repeat(auto-fill,minmax(272px,1fr))] gap-4"
         >
           {bookmarks.map((bookmark, i) => (
             <BookmarkCard
               key={bookmark.id}
               bookmark={bookmark}
-              view={view}
               onClick={() => onCardClick(bookmark.id)}
               onDelete={handleDelete}
               isDeleting={deleteBookmark.isPending && deleteBookmark.variables === bookmark.id}

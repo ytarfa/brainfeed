@@ -91,17 +91,14 @@ function setupMocks(overrides: {
   bookmarksData?: unknown;
   isLoading?: boolean;
   spacesData?: unknown;
-  view?: "grid" | "list";
 } = {}) {
   const {
     bookmarksData = { data: mockBookmarksRaw, total: 2, page: 1, limit: 20 },
     isLoading = false,
     spacesData = { data: mockSpaces },
-    view = "grid",
   } = overrides;
 
   vi.mocked(useOutletContext).mockReturnValue({
-    view,
     onCardClick: vi.fn(),
   });
 

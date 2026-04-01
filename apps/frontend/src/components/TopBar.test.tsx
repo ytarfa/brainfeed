@@ -5,8 +5,6 @@ import TopBar from "./TopBar";
 const defaultProps = {
   onAddClick: vi.fn(),
   onSearchClick: vi.fn(),
-  view: "grid" as const,
-  onViewChange: vi.fn(),
   onToggleDark: vi.fn(),
   dark: false,
   onToggleSidebar: vi.fn(),
@@ -49,26 +47,6 @@ describe("TopBar", () => {
     render(<TopBar {...defaultProps} onAddClick={onAddClick} />);
     fireEvent.click(screen.getByText("Save"));
     expect(onAddClick).toHaveBeenCalledTimes(1);
-  });
-
-  it("renders view toggle buttons (grid and list)", () => {
-    render(<TopBar {...defaultProps} />);
-    expect(screen.getByTitle("Grid view")).toBeInTheDocument();
-    expect(screen.getByTitle("List view")).toBeInTheDocument();
-  });
-
-  it("calls onViewChange with 'grid' when grid button clicked", () => {
-    const onViewChange = vi.fn();
-    render(<TopBar {...defaultProps} onViewChange={onViewChange} />);
-    fireEvent.click(screen.getByTitle("Grid view"));
-    expect(onViewChange).toHaveBeenCalledWith("grid");
-  });
-
-  it("calls onViewChange with 'list' when list button clicked", () => {
-    const onViewChange = vi.fn();
-    render(<TopBar {...defaultProps} onViewChange={onViewChange} />);
-    fireEvent.click(screen.getByTitle("List view"));
-    expect(onViewChange).toHaveBeenCalledWith("list");
   });
 
   it("renders dark mode toggle", () => {

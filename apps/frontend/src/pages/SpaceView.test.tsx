@@ -115,19 +115,16 @@ function setupMocks(overrides: {
   space?: unknown | null;
   spaceLoading?: boolean;
   activityData?: unknown;
-  view?: "grid" | "list";
   id?: string;
 } = {}) {
   const space = "space" in overrides ? overrides.space : mockSpace;
   const spaceLoading = overrides.spaceLoading ?? false;
   const activityData = overrides.activityData ?? { data: mockActivityEntries };
-  const view = overrides.view ?? "grid";
   const id = overrides.id ?? "space-1";
 
   vi.mocked(useParams).mockReturnValue({ id });
 
   vi.mocked(useOutletContext).mockReturnValue({
-    view,
     onCardClick: vi.fn(),
   });
 

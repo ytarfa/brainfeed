@@ -16,7 +16,6 @@ interface AppLayoutProps {
 
 export default function AppLayout({ dark, onToggleDark }: AppLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [view, setView] = useState<"grid" | "list">("grid");
   const [saveOpen, setSaveOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [detailBookmarkId, setDetailBookmarkId] = useState<string | null>(null);
@@ -61,8 +60,6 @@ export default function AppLayout({ dark, onToggleDark }: AppLayoutProps) {
         <TopBar
           onAddClick={() => setSaveOpen(true)}
           onSearchClick={() => setSearchOpen(true)}
-          view={view}
-          onViewChange={setView}
           onToggleDark={onToggleDark}
           dark={dark}
           onToggleSidebar={() => setSidebarCollapsed((v) => !v)}
@@ -70,7 +67,7 @@ export default function AppLayout({ dark, onToggleDark }: AppLayoutProps) {
 
         {/* Page content via Outlet, with view context */}
         <main className="flex-1 overflow-y-auto">
-          <Outlet context={{ view, onCardClick: setDetailBookmarkId, onAddClick: () => setSaveOpen(true) }} />
+          <Outlet context={{ onCardClick: setDetailBookmarkId, onAddClick: () => setSaveOpen(true) }} />
         </main>
       </div>
 

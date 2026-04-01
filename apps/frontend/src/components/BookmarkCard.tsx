@@ -17,7 +17,6 @@ import ThumbnailPlaceholder from "./ThumbnailPlaceholder";
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
-  view: "grid" | "list";
   onClick: () => void;
   onDelete?: (id: string) => void;
   isDeleting?: boolean;
@@ -41,12 +40,11 @@ const menuItems = [
   { label: "Delete", icon: <Trash2 size={13} />, danger: true },
 ];
 
-export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDeleting = false, isExiting = false, index = 0, readonly = false }: BookmarkCardProps) {
+export default function BookmarkCard({ bookmark, onClick, onDelete, isDeleting = false, isExiting = false, index = 0, readonly = false }: BookmarkCardProps) {
   const [hovered, setHovered] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-  const isGrid = view === "grid";
-  const hasThumbnail = isGrid && !!bookmark.thumbnail_url;
+  const hasThumbnail = !!bookmark.thumbnail_url;
 
   const disabled = isDeleting || isExiting;
 
@@ -83,7 +81,7 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
       ref={cardRef}
       className={cn(
         "group/card relative cursor-pointer overflow-hidden rounded-xl border",
-        isGrid ? "block" : "flex items-center gap-4 p-[14px_18px]",
+        "block",
         // Default state
         !disabled && (hovered
           ? "border-[var(--border-strong)]"
@@ -127,8 +125,8 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
         </div>
       )}
 
-      {/* ── Thumbnail / Placeholder (grid only) ── */}
-      {isGrid && (hasThumbnail ? (
+      {/* ── Thumbnail / Placeholder ── */}
+      {hasThumbnail ? (
         <div className="relative h-[140px] w-full overflow-hidden bg-[var(--bg-surface)]">
           <img
             src={bookmark.thumbnail_url!}
@@ -149,18 +147,13 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
         <div className="relative h-[140px] w-full overflow-hidden">
           <ThumbnailPlaceholder sourceType={bookmark.source_type} height={140} />
         </div>
-      ))}
+      )}
 
       {/* ── Card body ── */}
-      <div className={cn(
-        isGrid ? "px-4 pt-3 pb-3" : "min-w-0 flex-1",
-      )}>
+      <div className="px-4 pt-3 pb-3">
         {/* Title — the hero element */}
         <h3
-          className={cn(
-            "font-display font-medium leading-[1.35] text-[var(--text-primary)]",
-            isGrid ? "mb-2 text-[15px] line-clamp-2" : "mb-0.5 text-[14px] line-clamp-1",
-          )}
+          className="font-display font-medium leading-[1.35] text-[var(--text-primary)] mb-2 text-[15px] line-clamp-2"
         >
           {bookmark.title}
         </h3>
@@ -168,10 +161,7 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
         {/* Enrichment status indicator */}
         {isEnriching(bookmark.enrichment_status) && (
           <div
-            className={cn(
-              "flex items-center gap-1.5 font-ui text-2xs",
-              isGrid ? "mb-2" : "mb-1",
-            )}
+            className="flex items-center gap-1.5 font-ui text-2xs mb-2"
             data-testid="enrichment-loading"
           >
             <Loader2
@@ -186,10 +176,7 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
         )}
         {isEnrichmentFailed(bookmark.enrichment_status) && (
           <div
-            className={cn(
-              "flex items-center gap-1.5 font-ui text-2xs",
-              isGrid ? "mb-2" : "mb-1",
-            )}
+            className="flex items-center gap-1.5 font-ui text-2xs mb-2"
             data-testid="enrichment-failed"
           >
             <AlertCircle size={11} className="text-[var(--color-error)]" />
@@ -201,10 +188,7 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
 
         {/* Tags */}
         {bookmark.tags.length > 0 && (
-          <div className={cn(
-            "flex flex-wrap gap-1",
-            isGrid ? "mb-2.5" : "mb-1.5",
-          )}>
+          <div className="flex flex-wrap gap-1 mb-2.5">
             {bookmark.tags.map((tag) => (
               <span
                 key={tag.id}
@@ -265,6 +249,7 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
                       {item.label}
                     </button>
                   ))}
+
                 </div>
               )}
             </div>

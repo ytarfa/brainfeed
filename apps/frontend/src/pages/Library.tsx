@@ -1,7 +1,6 @@
 import React, { useCallback, useRef, useState, useMemo } from "react";
 import { useOutletContext, useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
-import { cn } from "../lib/utils";
 
 import BookmarkCard from "../components/BookmarkCard";
 import { useBookmarks, useDeleteBookmark, toBookmark, useDigestSummary } from "../api/hooks";
@@ -9,7 +8,6 @@ import { useBookmarks, useDeleteBookmark, toBookmark, useDigestSummary } from ".
 type SortOption = "saved" | "title" | "source";
 
 interface LayoutContext {
-  view: "grid" | "list";
   onCardClick: (id: string) => void;
   onAddClick: () => void;
 }
@@ -21,7 +19,7 @@ const sortMap: Record<SortOption, string> = {
 };
 
 export default function Library() {
-  const { view, onCardClick, onAddClick } = useOutletContext<LayoutContext>();
+  const { onCardClick, onAddClick } = useOutletContext<LayoutContext>();
   const [sort, setSort] = useState<SortOption>("saved");
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const navigate = useNavigate();
@@ -140,17 +138,12 @@ export default function Library() {
       {/* Card grid / list */}
       {!isLoading && bookmarks.length > 0 && (
         <div
-          className={cn(
-            view === "grid"
-              ? "grid grid-cols-[repeat(auto-fill,minmax(272px,1fr))] gap-4"
-              : "flex flex-col gap-2.5",
-          )}
+          className="grid grid-cols-[repeat(auto-fill,minmax(272px,1fr))] gap-4"
         >
           {bookmarks.map((bookmark, i) => (
               <BookmarkCard
                 key={bookmark.id}
                 bookmark={bookmark}
-                view={view}
                 onClick={() => onCardClick(bookmark.id)}
                 onDelete={handleDelete}
                 isDeleting={deleteBookmark.isPending && deleteBookmark.variables === bookmark.id}

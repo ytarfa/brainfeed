@@ -30,7 +30,6 @@ function createMockBookmark(overrides: Partial<Bookmark> = {}): Bookmark {
 
 const defaultProps = {
   bookmark: createMockBookmark(),
-  view: "grid" as const,
   onClick: vi.fn(),
 };
 
@@ -80,16 +79,11 @@ describe("BookmarkCard", () => {
     expect(onClick).toHaveBeenCalledTimes(1);
   });
 
-  it("shows thumbnail in grid view", () => {
-    const { container } = render(<BookmarkCard {...defaultProps} view="grid" />);
+  it("shows thumbnail when bookmark has thumbnail_url", () => {
+    const { container } = render(<BookmarkCard {...defaultProps} />);
     const img = container.querySelector("img");
     expect(img).toBeInTheDocument();
     expect(img).toHaveAttribute("src", "https://example.com/thumb.jpg");
-  });
-
-  it("does NOT show thumbnail in list view", () => {
-    const { container } = render(<BookmarkCard {...defaultProps} view="list" />);
-    expect(container.querySelector("img")).not.toBeInTheDocument();
   });
 
   it("shows space badge when showSpace=true and spaceName provided", () => {
@@ -246,9 +240,9 @@ describe("BookmarkCard", () => {
       expect(screen.queryByTestId("enrichment-failed")).not.toBeInTheDocument();
     });
 
-    it("shows loading indicator in list view", () => {
+    it("shows loading indicator regardless of layout", () => {
       const bookmark = createMockBookmark({ enrichment_status: "pending" } as Partial<Bookmark>);
-      render(<BookmarkCard {...defaultProps} bookmark={bookmark} view="list" />);
+      render(<BookmarkCard {...defaultProps} bookmark={bookmark} />);
       expect(screen.getByTestId("enrichment-loading")).toBeInTheDocument();
     });
   });
