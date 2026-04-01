@@ -10,6 +10,8 @@ import {
   useDeleteBookmark,
   toBookmark,
   bookmarkKeys,
+  shouldPollBookmarkList,
+  shouldPollBookmarkDetail,
 } from "./useBookmarks";
 
 // Mock the API client
@@ -104,6 +106,103 @@ describe("toBookmark", () => {
     const result = toBookmark(mockBookmarkRaw);
     // URL is https://www.example.com/article → domain should be example.com
     expect(result.domain).toBe("example.com");
+  });
+});
+
+describe("shouldPollBookmarkList", () => {
+  it("returns 5000 when any bookmark has pending status", () => {
+    const data = {
+      ...mockPaginatedResponse,
+      data: [
+        { ...mockBookmarkRaw, enrichment_status: "pending" },
+        { ...mockBookmarkRaw, id: "b2", enrichment_status: "completed" },
+      ],
+    };
+    expect(shouldPollBookmarkList(data)).toBe(5_000);
+  });
+
+  it("returns 5000 when any bookmark has processing status", () => {
+    const data = {
+      ...mockPaginatedResponse,
+      data: [{ ...mockBookmarkRaw, enrichment_status: "processing" }],
+    };
+    expect(shouldPollBookmarkList(data)).toBe(5_000);
+  });
+
+  it("returns false when all bookmarks are completed", () => {
+    const data = {
+      ...mockPaginatedResponse,
+      data: [{ ...mockBookmarkRaw, enrichment_status: "completed" }],
+    };
+    expect(shouldPollBookmarkList(data)).toBe(false);
+  });
+
+  it("returns false when all bookmarks are failed", () => {
+    const data = {
+      ...mockPaginatedResponse,
+      data: [{ ...mockBookmarkRaw, enrichment_status: "failed" }],
+    };
+    expect(shouldPollBookmarkList(data)).toBe(false);
+  });
+
+  it("returns false when all bookmarks are unsupported", () => {
+    const data = {
+      ...mockPaginatedResponse,
+      data: [{ ...mockBookmarkRaw, enrichment_status: "unsupported" }],
+    };
+    expect(shouldPollBookmarkList(data)).toBe(false);
+  });
+
+  it("returns false when data is undefined", () => {
+    expect(shouldPollBookmarkList(undefined)).toBe(false);
+  });
+
+  it("returns false when data list is empty", () => {
+    const data = { ...mockPaginatedResponse, data: [] };
+    expect(shouldPollBookmarkList(data)).toBe(false);
+  });
+
+  it("returns 5000 with mixed statuses including pending", () => {
+    const data = {
+      ...mockPaginatedResponse,
+      data: [
+        { ...mockBookmarkRaw, id: "b1", enrichment_status: "completed" },
+        { ...mockBookmarkRaw, id: "b2", enrichment_status: "failed" },
+        { ...mockBookmarkRaw, id: "b3", enrichment_status: "pending" },
+      ],
+    };
+    expect(shouldPollBookmarkList(data)).toBe(5_000);
+  });
+});
+
+describe("shouldPollBookmarkDetail", () => {
+  it("returns 5000 for pending status", () => {
+    const data = { ...mockBookmarkRaw, enrichment_status: "pending" };
+    expect(shouldPollBookmarkDetail(data)).toBe(5_000);
+  });
+
+  it("returns 5000 for processing status", () => {
+    const data = { ...mockBookmarkRaw, enrichment_status: "processing" };
+    expect(shouldPollBookmarkDetail(data)).toBe(5_000);
+  });
+
+  it("returns false for completed status", () => {
+    const data = { ...mockBookmarkRaw, enrichment_status: "completed" };
+    expect(shouldPollBookmarkDetail(data)).toBe(false);
+  });
+
+  it("returns false for failed status", () => {
+    const data = { ...mockBookmarkRaw, enrichment_status: "failed" };
+    expect(shouldPollBookmarkDetail(data)).toBe(false);
+  });
+
+  it("returns false for unsupported status", () => {
+    const data = { ...mockBookmarkRaw, enrichment_status: "unsupported" };
+    expect(shouldPollBookmarkDetail(data)).toBe(false);
+  });
+
+  it("returns false when data is undefined", () => {
+    expect(shouldPollBookmarkDetail(undefined)).toBe(false);
   });
 });
 

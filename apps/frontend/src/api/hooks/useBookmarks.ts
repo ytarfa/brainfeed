@@ -3,6 +3,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost, apiPatch, apiDelete, apiPostFormData } from "../client";
 import type { Bookmark } from "../../data/mock";
 import { timeAgo } from "../../lib/utils";
+import { isEnriching } from "../../lib/bookmark-status";
+
+/** Poll interval (ms) used while any bookmark is still enriching. */
+const ENRICHMENT_POLL_INTERVAL = 5_000;
 
 // --- Response types ---
 
@@ -82,6 +86,30 @@ export const bookmarkKeys = {
   detail: (id: string) => [...bookmarkKeys.details(), id] as const,
 };
 
+// --- Polling helpers (exported for testing) ---
+
+/** Returns `ENRICHMENT_POLL_INTERVAL` if any bookmark in the list is enriching, otherwise `false`. */
+export function shouldPollBookmarkList(
+  data: PaginatedResponse<BookmarkWithSpaces> | undefined,
+): number | false {
+  const items = data?.data;
+  if (!items) return false;
+  const hasEnriching = items.some((b) =>
+    isEnriching(b.enrichment_status as Bookmark["enrichment_status"]),
+  );
+  return hasEnriching ? ENRICHMENT_POLL_INTERVAL : false;
+}
+
+/** Returns `ENRICHMENT_POLL_INTERVAL` if the bookmark is enriching, otherwise `false`. */
+export function shouldPollBookmarkDetail(
+  data: BookmarkWithSpaces | undefined,
+): number | false {
+  if (!data) return false;
+  return isEnriching(data.enrichment_status as Bookmark["enrichment_status"])
+    ? ENRICHMENT_POLL_INTERVAL
+    : false;
+}
+
 // --- Hooks ---
 
 export function useBookmarks(params: BookmarkListParams = {}) {
@@ -95,6 +123,7 @@ export function useBookmarks(params: BookmarkListParams = {}) {
         page: params.page,
         limit: params.limit,
       }),
+    refetchInterval: (query) => shouldPollBookmarkList(query.state.data),
   });
 }
 
@@ -103,6 +132,7 @@ export function useBookmark(id: string | null) {
     queryKey: bookmarkKeys.detail(id ?? ""),
     queryFn: () => apiGet<BookmarkWithSpaces>(`/api/v1/bookmarks/${id}`),
     enabled: !!id,
+    refetchInterval: (query) => shouldPollBookmarkDetail(query.state.data),
   });
 }
 
