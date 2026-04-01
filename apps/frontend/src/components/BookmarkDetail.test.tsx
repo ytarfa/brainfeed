@@ -109,28 +109,37 @@ describe("BookmarkDetail", () => {
     expect(textarea).toHaveValue("Some notes");
   });
 
-  it("renders 'Open original source' link when bookmark has url", () => {
+  it("renders footer link when bookmark has url", () => {
     render(<BookmarkDetail bookmark={createMockBookmark()} onClose={vi.fn()} />);
-    const link = screen.getByText("Open original source");
+    // GitHub source_type renders "Open on GitHub" via GitHubDetailView
+    const link = screen.getByText("Open on GitHub");
     expect(link).toBeInTheDocument();
     expect(link.closest("a")).toHaveAttribute("href", "https://example.com/article");
     expect(link.closest("a")).toHaveAttribute("target", "_blank");
   });
 
-  it("does NOT render 'Open original source' link when url is null", () => {
+  it("does NOT render footer link when url is null", () => {
     render(
       <BookmarkDetail bookmark={createMockBookmark({ url: null })} onClose={vi.fn()} />,
     );
+    expect(screen.queryByText("Open on GitHub")).not.toBeInTheDocument();
     expect(screen.queryByText("Open original source")).not.toBeInTheDocument();
   });
 
-  it("renders thumbnail when bookmark has thumbnail_url", () => {
+  it("renders thumbnail for non-GitHub bookmark with thumbnail_url", () => {
     const { container } = render(
-      <BookmarkDetail bookmark={createMockBookmark()} onClose={vi.fn()} />,
+      <BookmarkDetail bookmark={createMockBookmark({ source_type: "article" })} onClose={vi.fn()} />,
     );
     const img = container.querySelector("img");
     expect(img).toBeInTheDocument();
     expect(img).toHaveAttribute("src", "https://example.com/thumb.jpg");
+  });
+
+  it("does NOT render thumbnail for GitHub bookmark (no hero image)", () => {
+    const { container } = render(
+      <BookmarkDetail bookmark={createMockBookmark({ source_type: "github" })} onClose={vi.fn()} />,
+    );
+    expect(container.querySelector("img")).not.toBeInTheDocument();
   });
 
   it("does NOT render thumbnail when thumbnail_url is null", () => {

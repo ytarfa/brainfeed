@@ -27,4 +27,4 @@ export type {
 } from "./app.types";
 
 // Enriched-data types (enrichment pipeline output)
-export type { EnrichedData } from "./enriched-data.types";
+export type { EnrichedData, MediaItem } from "./enriched-data.types";
