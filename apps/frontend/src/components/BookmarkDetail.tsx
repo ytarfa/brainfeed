@@ -82,7 +82,7 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          "relative flex max-h-[min(860px,90vh)] w-[min(720px,94vw)] flex-col overflow-hidden rounded-[20px] border border-[var(--border-subtle)] bg-[var(--bg-base)] transition-all duration-[320ms] ease-[cubic-bezier(0.32,0.72,0,1)]",
+          "relative flex max-h-[min(92vh,1080px)] w-[min(860px,94vw)] flex-col overflow-hidden rounded-[20px] border border-[var(--border-subtle)] bg-[var(--bg-base)] transition-all duration-[320ms] ease-[cubic-bezier(0.32,0.72,0,1)]",
           visible ? "scale-100 opacity-100" : "scale-[0.94] opacity-0 translate-y-3",
         )}
         style={{
@@ -106,7 +106,7 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
 
         {/* Hero image — tall, edge-to-edge, with gradient fade */}
         {hasThumbnail ? (
-          <div className="relative w-full shrink-0 overflow-hidden bg-[var(--bg-surface)]" style={{ minHeight: 260, maxHeight: 320 }}>
+          <div className="relative w-full shrink-0 overflow-hidden bg-[var(--bg-surface)]" style={{ minHeight: 280, maxHeight: 360 }}>
             <img
               src={bookmark.thumbnail_url!}
               alt=""
@@ -116,14 +116,7 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
                 "h-full w-full object-cover transition-opacity duration-500",
                 imgLoaded ? "opacity-100" : "opacity-0",
               )}
-              style={{ minHeight: 260, maxHeight: 320 }}
-            />
-            {/* Subtle gradient at bottom for text readability */}
-            <div
-              className="pointer-events-none absolute inset-x-0 bottom-0 h-24"
-              style={{
-                background: "linear-gradient(to top, var(--bg-base) 0%, transparent 100%)",
-              }}
+              style={{ minHeight: 280, maxHeight: 360 }}
             />
             {/* Loading skeleton */}
             {!imgLoaded && (
@@ -146,7 +139,7 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
         <div
           ref={bodyRef}
           className={cn(
-            "flex-1 overflow-y-auto px-7 pb-5 pt-1",
+            "flex-1 overflow-y-auto px-7 pb-5 pt-5",
           )}
         >
           {/* Title area */}
