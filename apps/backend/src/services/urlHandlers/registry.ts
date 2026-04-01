@@ -4,6 +4,7 @@ import type { UrlHandler, ResolvedBookmark } from "./types";
 import { NULL_OG_METADATA } from "./types";
 import { YouTubeHandler } from "./youtubeHandler";
 import { GitHubHandler } from "./githubHandler";
+import { InstagramHandler } from "./instagramHandler";
 import { ArticleHandler } from "./articleHandler";
 
 /**
@@ -11,7 +12,7 @@ import { ArticleHandler } from "./articleHandler";
  * finding the first matching handler, and merging its overrides.
  *
  * Handler registration order matters — first match wins.
- * Default order: YouTube → GitHub → Article.
+ * Default order: YouTube → GitHub → Instagram → Article.
  */
 export class UrlHandlerRegistry {
   private readonly handlers: UrlHandler[];
@@ -21,6 +22,7 @@ export class UrlHandlerRegistry {
     this.handlers = options?.handlers ?? [
       new YouTubeHandler(),
       new GitHubHandler(),
+      new InstagramHandler(),
       new ArticleHandler(),
     ];
     this.ogFetcherInstance = options?.ogFetcher ?? ogFetcher;

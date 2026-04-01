@@ -32,6 +32,9 @@ describe("detectRouteFromUrl", () => {
     ["https://youtube.com/watch?v=abc", "youtube"],
     ["https://www.youtube.com/watch?v=abc", "youtube"],
     ["https://youtu.be/abc", "youtube"],
+    ["https://www.instagram.com/p/DWiUsgBjbBe/", "instagram"],
+    ["https://instagram.com/reel/DWiTx5IgYHE/", "instagram"],
+    ["https://www.instagram.com/reels/ABC123/", "instagram"],
   ];
 
   it.each(cases)("detects %s as %s", (url, expected) => {
@@ -56,6 +59,7 @@ describe("resolveRoute", () => {
       ["github", "github"],
       ["youtube", "youtube"],
       ["article", "article"],
+      ["instagram", "instagram"],
       ["generic", "generic"],
     ];
 
@@ -92,6 +96,13 @@ describe("resolveRoute", () => {
         url: "https://youtu.be/dQw4w9WgXcQ",
       });
       expect(resolveRoute(bookmark)).toBe("youtube");
+    });
+
+    it("detects instagram from URL", () => {
+      const bookmark = makeBookmark({
+        url: "https://www.instagram.com/p/DWiUsgBjbBe/",
+      });
+      expect(resolveRoute(bookmark)).toBe("instagram");
     });
 
     it("falls back to article for non-matching HTTP URL", () => {

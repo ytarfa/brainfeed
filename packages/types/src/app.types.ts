@@ -18,7 +18,7 @@ import type { EnrichedData } from "./enriched-data.types";
 
 export type ContentType = "link";
 
-export type SourceType = "github" | "youtube" | "article" | "generic";
+export type SourceType = "github" | "youtube" | "article" | "instagram" | "generic";
 
 export type DigestStatus = "active" | "saved" | "dismissed";
 

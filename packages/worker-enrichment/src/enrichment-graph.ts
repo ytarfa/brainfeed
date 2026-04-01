@@ -9,6 +9,10 @@ import {
   truncateContent as truncateArticleContent,
 } from "./services/article-service"
 import { GitHubService } from "./services/github-service"
+import {
+  InstagramService,
+  InstagramSSRUnavailableError,
+} from "./services/instagram-service"
 import { enrichContent } from "./services/llm"
 import {
   YouTubeService,
@@ -33,7 +37,7 @@ export type EnrichmentSubgraphStateType = typeof EnrichmentSubgraphState.State
 // conditional-edge keys.  Exported for testing.
 // ---------------------------------------------------------------------------
 
-export type EnrichmentRoute = "github" | "youtube" | "article" | "generic"
+export type EnrichmentRoute = "github" | "youtube" | "article" | "instagram" | "generic"
 
 // ---------------------------------------------------------------------------
 // URL-based source-type detection (fallback when source_type is null)
@@ -42,6 +46,7 @@ export type EnrichmentRoute = "github" | "youtube" | "article" | "generic"
 const URL_PATTERNS: [RegExp, EnrichmentRoute][] = [
   [/github\.com/i, "github"],
   [/youtube\.com|youtu\.be/i, "youtube"],
+  [/instagram\.com/i, "instagram"],
 ]
 
 /**
@@ -65,6 +70,7 @@ const SOURCE_TYPE_TO_ROUTE: Record<string, EnrichmentRoute> = {
   github: "github",
   youtube: "youtube",
   article: "article",
+  instagram: "instagram",
   generic: "generic",
 }
 
@@ -823,6 +829,74 @@ async function articleNode(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Instagram enrichment node
+// ---------------------------------------------------------------------------
+
+async function instagramNode(
+  state: EnrichmentSubgraphStateType,
+): Promise<Partial<EnrichmentSubgraphStateType>> {
+  const { bookmark } = state
+
+  // Classify the Instagram URL to determine sub-type
+  const classification = InstagramService.classifyUrl(bookmark.url)
+
+  if (!classification) {
+    // URL didn't match a post/reel pattern (profile, story, explore, etc.)
+    throw new Error(
+      `instagramNode: unrecognized Instagram URL sub-type: ${bookmark.url}`,
+    )
+  }
+
+  // Extract content from SSR HTML — throws on empty JS shell or missing caption
+  const extracted = await InstagramService.extract(bookmark.url)
+
+  // Build content string for LLM
+  const contentType =
+    classification.instagramType === "reel"
+      ? "instagram reel"
+      : "instagram post"
+
+  const contentParts: string[] = []
+  contentParts.push(`Caption: ${extracted.caption}`)
+  if (extracted.accessibilityCaption) {
+    contentParts.push(
+      "",
+      "Image description:",
+      extracted.accessibilityCaption,
+    )
+  }
+  const content = contentParts.join("\n")
+
+  // Call LLM for enrichment — errors propagate (no fallback)
+  const llmResult = await enrichContent(content, contentType)
+
+  // Build metadata
+  const metadata: Record<string, string | number> = {
+    instagramType: classification.instagramType,
+    shortcode: classification.shortcode,
+  }
+  if (extracted.username) metadata.username = extracted.username
+  if (extracted.mediaType) metadata.mediaType = extracted.mediaType
+  if (extracted.carouselMediaCount !== null) {
+    metadata.carouselMediaCount = extracted.carouselMediaCount
+  }
+  metadata.hasAccessibilityCaption = extracted.accessibilityCaption
+    ? "true"
+    : "false"
+
+  return {
+    result: {
+      summary: llmResult.summary || null,
+      entities: llmResult.entities,
+      topics: llmResult.topics,
+      tags: llmResult.tags,
+      metadata,
+      processedAt: new Date().toISOString(),
+    },
+  }
+}
+
 async function genericNode(
   _state: EnrichmentSubgraphStateType,
 ): Promise<Partial<EnrichmentSubgraphStateType>> {
@@ -838,6 +912,7 @@ const ROUTE_MAP = {
   github: "github",
   youtube: "youtube",
   article: "article",
+  instagram: "instagram",
   generic: "generic",
 } as const
 
@@ -846,6 +921,7 @@ export const enrichmentGraph = new StateGraph(EnrichmentSubgraphState)
   .addNode("github", githubNode)
   .addNode("youtube", youtubeNode)
   .addNode("article", articleNode)
+  .addNode("instagram", instagramNode)
   .addNode("generic", genericNode)
   // Route from __start__ to the correct node
   .addConditionalEdges("__start__", routeNode, ROUTE_MAP)
@@ -853,6 +929,7 @@ export const enrichmentGraph = new StateGraph(EnrichmentSubgraphState)
   .addEdge("github", "__end__")
   .addEdge("youtube", "__end__")
   .addEdge("article", "__end__")
+  .addEdge("instagram", "__end__")
   .addEdge("generic", "__end__")
   .compile()
 
@@ -871,6 +948,7 @@ export {
   enrichRepo as _enrichRepo,
   enrichVideo as _enrichVideo,
   githubNode as _githubNode,
+  instagramNode as _instagramNode,
   truncateReadme as _truncateReadme,
   truncateTranscript as _truncateTranscript,
 }
