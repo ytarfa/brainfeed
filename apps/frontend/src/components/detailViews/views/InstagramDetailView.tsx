@@ -3,15 +3,17 @@ import {
   Camera,
   ChevronLeft,
   ChevronRight,
-  ExternalLink,
   Film,
   Globe,
+  Heart,
   Image,
+  MessageCircle,
   Play,
 } from "lucide-react";
 
 import type { Bookmark, MediaItem } from "@brain-feed/types";
 
+import { cn } from "../../../lib/utils";
 import ThumbnailPlaceholder from "../../ThumbnailPlaceholder";
 import DetailSummary from "../shared/DetailSummary";
 import DetailTopics from "../shared/DetailTopics";
@@ -19,6 +21,7 @@ import DetailEntities from "../shared/DetailEntities";
 import DetailTags from "../shared/DetailTags";
 import DetailSpace from "../shared/DetailSpace";
 import DetailNotes from "../shared/DetailNotes";
+import DetailFooter from "../shared/DetailFooter";
 import type { DetailViewProps } from "../types";
 import { registerDetailView } from "../registry";
 
@@ -60,73 +63,15 @@ function Carousel({ items, isReel }: CarouselProps) {
   const prev = () => setIdx((i) => (i === 0 ? items.length - 1 : i - 1));
   const next = () => setIdx((i) => (i === items.length - 1 ? 0 : i + 1));
 
-  const containerStyle: React.CSSProperties = {
-    position: "relative",
-    width: "100%",
-    aspectRatio: "4 / 5",
-    maxHeight: "70vh",
-    background: "var(--bg-sunken, #0a0a0a)",
-    overflow: "hidden",
-  };
-
-  const imgStyle: React.CSSProperties = {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    display: "block",
-  };
-
-  const arrowStyle = (side: "left" | "right"): React.CSSProperties => ({
-    position: "absolute",
-    top: "50%",
-    [side]: 12,
-    transform: "translateY(-50%)",
-    width: 36,
-    height: 36,
-    borderRadius: "50%",
-    background: "rgba(0,0,0,0.55)",
-    backdropFilter: "blur(8px)",
-    border: "1px solid rgba(255,255,255,0.12)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: "#fff",
-    cursor: "pointer",
-    opacity: 0.85,
-    transition: "opacity 180ms, transform 180ms",
-  });
-
-  const dotsContainerStyle: React.CSSProperties = {
-    position: "absolute",
-    bottom: 14,
-    left: "50%",
-    transform: "translateX(-50%)",
-    display: "flex",
-    gap: 6,
-    padding: "4px 10px",
-    borderRadius: 12,
-    background: "rgba(0,0,0,0.45)",
-    backdropFilter: "blur(6px)",
-  };
-
-  const dotStyle = (active: boolean): React.CSSProperties => ({
-    width: active ? 7 : 6,
-    height: active ? 7 : 6,
-    borderRadius: "50%",
-    background: active ? "#fff" : "rgba(255,255,255,0.4)",
-    transition: "all 200ms",
-    cursor: "pointer",
-  });
-
   return (
-    <div style={containerStyle}>
+    <div className="relative h-full w-full overflow-hidden bg-[var(--bg-sunken,#0a0a0a)]">
       {current.type === "video" || isReel ? (
-        <div style={{ position: "relative", width: "100%", height: "100%" }}>
+        <div className="relative h-full w-full">
           {current.url ? (
             <img
               src={current.url}
               alt={current.alt || "Instagram media"}
-              style={imgStyle}
+              className="h-full w-full object-cover"
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = "none";
               }}
@@ -140,7 +85,7 @@ function Carousel({ items, isReel }: CarouselProps) {
         <img
           src={current.url}
           alt={current.alt || "Instagram media"}
-          style={imgStyle}
+          className="h-full w-full object-cover"
           onError={(e) => {
             (e.target as HTMLImageElement).style.display = "none";
           }}
@@ -149,69 +94,40 @@ function Carousel({ items, isReel }: CarouselProps) {
         <ThumbnailPlaceholder sourceType="instagram" height={400} />
       )}
 
-      {/* Gradient fade at bottom */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 80,
-          background:
-            "linear-gradient(to top, var(--bg-primary, #111) 0%, transparent 100%)",
-          pointerEvents: "none",
-        }}
-      />
-
       {/* Arrows */}
       {multi && (
         <>
           <button
             onClick={prev}
-            style={arrowStyle("left")}
+            className="absolute left-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/55 text-white backdrop-blur-sm transition-all duration-150 hover:scale-105 hover:bg-black/70"
             aria-label="Previous image"
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.opacity = "1";
-              (e.currentTarget as HTMLElement).style.transform =
-                "translateY(-50%) scale(1.08)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.opacity = "0.85";
-              (e.currentTarget as HTMLElement).style.transform =
-                "translateY(-50%)";
-            }}
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={16} />
           </button>
           <button
             onClick={next}
-            style={arrowStyle("right")}
+            className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/55 text-white backdrop-blur-sm transition-all duration-150 hover:scale-105 hover:bg-black/70"
             aria-label="Next image"
-            onMouseEnter={(e) => {
-              (e.currentTarget as HTMLElement).style.opacity = "1";
-              (e.currentTarget as HTMLElement).style.transform =
-                "translateY(-50%) scale(1.08)";
-            }}
-            onMouseLeave={(e) => {
-              (e.currentTarget as HTMLElement).style.opacity = "0.85";
-              (e.currentTarget as HTMLElement).style.transform =
-                "translateY(-50%)";
-            }}
           >
-            <ChevronRight size={18} />
+            <ChevronRight size={16} />
           </button>
         </>
       )}
 
       {/* Dot indicators */}
       {multi && (
-        <div style={dotsContainerStyle}>
+        <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full bg-black/45 px-2.5 py-1 backdrop-blur-sm">
           {items.map((_, i) => (
             <div
               key={i}
               role="button"
               aria-label={`Go to image ${i + 1}`}
-              style={dotStyle(i === idx)}
+              className={cn(
+                "rounded-full transition-all duration-200 cursor-pointer",
+                i === idx
+                  ? "h-[7px] w-[7px] bg-white"
+                  : "h-1.5 w-1.5 bg-white/40",
+              )}
               onClick={() => setIdx(i)}
             />
           ))}
@@ -226,26 +142,11 @@ function Carousel({ items, isReel }: CarouselProps) {
 /* ------------------------------------------------------------------ */
 
 function ReelOverlay() {
-  const overlayStyle: React.CSSProperties = {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: 60,
-    height: 60,
-    borderRadius: "50%",
-    background: "rgba(0,0,0,0.5)",
-    backdropFilter: "blur(8px)",
-    border: "2px solid rgba(255,255,255,0.2)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    pointerEvents: "none",
-  };
-
   return (
-    <div style={overlayStyle}>
-      <Play size={26} color="#fff" fill="#fff" style={{ marginLeft: 3 }} />
+    <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-white/20 bg-black/50 backdrop-blur-sm">
+        <Play size={24} color="#fff" fill="#fff" className="ml-0.5" />
+      </div>
     </div>
   );
 }
@@ -263,29 +164,13 @@ interface SingleImageProps {
 function SingleImage({ url, alt, isReel }: SingleImageProps) {
   const [imgError, setImgError] = useState(false);
 
-  const containerStyle: React.CSSProperties = {
-    position: "relative",
-    width: "100%",
-    aspectRatio: "4 / 5",
-    maxHeight: "70vh",
-    background: "var(--bg-sunken, #0a0a0a)",
-    overflow: "hidden",
-  };
-
-  const imgStyle: React.CSSProperties = {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    display: "block",
-  };
-
   return (
-    <div style={containerStyle}>
+    <div className="relative h-full w-full overflow-hidden bg-[var(--bg-sunken,#0a0a0a)]">
       {url && !imgError ? (
         <img
           src={url}
           alt={alt || "Instagram post"}
-          style={imgStyle}
+          className="h-full w-full object-cover"
           onError={() => setImgError(true)}
         />
       ) : (
@@ -293,20 +178,6 @@ function SingleImage({ url, alt, isReel }: SingleImageProps) {
       )}
 
       {isReel && <ReelOverlay />}
-
-      {/* Gradient fade at bottom */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 80,
-          background:
-            "linear-gradient(to top, var(--bg-primary, #111) 0%, transparent 100%)",
-          pointerEvents: "none",
-        }}
-      />
     </div>
   );
 }
@@ -322,21 +193,22 @@ interface BodySectionsProps {
 }
 
 function BodySections({ bookmark, spaceName, spaceColor }: BodySectionsProps) {
-  const ed = bookmark.enriched_data;
+  const hasTopics = bookmark.enriched_data?.topics && bookmark.enriched_data.topics.length > 0;
+  const hasEntities = bookmark.enriched_data?.entities && bookmark.enriched_data.entities.length > 0;
+
   return (
     <>
       <DetailSummary bookmark={bookmark} />
-      <DetailTopics topics={ed?.topics ?? []} />
-      <DetailEntities entities={ed?.entities ?? []} />
+
+      {(hasTopics || hasEntities) && (
+        <div className="mb-6 flex flex-col gap-4">
+          {hasTopics && <DetailTopics topics={bookmark.enriched_data!.topics!} />}
+          {hasEntities && <DetailEntities entities={bookmark.enriched_data!.entities!} />}
+        </div>
+      )}
 
       {/* Divider */}
-      <div
-        style={{
-          height: 1,
-          background: "var(--border-primary, rgba(255,255,255,0.08))",
-          margin: "8px 0 4px",
-        }}
-      />
+      <div className="mb-5 h-px bg-[var(--border-subtle)]" />
 
       <DetailTags tags={bookmark.tags ?? []} />
       {spaceName && (
@@ -344,62 +216,6 @@ function BodySections({ bookmark, spaceName, spaceColor }: BodySectionsProps) {
       )}
       <DetailNotes initialNotes={bookmark.notes ?? ""} />
     </>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Instagram footer                                                   */
-/* ------------------------------------------------------------------ */
-
-interface InstaFooterProps {
-  url: string;
-}
-
-function InstaFooter({ url }: InstaFooterProps) {
-  const footerStyle: React.CSSProperties = {
-    position: "sticky",
-    bottom: 0,
-    padding: "14px 28px",
-    background: "var(--bg-primary, #111)",
-    borderTop: "1px solid var(--border-primary, rgba(255,255,255,0.08))",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  };
-
-  const linkStyle: React.CSSProperties = {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 8,
-    color: "var(--text-secondary, #aaa)",
-    fontSize: 13,
-    fontWeight: 500,
-    textDecoration: "none",
-    letterSpacing: 0.3,
-    transition: "color 180ms",
-    background: "linear-gradient(135deg, #833AB4, #E1306C, #F77737)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-  };
-
-  return (
-    <div style={footerStyle}>
-      <a
-        href={url}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={linkStyle}
-        onMouseEnter={(e) => {
-          (e.currentTarget as HTMLElement).style.opacity = "0.8";
-        }}
-        onMouseLeave={(e) => {
-          (e.currentTarget as HTMLElement).style.opacity = "1";
-        }}
-      >
-        <ExternalLink size={14} />
-        Open on Instagram
-      </a>
-    </div>
   );
 }
 
@@ -418,6 +234,8 @@ export default function InstagramDetailView({
   const username = str(m, "username");
   const shortcode = str(m, "shortcode");
   const carouselMediaCount = num(m, "carouselMediaCount");
+  const likes = num(m, "likes");
+  const comments = num(m, "comments");
 
   const isReel = instagramType === "reel" || mediaType === "video";
 
@@ -432,189 +250,141 @@ export default function InstagramDetailView({
   const hasCarousel = mediaItems.length > 1;
   const hasImage = mediaItems.length > 0;
 
+  /* Deduplicate description when title already contains it */
+  const showDescription = (() => {
+    if (!bookmark.description) return false;
+    const desc = bookmark.description.trim();
+    const title = (bookmark.title ?? "").trim();
+    if (!title) return true;
+    /* Hide if description starts with the title or title starts with the description */
+    if (desc.startsWith(title.slice(0, 80))) return false;
+    if (title.startsWith(desc.slice(0, 80))) return false;
+    return true;
+  })();
+
   /* Type label */
   const typeLabel = isReel ? "Reel" : "Post";
   const TypeIcon = isReel ? Film : Image;
 
-  const contentPadding: React.CSSProperties = {
-    padding: "0 28px",
-  };
-
   return (
-    <div style={{ paddingBottom: 0 }}>
-      {/* ---- Image / Carousel area ---- */}
-      {hasCarousel ? (
-        <Carousel items={mediaItems} isReel={isReel} />
-      ) : hasImage ? (
-        <SingleImage
-          url={mediaItems[0].url}
-          alt={mediaItems[0].alt}
-          isReel={isReel}
-        />
-      ) : (
-        <div style={{ position: "relative" }}>
-          <ThumbnailPlaceholder sourceType="instagram" height={280} />
-          <div
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: 80,
-              background:
-                "linear-gradient(to top, var(--bg-primary, #111) 0%, transparent 100%)",
-              pointerEvents: "none",
-            }}
-          />
+    <>
+      {/* Two-column layout: stacked on small screens, side-by-side on md+ */}
+      <div className="flex flex-1 flex-col overflow-hidden md:flex-row">
+        {/* ---- Left column: image / carousel ---- */}
+        <div className="relative flex w-full shrink-0 items-center bg-[var(--bg-sunken,#0a0a0a)] max-h-[40vh] md:max-h-none md:w-[55%]">
+          {hasCarousel ? (
+            <Carousel items={mediaItems} isReel={isReel} />
+          ) : hasImage ? (
+            <SingleImage
+              url={mediaItems[0].url}
+              alt={mediaItems[0].alt}
+              isReel={isReel}
+            />
+          ) : (
+            <ThumbnailPlaceholder sourceType="instagram" height={400} />
+          )}
         </div>
-      )}
 
-      {/* ---- Content area ---- */}
-      <div style={contentPadding}>
-        {/* Type badge + shortcode */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginTop: 16,
-            marginBottom: 6,
-          }}
-        >
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 5,
-              padding: "3px 10px",
-              borderRadius: 6,
-              fontSize: 11,
-              fontWeight: 600,
-              letterSpacing: 0.5,
-              textTransform: "uppercase",
-              background: isReel
-                ? "rgba(231,48,96,0.12)"
-                : "rgba(131,58,180,0.12)",
-              color: isReel ? "#E1306C" : "#833AB4",
-            }}
-          >
-            <TypeIcon size={11} />
-            {typeLabel}
+        {/* ---- Right column: metadata & content ---- */}
+        <div className="flex flex-1 flex-col overflow-y-auto">
+          <div className="px-7 pb-5 pt-6">
+            {/* Type badge + shortcode */}
+            <div className="mb-2 flex items-center gap-2">
+              <div
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-md px-2.5 py-[3px] font-ui text-[11px] font-semibold uppercase tracking-[0.04em]",
+                  isReel
+                    ? "bg-[#E1306C]/12 text-[#E1306C]"
+                    : "bg-[#833AB4]/12 text-[#833AB4]",
+                )}
+              >
+                <TypeIcon size={11} />
+                {typeLabel}
+              </div>
+              {shortcode && (
+                <span className="font-mono text-[11px] text-[var(--text-muted)]">
+                  {shortcode}
+                </span>
+              )}
+              {carouselMediaCount && carouselMediaCount > 1 && (
+                <span className="flex items-center gap-1 font-ui text-[11px] text-[var(--text-muted)]">
+                  <Camera size={11} />
+                  {carouselMediaCount} photos
+                </span>
+              )}
+            </div>
+
+            {/* Username */}
+            {username && (
+              <p className="mb-1.5 font-ui text-[13px] font-medium">
+                <span
+                  className="bg-clip-text font-semibold"
+                  style={{
+                    background: "linear-gradient(135deg, #833AB4, #E1306C, #F77737)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                  }}
+                >
+                  @{username}
+                </span>
+              </p>
+            )}
+
+            {/* Title / caption */}
+            {bookmark.title && (
+              <h2 className="line-clamp-3 font-display text-[22px] font-medium leading-[1.28] tracking-[-0.01em] text-[var(--text-primary)]">
+                {bookmark.title}
+              </h2>
+            )}
+
+            {/* Engagement stats */}
+            {(likes || comments) && (
+              <div className="mt-2.5 flex items-center gap-3">
+                {likes != null && (
+                  <span className="flex items-center gap-1.5 rounded-lg bg-[var(--bg-surface)] px-3 py-1.5 font-ui text-[12px] text-[var(--text-secondary)]">
+                    <Heart size={12} />
+                    {likes.toLocaleString()}
+                  </span>
+                )}
+                {comments != null && (
+                  <span className="flex items-center gap-1.5 rounded-lg bg-[var(--bg-surface)] px-3 py-1.5 font-ui text-[12px] text-[var(--text-secondary)]">
+                    <MessageCircle size={12} />
+                    {comments.toLocaleString()}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Description — hidden when it largely duplicates the title */}
+            {showDescription && (
+              <p className="mt-2 line-clamp-4 whitespace-pre-wrap break-words font-ui text-[13px] leading-relaxed text-[var(--text-secondary)]">
+                {bookmark.description}
+              </p>
+            )}
+
+            {/* Saved-at context */}
+            <div className="mb-5 mt-3 flex items-center gap-2 font-ui text-[12px] text-[var(--text-muted)]">
+              <Globe size={11} />
+              {bookmark.domain && <span>{bookmark.domain}</span>}
+              {bookmark.domain && bookmark.savedAt && (
+                <span className="text-[var(--border-strong)]">&middot;</span>
+              )}
+              {bookmark.savedAt && <span>{bookmark.savedAt}</span>}
+            </div>
+
+            {/* Shared body sections */}
+            <BodySections
+              bookmark={bookmark}
+              spaceName={spaceName}
+              spaceColor={spaceColor}
+            />
           </div>
-          {shortcode && (
-            <span
-              style={{
-                fontSize: 11,
-                color: "var(--text-muted, #666)",
-                fontFamily: "var(--font-mono, monospace)",
-              }}
-            >
-              {shortcode}
-            </span>
-          )}
-          {carouselMediaCount && carouselMediaCount > 1 && (
-            <span
-              style={{
-                fontSize: 11,
-                color: "var(--text-muted, #666)",
-              }}
-            >
-              <Camera
-                size={11}
-                style={{ marginRight: 3, verticalAlign: "middle" }}
-              />
-              {carouselMediaCount} photos
-            </span>
-          )}
         </div>
-
-        {/* Username */}
-        {username && (
-          <div
-            style={{
-              fontSize: 15,
-              fontWeight: 600,
-              color: "var(--text-primary, #fff)",
-              marginBottom: 8,
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-            }}
-          >
-            <span
-              style={{
-                background:
-                  "linear-gradient(135deg, #833AB4, #E1306C, #F77737)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              @{username}
-            </span>
-          </div>
-        )}
-
-        {/* Title / caption */}
-        {bookmark.title && (
-          <h2
-            style={{
-              fontSize: 17,
-              fontWeight: 600,
-              color: "var(--text-primary, #fff)",
-              lineHeight: 1.35,
-              margin: "0 0 6px",
-            }}
-          >
-            {bookmark.title}
-          </h2>
-        )}
-
-        {/* Caption / description as distinct styled text */}
-        {bookmark.description && (
-          <p
-            style={{
-              fontSize: 13.5,
-              lineHeight: 1.55,
-              color: "var(--text-secondary, #aaa)",
-              margin: "0 0 12px",
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-            }}
-          >
-            {bookmark.description}
-          </p>
-        )}
-
-        {/* Saved-at context */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            fontSize: 12,
-            color: "var(--text-muted, #666)",
-            marginBottom: 16,
-          }}
-        >
-          <Globe size={11} />
-          {bookmark.domain && <span>{bookmark.domain}</span>}
-          {bookmark.domain && bookmark.savedAt && (
-            <span style={{ opacity: 0.4 }}>&middot;</span>
-          )}
-          {bookmark.savedAt && <span>{bookmark.savedAt}</span>}
-        </div>
-
-        {/* Shared body sections */}
-        <BodySections
-          bookmark={bookmark}
-          spaceName={spaceName}
-          spaceColor={spaceColor}
-        />
       </div>
 
       {/* Footer */}
-      {bookmark.url && <InstaFooter url={bookmark.url} />}
-    </div>
+      {bookmark.url && <DetailFooter url={bookmark.url} label="Open on Instagram" />}
+    </>
   );
 }
 

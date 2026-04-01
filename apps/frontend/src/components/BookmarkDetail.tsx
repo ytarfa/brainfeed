@@ -83,7 +83,7 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
         aria-modal="true"
         onClick={(e) => e.stopPropagation()}
         className={cn(
-          "relative flex max-h-[min(92vh,1080px)] w-[min(860px,94vw)] flex-col overflow-hidden rounded-[20px] border border-[var(--border-subtle)] bg-[var(--bg-base)] transition-all duration-[320ms] ease-[cubic-bezier(0.32,0.72,0,1)]",
+          "relative flex max-h-[min(92vh,1080px)] w-[min(1200px,94vw)] flex-col overflow-hidden rounded-[20px] border border-[var(--border-subtle)] bg-[var(--bg-base)] transition-all duration-[320ms] ease-[cubic-bezier(0.32,0.72,0,1)]",
           visible ? "scale-100 opacity-100" : "scale-[0.94] opacity-0 translate-y-3",
         )}
         style={{
