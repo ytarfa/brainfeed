@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { X, ExternalLink, ChevronDown, Loader2, AlertCircle, ArrowUpRight, Hash, Sparkles } from "lucide-react";
 import { cn } from "../lib/utils";
+import { isEnriching as checkIsEnriching, isEnrichmentFailed } from "../lib/bookmark-status";
 import type { Bookmark } from "@brain-feed/types";
 import ThumbnailPlaceholder from "./ThumbnailPlaceholder";
 
@@ -47,10 +48,8 @@ export default function BookmarkDetail({ bookmark, onClose, spaceName, spaceColo
 
   const enrichedSummary = bookmark.enriched_data?.summary;
   const displaySummary = enrichedSummary || bookmark.summary;
-  const isEnriching =
-    bookmark.enrichment_status === "pending" ||
-    bookmark.enrichment_status === "processing";
-  const isFailed = bookmark.enrichment_status === "failed";
+  const isEnriching = checkIsEnriching(bookmark.enrichment_status);
+  const isFailed = isEnrichmentFailed(bookmark.enrichment_status);
   const hasThumbnail = bookmark.thumbnail_url && !imgError;
   const hasTopics = bookmark.enriched_data?.topics && bookmark.enriched_data.topics.length > 0;
   const hasEntities = bookmark.enriched_data?.entities && bookmark.enriched_data.entities.length > 0;

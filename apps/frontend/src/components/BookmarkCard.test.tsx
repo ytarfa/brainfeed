@@ -208,4 +208,48 @@ describe("BookmarkCard", () => {
       expect(container.querySelector(".lucide-star")).not.toBeInTheDocument();
     });
   });
+
+  // ── Enrichment status indicator tests ─────────────────────────────────
+
+  describe("enrichment status indicators", () => {
+    it("shows loading indicator when enrichment_status is 'pending'", () => {
+      const bookmark = createMockBookmark({ enrichment_status: "pending" } as Partial<Bookmark>);
+      render(<BookmarkCard {...defaultProps} bookmark={bookmark} />);
+      expect(screen.getByTestId("enrichment-loading")).toBeInTheDocument();
+      expect(screen.getByText("Generating summary\u2026")).toBeInTheDocument();
+    });
+
+    it("shows loading indicator when enrichment_status is 'processing'", () => {
+      const bookmark = createMockBookmark({ enrichment_status: "processing" } as Partial<Bookmark>);
+      render(<BookmarkCard {...defaultProps} bookmark={bookmark} />);
+      expect(screen.getByTestId("enrichment-loading")).toBeInTheDocument();
+    });
+
+    it("shows failed indicator when enrichment_status is 'failed'", () => {
+      const bookmark = createMockBookmark({ enrichment_status: "failed" } as Partial<Bookmark>);
+      render(<BookmarkCard {...defaultProps} bookmark={bookmark} />);
+      expect(screen.getByTestId("enrichment-failed")).toBeInTheDocument();
+      expect(screen.getByText("Summary failed")).toBeInTheDocument();
+    });
+
+    it("does NOT show any enrichment indicator when status is 'completed'", () => {
+      const bookmark = createMockBookmark({ enrichment_status: "completed" } as Partial<Bookmark>);
+      render(<BookmarkCard {...defaultProps} bookmark={bookmark} />);
+      expect(screen.queryByTestId("enrichment-loading")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("enrichment-failed")).not.toBeInTheDocument();
+    });
+
+    it("does NOT show any enrichment indicator when status is undefined", () => {
+      const bookmark = createMockBookmark();
+      render(<BookmarkCard {...defaultProps} bookmark={bookmark} />);
+      expect(screen.queryByTestId("enrichment-loading")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("enrichment-failed")).not.toBeInTheDocument();
+    });
+
+    it("shows loading indicator in list view", () => {
+      const bookmark = createMockBookmark({ enrichment_status: "pending" } as Partial<Bookmark>);
+      render(<BookmarkCard {...defaultProps} bookmark={bookmark} view="list" />);
+      expect(screen.getByTestId("enrichment-loading")).toBeInTheDocument();
+    });
+  });
 });

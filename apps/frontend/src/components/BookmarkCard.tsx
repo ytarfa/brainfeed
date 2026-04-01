@@ -7,8 +7,11 @@ import {
   ArrowRight,
   ExternalLink,
   Trash2,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { cn } from "../lib/utils";
+import { isEnriching, isEnrichmentFailed, getEnrichmentDisplay } from "../lib/bookmark-status";
 import type { Bookmark } from "@brain-feed/types";
 import ThumbnailPlaceholder from "./ThumbnailPlaceholder";
 
@@ -161,6 +164,40 @@ export default function BookmarkCard({ bookmark, view, onClick, onDelete, isDele
         >
           {bookmark.title}
         </h3>
+
+        {/* Enrichment status indicator */}
+        {isEnriching(bookmark.enrichment_status) && (
+          <div
+            className={cn(
+              "flex items-center gap-1.5 font-ui text-2xs",
+              isGrid ? "mb-2" : "mb-1",
+            )}
+            data-testid="enrichment-loading"
+          >
+            <Loader2
+              size={11}
+              className="text-[var(--accent)]"
+              style={{ animation: "spin 1.2s linear infinite" }}
+            />
+            <span className="text-[var(--text-muted)]" style={{ animation: "var(--animate-enrichment-breathe)" }}>
+              {getEnrichmentDisplay(bookmark.enrichment_status)?.label}
+            </span>
+          </div>
+        )}
+        {isEnrichmentFailed(bookmark.enrichment_status) && (
+          <div
+            className={cn(
+              "flex items-center gap-1.5 font-ui text-2xs",
+              isGrid ? "mb-2" : "mb-1",
+            )}
+            data-testid="enrichment-failed"
+          >
+            <AlertCircle size={11} className="text-[var(--color-error)]" />
+            <span className="text-[var(--color-error)] opacity-80">
+              {getEnrichmentDisplay(bookmark.enrichment_status)?.label}
+            </span>
+          </div>
+        )}
 
         {/* Tags */}
         {bookmark.tags.length > 0 && (
