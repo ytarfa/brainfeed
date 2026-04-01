@@ -19,6 +19,7 @@ import publicRouter from "./routes/public";
 import authRouter from "./routes/auth";
 import settingsRouter from "./routes/settings";
 import digestRouter from "./routes/digest";
+import tagsRouter from "./routes/tags";
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -67,6 +68,7 @@ app.use("/api/v1/spaces/:spaceId/activity", activityRouter);
 app.use("/api/v1/search", searchRouter);
 app.use("/api/v1/settings", settingsRouter);
 app.use("/api/v1/digest", digestRouter);
+app.use("/api/v1/tags", tagsRouter);
 
 // --- Error handler (must be last) ---
 app.use(errorHandlerMiddleware(logger));

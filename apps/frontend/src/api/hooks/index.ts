@@ -8,6 +8,7 @@ export { useSearch, searchKeys } from "./useSearch";
 export { useProfile, useUpdateProfile, useDeleteAccount, settingsKeys } from "./useSettings";
 export { usePublicSpace, publicSpaceKeys } from "./usePublicSpace";
 export { useDigest, useDigestSummary, useSaveCandidate, useDismissCandidate, useDismissAll, useDismissGroup, usePurgeExpired, digestKeys, toDigestCandidate } from "./useDigest";
+export { useTags, tagKeys } from "./useTags";
 
 export type { SpaceListItem, SpaceDetailResponse, SpaceMember, BookmarkInSpace } from "./useSpaces";
 export type { RuleRow } from "./useRules";

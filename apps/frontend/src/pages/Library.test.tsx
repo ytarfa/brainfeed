@@ -9,6 +9,7 @@ vi.mock("../api/hooks", () => ({
   useBookmarks: vi.fn(),
   useSpaces: vi.fn(),
   toBookmark: vi.fn(),
+  useTags: vi.fn(() => ({ data: ["react", "typescript"], isLoading: false, isError: false })),
   useDigestSummary: vi.fn(() => ({ data: undefined, isLoading: false, isError: false })),
   useDeleteBookmark: vi.fn(() => ({ mutate: mockDeleteMutate })),
 }));
@@ -44,7 +45,7 @@ const mockBookmarksRaw = [
     description: "TS deep dive book",
     notes: null,
     content_type: "link",
-    source_type: "generic",
+    source_type: "github",
     tags: ["typescript"],
     thumbnail_url: null,
     created_at: "2024-01-02T00:00:00Z",
@@ -100,6 +101,7 @@ function setupMocks(overrides: {
 
   vi.mocked(useOutletContext).mockReturnValue({
     onCardClick: vi.fn(),
+    onAddClick: vi.fn(),
   });
 
   vi.mocked(useBookmarks).mockReturnValue({
@@ -122,7 +124,7 @@ function setupMocks(overrides: {
     notes: null,
     content_type: (raw as Record<string, unknown>).content_type as "link",
     source_type: (raw as Record<string, unknown>).source_type ?? null,
-    tags: [],
+    tags: ((raw as Record<string, unknown>).tags as string[] ?? []).map((t: string) => ({ id: t, label: t })),
     thumbnail_url: null,
     created_at: (raw as Record<string, unknown>).created_at as string,
     updated_at: (raw as Record<string, unknown>).updated_at as string,
@@ -160,28 +162,20 @@ describe("Library", () => {
     expect(screen.getByText("2 items across all Spaces")).toBeInTheDocument();
   });
 
-  it("does not render filter buttons (filter tabs removed)", () => {
+  it("renders FilterBar with source pills", () => {
     setupMocks();
     renderWithProviders(<Library />);
-    expect(screen.queryByText("Links")).not.toBeInTheDocument();
-    expect(screen.queryByText("Notes")).not.toBeInTheDocument();
-    expect(screen.queryByText("Images")).not.toBeInTheDocument();
-    expect(screen.queryByText("PDFs")).not.toBeInTheDocument();
-    expect(screen.queryByText("Files")).not.toBeInTheDocument();
+    expect(screen.getByRole("radiogroup")).toBeInTheDocument();
+    expect(screen.getByText("All")).toBeInTheDocument();
+    expect(screen.getByText("GitHub")).toBeInTheDocument();
+    expect(screen.getByText("YouTube")).toBeInTheDocument();
+    expect(screen.getByText("Article")).toBeInTheDocument();
   });
 
-  it("renders sort dropdown with options", () => {
+  it("renders FilterBar sort button with default 'Date saved'", () => {
     setupMocks();
     renderWithProviders(<Library />);
-    expect(screen.getByText("Sort by")).toBeInTheDocument();
-    const select = screen.getByRole("combobox");
-    expect(select).toBeInTheDocument();
-
-    const options = screen.getAllByRole("option");
-    expect(options).toHaveLength(3);
-    expect(options[0]).toHaveTextContent("Date saved");
-    expect(options[1]).toHaveTextContent("Title");
-    expect(options[2]).toHaveTextContent("Source");
+    expect(screen.getByText("Date saved")).toBeInTheDocument();
   });
 
   it("shows empty state with 'Nothing saved yet' when no bookmarks", () => {
@@ -203,16 +197,14 @@ describe("Library", () => {
     expect(screen.getByText("TypeScript Deep Dive")).toBeInTheDocument();
   });
 
-  it("clicking sort dropdown changes the sort parameter", () => {
+  it("passes default sort params to useBookmarks", () => {
     setupMocks();
     renderWithProviders(<Library />);
-    const select = screen.getByRole("combobox");
-    fireEvent.change(select, { target: { value: "title" } });
 
     const calls = vi.mocked(useBookmarks).mock.calls;
     const lastCall = calls[calls.length - 1];
     expect(lastCall[0]).toEqual(
-      expect.objectContaining({ sort: "title" }),
+      expect.objectContaining({ sort: "created_at", order: "desc" }),
     );
   });
 
@@ -227,6 +219,32 @@ describe("Library", () => {
     setupMocks({ isLoading: true, bookmarksData: undefined });
     renderWithProviders(<Library />);
     expect(screen.queryByText("Nothing saved yet")).not.toBeInTheDocument();
+    expect(screen.queryByText("React Patterns")).not.toBeInTheDocument();
+  });
+
+  it("passes source type to useBookmarks when source pill is clicked", () => {
+    setupMocks();
+    renderWithProviders(<Library />);
+    fireEvent.click(screen.getByText("GitHub"));
+
+    const calls = vi.mocked(useBookmarks).mock.calls;
+    const lastCall = calls[calls.length - 1];
+    expect(lastCall[0]).toEqual(
+      expect.objectContaining({ type: "github" }),
+    );
+  });
+
+  it("filters bookmarks client-side when tag is selected", () => {
+    setupMocks();
+    renderWithProviders(<Library />);
+
+    // Open tag select dropdown
+    fireEvent.click(screen.getByText("Tags"));
+    // Select 'typescript' tag
+    fireEvent.click(screen.getByRole("option", { name: "typescript" }));
+
+    // Only the TypeScript bookmark should remain
+    expect(screen.getByText("TypeScript Deep Dive")).toBeInTheDocument();
     expect(screen.queryByText("React Patterns")).not.toBeInTheDocument();
   });
 });

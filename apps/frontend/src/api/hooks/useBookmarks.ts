@@ -4,6 +4,7 @@ import { apiGet, apiPost, apiPatch, apiDelete, apiPostFormData } from "../client
 import type { Bookmark } from "../../data/mock";
 import { timeAgo } from "../../lib/utils";
 import { isEnriching } from "../../lib/bookmark-status";
+import { tagKeys } from "./useTags";
 
 /** Poll interval (ms) used while any bookmark is still enriching. */
 const ENRICHMENT_POLL_INTERVAL = 5_000;
@@ -160,6 +161,7 @@ export function useCreateBookmark() {
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: bookmarkKeys.all });
+      void queryClient.invalidateQueries({ queryKey: tagKeys.all });
     },
   });
 }
@@ -173,6 +175,7 @@ export function useUpdateBookmark() {
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: bookmarkKeys.detail(variables.id) });
       void queryClient.invalidateQueries({ queryKey: bookmarkKeys.lists() });
+      void queryClient.invalidateQueries({ queryKey: tagKeys.all });
     },
   });
 }
@@ -184,6 +187,7 @@ export function useDeleteBookmark() {
     mutationFn: (id: string) => apiDelete(`/api/v1/bookmarks/${id}`),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: bookmarkKeys.all });
+      void queryClient.invalidateQueries({ queryKey: tagKeys.all });
     },
   });
 }

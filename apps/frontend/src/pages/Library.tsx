@@ -3,30 +3,25 @@ import { useOutletContext, useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
 
 import BookmarkCard from "../components/BookmarkCard";
+import { FilterProvider, FilterBar, useFilterContext } from "../components/FilterBar";
 import { useBookmarks, useDeleteBookmark, toBookmark, useDigestSummary } from "../api/hooks";
-
-type SortOption = "saved" | "title" | "source";
 
 interface LayoutContext {
   onCardClick: (id: string) => void;
   onAddClick: () => void;
 }
 
-const sortMap: Record<SortOption, string> = {
-  saved: "created_at",
-  title: "title",
-  source: "source_type",
-};
-
-export default function Library() {
+function LibraryContent() {
   const { onCardClick, onAddClick } = useOutletContext<LayoutContext>();
-  const [sort, setSort] = useState<SortOption>("saved");
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const navigate = useNavigate();
 
+  const { serverParams, filterByTags } = useFilterContext();
+
   const { data: bookmarksData, isLoading } = useBookmarks({
-    sort: sortMap[sort],
-    order: "desc",
+    sort: serverParams.sort,
+    order: serverParams.order,
+    type: serverParams.type,
   });
   const { data: digestSummary } = useDigestSummary();
   const deleteBookmark = useDeleteBookmark();
@@ -43,11 +38,17 @@ export default function Library() {
     });
   }, [deleteBookmark]);
 
-  const bookmarks = useMemo(
+  const allBookmarks = useMemo(
     () => (bookmarksData?.data ?? []).map(toBookmark),
     [bookmarksData],
   );
-  const total = bookmarksData?.total ?? bookmarks.length;
+
+  const bookmarks = useMemo(
+    () => filterByTags(allBookmarks),
+    [allBookmarks, filterByTags],
+  );
+
+  const total = bookmarksData?.total ?? allBookmarks.length;
 
   const digestCount = digestSummary?.total ?? 0;
   const digestGroups = digestSummary?.groups ?? [];
@@ -95,20 +96,14 @@ export default function Library() {
         <p className="text-[13px] text-[var(--text-muted)]">{total} items across all Spaces</p>
       </div>
 
-      {/* Sort bar */}
-      <div className="mb-5 flex flex-wrap items-center justify-end gap-3">
-        <div className="flex items-center gap-1.5">
-          <span className="text-meta shrink-0">Sort by</span>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortOption)}
-            className="h-7 cursor-pointer rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2 font-ui text-xs text-[var(--text-secondary)] outline-none"
-          >
-            <option value="saved">Date saved</option>
-            <option value="title">Title</option>
-            <option value="source">Source</option>
-          </select>
-        </div>
+      {/* Filter bar */}
+      <div className="mb-5">
+        <FilterBar>
+          <FilterBar.SourcePills />
+          <FilterBar.TagSelect />
+          <FilterBar.Sort />
+        </FilterBar>
+        <FilterBar.ActiveFilters />
       </div>
 
       {/* Loading state */}
@@ -154,5 +149,13 @@ export default function Library() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function Library() {
+  return (
+    <FilterProvider>
+      <LibraryContent />
+    </FilterProvider>
   );
 }
